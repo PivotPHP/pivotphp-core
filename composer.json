@@ -1,6 +1,6 @@
 {
     "name": "pivotphp/core",
-    "description": "PivotPHP Core v1.2.0 - Simplified high-performance microframework with automatic OpenAPI/Swagger documentation, PSR-7 hybrid support, and Express.js-inspired API",
+    "description": "PivotPHP Core v2.0.0 - Modular high-performance microframework with pluggable routing system, automatic OpenAPI/Swagger documentation, PSR-7 hybrid support, and Express.js-inspired API",
     "type": "library",
     "keywords": [
         "php",
@@ -43,11 +43,14 @@
         "psr/container": "^2.0",
         "psr/event-dispatcher": "^1.0",
         "psr/http-factory": "^1.0",
-        "psr/http-message": "^1.1",
+        "psr/http-message": "^1.1|^2.0",
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
         "psr/log": "^3.0",
-        "react/http": "^1.9"
+        "psr/cache": "^2.0|^3.0",
+        "psr/simple-cache": "^2.0|^3.0",
+        "react/http": "^1.9",
+        "pivotphp/core-routing": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0|^10.0",
@@ -62,7 +65,9 @@
         "ext-openssl": "Required for secure token generation",
         "ext-mbstring": "Required for proper string handling",
         "ext-fileinfo": "Required for file upload validation",
-        "ext-apcu": "For caching middleware and performance optimization"
+        "ext-apcu": "For caching middleware and performance optimization",
+        "pivotphp/cycle-orm": "Database ORM integration for PivotPHP",
+        "pivotphp/reactphp": "Async runtime extension for continuous execution"
     },
     "autoload": {
         "psr-4": {
