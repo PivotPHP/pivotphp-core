@@ -264,7 +264,7 @@ class Response implements ResponseInterface
         $textString = is_string($text) ? $text : (
             is_scalar($text) || (is_object($text) && method_exists($text, '__toString'))
                 ? (string)$text
-                : (json_encode($text) ?: '')
+                : $this->encodeJsonSafely($text)
         );
         $this->body = $textString;
         if ($this->psr7Response !== null) {
@@ -288,7 +288,7 @@ class Response implements ResponseInterface
         $htmlString = is_string($html) ? $html : (
             is_scalar($html) || (is_object($html) && method_exists($html, '__toString'))
                 ? (string)$html
-                : (json_encode($html) ?: '')
+                : $this->encodeJsonSafely($html)
         );
         $this->body = $htmlString;
         if ($this->psr7Response !== null) {
@@ -398,7 +398,7 @@ class Response implements ResponseInterface
         if (is_scalar($data) || (is_object($data) && method_exists($data, '__toString'))) {
             return $this->text((string)$data);
         }
-        return $this->text(json_encode($data));
+        return $this->text($this->encodeJsonSafely($data));
     }
 
     // =============================================================================
@@ -601,8 +601,18 @@ class Response implements ResponseInterface
             throw new InvalidArgumentException("File not found or not readable: {$filePath}");
         }
 
-        $fileSize = filesize($filePath);
-        $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
+        $fileSize = @filesize($filePath);
+        if ($fileSize === false) {
+            throw new InvalidArgumentException("Cannot determine file size: {$filePath}");
+        }
+
+        $mimeType = 'application/octet-stream';
+        if (function_exists('mime_content_type')) {
+            $detected = @mime_content_type($filePath);
+            if ($detected !== false) {
+                $mimeType = $detected;
+            }
+        }
 
         // Configurar cabeçalhos
         $this->header('Content-Type', $mimeType);
@@ -742,6 +752,19 @@ class Response implements ResponseInterface
     // =============================================================================
     // MÉTODOS UTILITÁRIOS
     // =============================================================================
+
+    /**
+     * Encodes JSON safely with proper error handling
+     */
+    private function encodeJsonSafely(mixed $data): string
+    {
+        $encoded = json_encode($data, self::JSON_ENCODE_FLAGS);
+        if ($encoded === false) {
+            error_log('JSON encoding failed: ' . json_last_error_msg());
+            return '{}';
+        }
+        return $encoded;
+    }
 
     /**
      * Sanitiza dados para garantir codificação UTF-8 válida para JSON.

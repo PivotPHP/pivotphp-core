@@ -92,7 +92,13 @@ class Request implements ServerRequestInterface, AttributeInterface
     private function getCachedInput(): string
     {
         if (self::$cachedInput === null) {
-            self::$cachedInput = file_get_contents('php://input') ?: '';
+            $input = @file_get_contents('php://input');
+            if ($input === false) {
+                error_log('Failed to read from php://input stream');
+                self::$cachedInput = '';
+            } else {
+                self::$cachedInput = $input;
+            }
         }
         return self::$cachedInput;
     }
@@ -173,7 +179,12 @@ class Request implements ServerRequestInterface, AttributeInterface
             $input = $this->getCachedInput();
             if ($input !== '') {
                 $decoded = json_decode($input, true);
-                $this->psr7Request = $this->psr7Request->withParsedBody($decoded ?: $_POST);
+                if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+                    error_log('JSON decode error in request body: ' . json_last_error_msg());
+                    $this->psr7Request = $this->psr7Request->withParsedBody($_POST);
+                } else {
+                    $this->psr7Request = $this->psr7Request->withParsedBody($decoded ?: $_POST);
+                }
             }
         }
 

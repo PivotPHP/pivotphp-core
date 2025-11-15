@@ -115,8 +115,8 @@ class AuthMiddleware extends AbstractMiddleware
     {
         $header = $request->getHeaderLine('Authorization');
         if (strpos($header, 'Basic ') === 0) {
-            $decoded = base64_decode(substr($header, 6));
-            if ($decoded && strpos($decoded, ':') !== false) {
+            $decoded = base64_decode(substr($header, 6), true);
+            if ($decoded !== false && strpos($decoded, ':') !== false) {
                 [$username, $password] = explode(':', $decoded, 2);
                 if (isset($this->config['basicAuthCallback']) && is_callable($this->config['basicAuthCallback'])) {
                     $result = call_user_func($this->config['basicAuthCallback'], $username, $password);
@@ -202,11 +202,21 @@ class AuthMiddleware extends AbstractMiddleware
         try {
             // Simple validation - in production, use a proper JWT library
             $parts = explode('.', $token);
-            if (count($parts) !== 3) {
+            if (count($parts) !== 3 || empty($parts[1])) {
                 return false;
             }
 
-            $payload = json_decode(base64_decode($parts[1]), true);
+            $decoded = base64_decode($parts[1], true);
+            if ($decoded === false) {
+                error_log('JWT token base64 decode failed');
+                return false;
+            }
+
+            $payload = json_decode($decoded, true);
+            if ($payload === null && json_last_error() !== JSON_ERROR_NONE) {
+                error_log('JWT token JSON decode failed: ' . json_last_error_msg());
+                return false;
+            }
 
             if (!is_array($payload)) {
                 return false;
@@ -219,10 +229,16 @@ class AuthMiddleware extends AbstractMiddleware
 
             // Validate signature (simplified)
             $expectedSignature = hash_hmac('sha256', $parts[0] . '.' . $parts[1], $this->config['secret'], true);
-            $actualSignature = base64_decode(strtr($parts[2], '-_', '+/'));
+            $actualSignature = base64_decode(strtr($parts[2], '-_', '+/'), true);
+
+            if ($actualSignature === false) {
+                error_log('JWT signature base64 decode failed');
+                return false;
+            }
 
             return hash_equals($expectedSignature, $actualSignature);
         } catch (\Exception $e) {
+            error_log('JWT validation error: ' . $e->getMessage());
             return false;
         }
     }
@@ -231,9 +247,25 @@ class AuthMiddleware extends AbstractMiddleware
     {
         try {
             $parts = explode('.', $token);
-            $decoded = json_decode(base64_decode($parts[1]), true);
-            return is_array($decoded) ? $decoded : null;
+            if (count($parts) !== 3 || empty($parts[1])) {
+                return null;
+            }
+
+            $decoded = base64_decode($parts[1], true);
+            if ($decoded === false) {
+                error_log('Token base64 decode failed in decodeToken');
+                return null;
+            }
+
+            $payload = json_decode($decoded, true);
+            if ($payload === null && json_last_error() !== JSON_ERROR_NONE) {
+                error_log('Token JSON decode failed in decodeToken: ' . json_last_error_msg());
+                return null;
+            }
+
+            return is_array($payload) ? $payload : null;
         } catch (\Exception $e) {
+            error_log('Token decode error: ' . $e->getMessage());
             return null;
         }
     }

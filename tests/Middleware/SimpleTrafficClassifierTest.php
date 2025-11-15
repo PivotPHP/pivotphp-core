@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PivotPHP\Tests\Middleware;
+namespace PivotPHP\Core\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\SimpleTrafficClassifier;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PivotPHP\Tests\Http\Pool;
+namespace PivotPHP\Core\Tests\Http\Pool;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Http\Pool\SimplePoolManager;

@@ -53,7 +53,10 @@ class JsonBuffer
 
         if ($this->useStream && $this->stream !== null) {
             // Use stream for large buffers to avoid string reallocation
-            fwrite($this->stream, $data);
+            $bytesWritten = @fwrite($this->stream, $data);
+            if ($bytesWritten === false) {
+                throw new \RuntimeException('Failed to write to stream buffer');
+            }
         } else {
             // Use string concatenation for small buffers
             $this->buffer .= $data;
@@ -83,8 +86,10 @@ class JsonBuffer
         if (!$this->finalized) {
             if ($this->useStream && $this->stream !== null) {
                 // Read all content from stream
-                rewind($this->stream);
-                $content = stream_get_contents($this->stream);
+                if (@rewind($this->stream) === false) {
+                    throw new \RuntimeException('Failed to rewind stream');
+                }
+                $content = @stream_get_contents($this->stream);
                 if ($content === false) {
                     throw new \RuntimeException('Failed to read from stream');
                 }
@@ -107,8 +112,12 @@ class JsonBuffer
 
         if ($this->useStream && $this->stream !== null) {
             // Reset stream to beginning and truncate
-            rewind($this->stream);
-            ftruncate($this->stream, 0);
+            if (@rewind($this->stream) === false) {
+                error_log('Failed to rewind stream during reset');
+            }
+            if (@ftruncate($this->stream, 0) === false) {
+                error_log('Failed to truncate stream during reset');
+            }
         }
     }
 

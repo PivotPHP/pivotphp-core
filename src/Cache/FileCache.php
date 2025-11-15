@@ -2,6 +2,8 @@
 
 namespace PivotPHP\Core\Cache;
 
+use RuntimeException;
+
 /**
  * Driver de cache em arquivo
  */
@@ -14,7 +16,9 @@ class FileCache implements CacheInterface
         $this->cacheDir = $cacheDir ?? sys_get_temp_dir() . '/express-cache';
 
         if (!is_dir($this->cacheDir)) {
-            mkdir($this->cacheDir, 0755, true);
+            if (!@mkdir($this->cacheDir, 0755, true) && !is_dir($this->cacheDir)) {
+                throw new RuntimeException("Cannot create cache directory: {$this->cacheDir}");
+            }
         }
     }
 
@@ -30,8 +34,10 @@ class FileCache implements CacheInterface
             return $default;
         }
 
-        $fileContents = file_get_contents($file);
+        $fileContents = @file_get_contents($file);
         if ($fileContents === false) {
+            $error = error_get_last();
+            error_log("FileCache read failed for {$file}: " . ($error['message'] ?? 'Unknown error'));
             return $default;
         }
 
@@ -75,7 +81,12 @@ class FileCache implements CacheInterface
             'expires' => $expires
         ];
 
-        return file_put_contents($file, serialize($data)) !== false;
+        $written = @file_put_contents($file, serialize($data), LOCK_EX);
+        if ($written === false) {
+            error_log("FileCache write failed for {$file}");
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -121,14 +132,17 @@ class FileCache implements CacheInterface
             return false;
         }
 
-        $fileContents = file_get_contents($file);
+        $fileContents = @file_get_contents($file);
         if ($fileContents === false) {
+            $error = error_get_last();
+            error_log("FileCache read failed for {$file}: " . ($error['message'] ?? 'Unknown error'));
             return false;
         }
 
         try {
             $data = unserialize($fileContents);
         } catch (\Throwable $e) {
+            error_log("FileCache unserialize failed for {$key}: " . $e->getMessage());
             $this->delete($key);
             return false;
         }

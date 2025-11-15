@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PivotPHP\Tests\Routing;
+namespace PivotPHP\Core\Tests\Routing;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Routing\RouteMemoryManager;

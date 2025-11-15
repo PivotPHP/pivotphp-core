@@ -2,6 +2,8 @@
 
 namespace PivotPHP\Core\Logging;
 
+use RuntimeException;
+
 /**
  * Handler para arquivo
  */
@@ -21,7 +23,9 @@ class FileHandler implements LogHandlerInterface
         // Cria o diretório se não existir
         $dir = dirname($filePath);
         if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+            if (!@mkdir($dir, 0755, true) && !is_dir($dir)) {
+                throw new RuntimeException("Cannot create log directory: {$dir}");
+            }
         }
     }
 
@@ -31,7 +35,10 @@ class FileHandler implements LogHandlerInterface
     public function handle(array $record): void
     {
         $message = $this->format($record);
-        file_put_contents($this->filePath, $message . PHP_EOL, FILE_APPEND | LOCK_EX);
+        $written = @file_put_contents($this->filePath, $message . PHP_EOL, FILE_APPEND | LOCK_EX);
+        if ($written === false) {
+            error_log('Failed to write to log file: ' . $this->filePath);
+        }
     }
 
     private function format(array $record): string

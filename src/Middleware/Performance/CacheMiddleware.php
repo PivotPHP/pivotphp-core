@@ -8,6 +8,8 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
+use Throwable;
 
 /**
  * Cache Middleware
@@ -31,7 +33,9 @@ class CacheMiddleware implements MiddlewareInterface
         $this->ttl = $ttl;
         $this->cacheDir = $cacheDir;
         if (!is_dir($this->cacheDir)) {
-            @mkdir($this->cacheDir, 0777, true);
+            if (!@mkdir($this->cacheDir, 0777, true) && !is_dir($this->cacheDir)) {
+                throw new RuntimeException("Cannot create cache directory: {$this->cacheDir}");
+            }
         }
     }
 
@@ -43,20 +47,44 @@ class CacheMiddleware implements MiddlewareInterface
         $key = $this->generateCacheKey($request);
         $cacheFile = $this->cacheDir . '/' . $key;
 
-        if (file_exists($cacheFile) && (filemtime($cacheFile) + $this->ttl) > time()) {
-            $cached = file_get_contents($cacheFile);
-            $response = unserialize((string)$cached);
-            if ($response instanceof ResponseInterface) {
-                return $response;
+        // Try to read from cache
+        try {
+            if (file_exists($cacheFile) && (filemtime($cacheFile) + $this->ttl) > time()) {
+                $cached = @file_get_contents($cacheFile);
+                if ($cached !== false) {
+                    try {
+                        $response = unserialize($cached);
+                        if ($response instanceof ResponseInterface) {
+                            return $response;
+                        }
+                    } catch (Throwable $e) {
+                        // Delete corrupted cache file
+                        @unlink($cacheFile);
+                        error_log('Cache file corrupted, deleted: ' . $cacheFile);
+                    }
+                }
             }
+        } catch (Throwable $e) {
+            error_log('Cache read error: ' . $e->getMessage());
         }
 
         $response = $handler->handle($request);
+
         // Adiciona header de cache-control
         if (method_exists($response, 'withHeader')) {
             $response = $response->withHeader('Cache-Control', 'public, max-age=' . $this->ttl);
         }
-        file_put_contents($cacheFile, serialize($response));
+
+        // Try to write to cache
+        try {
+            $written = @file_put_contents($cacheFile, serialize($response), LOCK_EX);
+            if ($written === false) {
+                error_log('Failed to write cache file: ' . $cacheFile);
+            }
+        } catch (Throwable $e) {
+            error_log('Cache write error: ' . $e->getMessage());
+        }
+
         return $response;
     }
 

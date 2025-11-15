@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PivotPHP\Tests\Memory;
+namespace PivotPHP\Core\Tests\Memory;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Memory\SimpleMemoryManager;
