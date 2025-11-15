@@ -545,29 +545,6 @@ class Application
     }
 
     /**
-     * Registra uma rota estática pré-compilada (apenas GET).
-     *
-     * Esta é a implementação simplificada da pré-compilação, onde o desenvolvedor
-     * DECLARA explicitamente que a rota é estática, eliminando complexidade
-     * de análise automática.
-     *
-     * @param  string   $path    Caminho da rota
-     * @param  callable $handler Handler que DEVE retornar dados estáticos
-     * @param  array    $options Opções adicionais
-     * @return $this
-     */
-    public function static(string $path, callable $handler, array $options = []): self
-    {
-        // Importa StaticRouteManager apenas quando necessário
-        $optimizedHandler = \PivotPHP\Core\Routing\StaticRouteManager::register($path, $handler, $options);
-
-        // Registra como rota GET com handler otimizado
-        $this->router->get($path, $optimizedHandler);
-
-        return $this;
-    }
-
-    /**
      * Registra arquivos específicos como rotas estáticas.
      *
      * Abordagem direta: registra cada arquivo encontrado como uma rota individual.

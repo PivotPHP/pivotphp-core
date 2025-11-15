@@ -1,31 +1,26 @@
 <?php
 
 /**
- * 📁 PivotPHP v1.1.3 - Static Files and Routes
- * 
- * Demonstrates two distinct approaches:
- * 1. $app->staticFiles() - Serves actual files from disk using StaticFileManager
- * 2. $app->static() - Pre-compiled static responses using StaticRouteManager
- * 
+ * 📁 PivotPHP v2.0.0 - Static Files Serving
+ *
+ * Demonstrates static file serving using StaticFileManager from core-routing.
+ *
  * 🚀 How to run:
  * php -S localhost:8000 examples/02-routing/static-files.php
- * 
+ *
  * 🧪 How to test:
  * # Static files (served from disk)
  * curl http://localhost:8000/public/test.json      # File serving
  * curl http://localhost:8000/assets/app.css        # CSS file
  * curl http://localhost:8000/docs/readme.txt       # Text file
- * 
- * # Static routes (pre-compiled responses)
- * curl http://localhost:8000/api/static/health     # Optimized response
- * curl http://localhost:8000/api/static/version    # Static data
- * curl http://localhost:8000/api/static/metrics    # Pre-computed metrics
+ *
+ * 📝 Note: $app->static() was removed in v2.0.0
+ * Use regular routes with HTTP caching headers for static responses instead.
  */
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Routing\SimpleStaticFileManager;
 
 // 🎯 Create Application
 $app = new Application();
@@ -37,14 +32,14 @@ if (!is_dir($staticDir)) {
     mkdir($staticDir . '/css', 0755, true);
     mkdir($staticDir . '/js', 0755, true);
     mkdir($staticDir . '/docs', 0755, true);
-    
+
     // Create demo files
     file_put_contents($staticDir . '/test.json', json_encode([
         'message' => 'This is a static JSON file',
-        'served_by' => 'SimpleStaticFileManager',
-        'framework' => 'PivotPHP v1.1.3'
+        'served_by' => 'StaticFileManager (core-routing)',
+        'framework' => 'PivotPHP v2.0.0'
     ], JSON_PRETTY_PRINT));
-    
+
     file_put_contents($staticDir . '/css/app.css', "
 /* Demo CSS file served by PivotPHP */
 body {
@@ -60,46 +55,44 @@ body {
     background: white;
 }
 ");
-    
+
     file_put_contents($staticDir . '/js/app.js', "
 // Demo JavaScript file served by PivotPHP
-console.log('PivotPHP v1.1.3 - Static file serving working!');
+console.log('PivotPHP v2.0.0 - Modular routing system!');
 
 function showFrameworkInfo() {
     return {
         framework: 'PivotPHP',
-        version: '1.1.3',
-        feature: 'Static file serving',
-        performance: '+116% improvement'
+        version: '2.0.0',
+        feature: 'Modular routing with core-routing package'
     };
 }
 ");
-    
+
     file_put_contents($staticDir . '/docs/readme.txt', "
-PivotPHP v1.1.3 - Static Files Demo
+PivotPHP v2.0.0 - Modular Routing
 
-This file is served directly by SimpleStaticFileManager.
+This file is served directly by StaticFileManager from core-routing package.
 
-Features demonstrated:
+Features:
 - Static file serving with proper MIME types
-- Directory organization
-- Security (path traversal prevention)
-- Performance optimization
-- Integration with main application
+- Directory organization and security
+- Path traversal prevention
+- Integration with modular routing system
 
-Static files are served efficiently while maintaining
-the framework's principle of simplicity over premature optimization.
+v2.0.0 Breaking Changes:
+- Routing system now uses pivotphp/core-routing
+- $app->static() method removed (use HTTP caching instead)
+- StaticFileManager now from core-routing package
 ");
 }
 
-// 🏠 Home route - Static files overview
+// 🏠 Home route - Overview
 $app->get('/', function($req, $res) {
     return $res->json([
-        'title' => 'PivotPHP v1.1.3 - Static Files & Routes Demo',
-        'two_approaches' => [
-            'staticFiles()' => 'Serves actual files from disk using StaticFileManager',
-            'static()' => 'Pre-compiled responses using StaticRouteManager for maximum performance'
-        ],
+        'title' => 'PivotPHP v2.0.0 - Static Files Demo',
+        'version' => '2.0.0',
+        'routing' => 'Modular (pivotphp/core-routing)',
         'static_file_serving' => [
             'method' => '$app->staticFiles()',
             'purpose' => 'Serve actual files from filesystem',
@@ -116,26 +109,16 @@ $app->get('/', function($req, $res) {
                 'directory_traversal_protection' => true
             ]
         ],
-        'static_routes' => [
-            'method' => '$app->static()',
-            'purpose' => 'Pre-computed responses for maximum performance',
-            'examples' => [
-                'GET /api/static/health' => 'Static health check (pre-compiled)',
-                'GET /api/static/version' => 'Static version info (optimized)',
-                'GET /api/static/metrics' => 'Static metrics endpoint (cached)'
-            ],
-            'benefits' => [
-                'zero_processing_time' => true,
-                'pre_computed_responses' => true,
-                'maximum_throughput' => true,
-                'minimal_memory_usage' => true
-            ]
+        'breaking_changes' => [
+            'removed' => '$app->static() method',
+            'alternative' => 'Use regular routes with Cache-Control headers',
+            'example' => '$res->header("Cache-Control", "public, max-age=3600")'
         ]
     ]);
 });
 
 // 📁 Register static file directories using $app->staticFiles()
-// This uses StaticFileManager to serve actual files from disk
+// This uses StaticFileManager from core-routing to serve actual files from disk
 try {
     // Register /public route to serve files from static-demo directory
     $app->staticFiles('/public', $staticDir, [
@@ -145,16 +128,16 @@ try {
         'fallthrough' => true,
         'redirect' => true
     ]);
-    
+
     // Register /assets route for CSS/JS files
     $app->staticFiles('/assets', $staticDir, [
         'index' => false,
         'dotfiles' => 'deny'
     ]);
-    
-    // Register /docs route for documentation files  
+
+    // Register /docs route for documentation files
     $app->staticFiles('/docs', $staticDir . '/docs');
-    
+
 } catch (Exception $e) {
     // Handle directory registration errors gracefully
     $app->get('/static-error', function($req, $res) use ($e) {
@@ -166,70 +149,13 @@ try {
     });
 }
 
-// 🚀 Static Routes using $app->static() - Pre-compiled responses
-// These use StaticRouteManager for maximum performance optimization
-
-// Health check with static response
-$app->static('/api/static/health', function($req, $res) {
-    return $res->json([
-        'status' => 'healthy',
-        'framework' => 'PivotPHP',
-        'version' => '1.1.3',
-        'uptime' => 'demo',
-        'static_route' => true,
-        'optimized' => 'StaticRouteManager'
-    ]);
-}, [
-    'cache_control' => 'public, max-age=300' // 5 minutes cache
-]);
-
-// Version info with static response
-$app->static('/api/static/version', function($req, $res) {
-    return $res->json([
-        'framework' => 'PivotPHP Core',
-        'version' => '1.1.3',
-        'edition' => 'Performance Optimization & Array Callables',
-        'php_version' => PHP_VERSION,
-        'features' => [
-            'array_callables' => true,
-            'performance_boost' => '+116%',
-            'object_pooling' => true,
-            'json_optimization' => true
-        ],
-        'static_route' => true
-    ]);
-}, [
-    'cache_control' => 'public, max-age=3600' // 1 hour cache
-]);
-
-// Metrics with static response
-$app->static('/api/static/metrics', function($req, $res) {
-    return $res->json([
-        'framework_metrics' => [
-            'throughput_improvement' => '+116%',
-            'object_pool_reuse' => '100%',
-            'json_operations' => '505K ops/sec',
-            'memory_efficiency' => 'optimized'
-        ],
-        'static_route_benefits' => [
-            'no_dynamic_processing' => true,
-            'pre_computed_response' => true,
-            'minimal_memory_usage' => true,
-            'maximum_throughput' => true
-        ],
-        'generated_at' => date('c'),
-        'static_route' => true
-    ]);
-}, [
-    'cache_control' => 'public, max-age=60' // 1 minute cache
-]);
-
-// 📊 Static implementation details
+// 📊 Static files information
 $app->get('/static-info', function($req, $res) {
     return $res->json([
-        'app_staticFiles_method' => [
+        'staticFiles_method' => [
             'purpose' => 'Serve actual files from disk',
-            'uses' => 'StaticFileManager class',
+            'package' => 'pivotphp/core-routing',
+            'class' => 'StaticFileManager',
             'api_call' => '$app->staticFiles(\'/assets\', \'./public/assets\')',
             'features' => [
                 'mime_type_detection' => 'Automatic based on file extension',
@@ -244,34 +170,47 @@ $app->get('/static-info', function($req, $res) {
                 'downloads' => 'Static downloads'
             ]
         ],
-        'app_static_method' => [
-            'purpose' => 'Pre-compiled responses for maximum performance',
-            'uses' => 'StaticRouteManager class',
-            'api_call' => '$app->static(\'/api/health\', function($req, $res) { ... })',
-            'optimization' => 'Pre-computed responses for maximum performance',
-            'use_cases' => [
-                'health_checks' => 'Service monitoring endpoints',
-                'version_info' => 'Application metadata',
-                'metrics' => 'Performance indicators',
-                'api_status' => 'Service availability'
-            ],
-            'benefits' => [
-                'zero_processing_time' => 'Response pre-computed',
-                'maximum_throughput' => 'No dynamic processing',
-                'minimal_memory' => 'Optimized memory usage',
-                'cache_friendly' => 'HTTP cache headers'
+        'migration_from_v1' => [
+            'removed_feature' => '$app->static() method',
+            'reason' => 'Simplification and modular architecture',
+            'alternative' => 'Use HTTP caching headers with regular routes',
+            'example' => [
+                'old' => '$app->static(\'/health\', fn() => $res->json([...]))',
+                'new' => '$app->get(\'/health\', fn() => $res->header("Cache-Control", "max-age=300")->json([...]))'
             ]
-        ],
-        'when_to_use' => [
-            'staticFiles' => 'When you need to serve actual files (CSS, JS, images, documents)',
-            'static' => 'When you have fixed data that never changes (health, version, status)'
-        ],
-        'performance_comparison' => [
-            'staticFiles' => 'Fast file serving with MIME detection and security',
-            'static' => 'Ultra-fast pre-computed responses with zero processing',
-            'recommendation' => 'Use static() for data, staticFiles() for files'
         ]
     ]);
+});
+
+// Example: Static-like response using HTTP caching (replacement for $app->static())
+$app->get('/api/health', function($req, $res) {
+    return $res
+        ->header('Cache-Control', 'public, max-age=300') // 5 minutes cache
+        ->json([
+            'status' => 'healthy',
+            'framework' => 'PivotPHP',
+            'version' => '2.0.0',
+            'routing' => 'modular (core-routing)',
+            'note' => 'Uses HTTP caching instead of $app->static()'
+        ]);
+});
+
+// Example: Version endpoint with caching
+$app->get('/api/version', function($req, $res) {
+    return $res
+        ->header('Cache-Control', 'public, max-age=3600') // 1 hour cache
+        ->json([
+            'framework' => 'PivotPHP Core',
+            'version' => '2.0.0',
+            'edition' => 'Modular Routing',
+            'php_version' => PHP_VERSION,
+            'routing_package' => 'pivotphp/core-routing ^1.0',
+            'breaking_changes' => [
+                'modular_routing' => true,
+                'removed_static_method' => true,
+                'removed_classes' => ['StaticRouteManager', 'MockRequest', 'MockResponse']
+            ]
+        ]);
 });
 
 // 🔧 Static files listing endpoint
@@ -282,45 +221,11 @@ $app->get('/files/list', function($req, $res) {
             '/assets' => 'CSS and JS files',
             '/docs' => 'Documentation files'
         ],
-        'static_route_examples' => [
-            '/api/static/health',
-            '/api/static/version', 
-            '/api/static/metrics'
+        'cached_api_endpoints' => [
+            '/api/health' => 'Health check with 5min cache',
+            '/api/version' => 'Version info with 1hr cache'
         ],
-        'note' => 'Static files are served directly without PHP processing for maximum performance'
-    ]);
-});
-
-// 🧪 Performance comparison endpoint
-$app->get('/performance/static-vs-dynamic', function($req, $res) {
-    // Simulate dynamic route processing time
-    $dynamicStart = microtime(true);
-    usleep(100); // Simulate some processing time
-    $dynamicEnd = microtime(true);
-    $dynamicTime = ($dynamicEnd - $dynamicStart) * 1000;
-    
-    // Static route would have ~0ms processing time (pre-computed)
-    $staticTime = 0.001; // Essentially instantaneous
-    
-    return $res->json([
-        'performance_comparison' => [
-            'dynamic_route' => [
-                'processing_time_ms' => round($dynamicTime, 3),
-                'benefits' => ['flexible', 'real-time data', 'customizable'],
-                'use_cases' => ['user-specific data', 'real-time calculations', 'database queries']
-            ],
-            'static_route' => [
-                'processing_time_ms' => $staticTime,
-                'benefits' => ['maximum_speed', 'minimal_cpu', 'cacheable'],
-                'use_cases' => ['health checks', 'version info', 'fixed responses']
-            ],
-            'recommendation' => 'Use static routes for fixed responses, dynamic for real-time data'
-        ],
-        'framework_philosophy' => [
-            'principle' => 'Right tool for the right job',
-            'approach' => 'Simple, practical solutions over complex optimizations',
-            'result' => 'High performance with maintainable code'
-        ]
+        'note' => 'Static files served by StaticFileManager from core-routing package'
     ]);
 });
 
@@ -332,7 +237,7 @@ register_shutdown_function(function() use ($staticDir) {
             new RecursiveDirectoryIterator($staticDir, RecursiveDirectoryIterator::SKIP_DOTS),
             RecursiveIteratorIterator::CHILD_FIRST
         );
-        
+
         foreach ($files as $fileinfo) {
             $todo = ($fileinfo->isDir() ? 'rmdir' : 'unlink');
             $todo($fileinfo->getRealPath());
