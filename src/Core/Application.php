@@ -16,6 +16,7 @@ use PivotPHP\Core\Providers\EventServiceProvider;
 use PivotPHP\Core\Providers\LoggingServiceProvider;
 use PivotPHP\Core\Providers\HookServiceProvider;
 use PivotPHP\Core\Providers\ExtensionServiceProvider;
+use PivotPHP\Core\Providers\RoutingServiceProvider;
 use PivotPHP\Core\Support\HookManager;
 use PivotPHP\Core\Events\ApplicationStarted;
 use PivotPHP\Core\Events\RequestReceived;
@@ -40,7 +41,7 @@ class Application
     /**
      * Versão do framework.
      */
-    public const VERSION = '1.2.0';
+    public const VERSION = '2.0.0';
 
     /**
      * Container de dependências PSR-11.
@@ -88,6 +89,7 @@ class Application
         LoggingServiceProvider::class,
         HookServiceProvider::class,
         ExtensionServiceProvider::class,
+        RoutingServiceProvider::class,
     ];
 
     /**
