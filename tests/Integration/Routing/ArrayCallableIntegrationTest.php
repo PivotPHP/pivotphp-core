@@ -266,7 +266,9 @@ class ArrayCallableIntegrationTest extends TestCase
         $this->assertIsArray($body);
         $this->assertTrue($body['error']);
         $this->assertArrayHasKey('message', $body);
-    }    /**
+    }
+
+    /**
      * @test
      */
     public function testResponseTypesFromArrayCallable(): void

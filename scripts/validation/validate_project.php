@@ -258,10 +258,10 @@ class ProjectValidator
     {
         echo "🧪 Validando testes...\n";
 
+        // v2.0.0: AuthMiddleware tests removed in cleanup
+        // Only validate JWTHelper test as critical authentication component
         $testFiles = [
-            'tests/Security/AuthMiddlewareTest.php',
             'tests/Helpers/JWTHelperTest.php',
-            'tests/Security/AuthMiddlewareTest.php'
         ];
 
         foreach ($testFiles as $testFile) {

@@ -783,14 +783,14 @@ class Application
             return $response
                 ->status($statusCode)
                 ->json(
-                [
-                    'error' => true,
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString()
-                ]
-            );
+                    [
+                        'error' => true,
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]
+                );
         } else {
             // Em produção, gerar ID único para o erro e logar detalhes
             $errorId = uniqid('err_', true);
@@ -801,12 +801,12 @@ class Application
             return $response
                 ->status($statusCode)
                 ->json(
-                [
-                    'error' => true,
-                    'message' => $statusCode === 404 ? 'Not Found' : 'Internal Server Error',
-                    'error_id' => $errorId
-                ]
-            );
+                    [
+                        'error' => true,
+                        'message' => $statusCode === 404 ? 'Not Found' : 'Internal Server Error',
+                        'error_id' => $errorId
+                    ]
+                );
         }
     }
 
