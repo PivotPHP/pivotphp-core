@@ -21,7 +21,7 @@
 - **🛡️ Segurança Integrada**: Middlewares prontos para CSRF, XSS, JWT - protótipos seguros desde o início.
 - **🔧 Extensibilidade Simples**: Sistema de plugins e providers para expandir funcionalidades conforme necessário.
 - **📊 Performance Adequada**: Throughput de 44,092 ops/sec, footprint de 1.61MB - suficiente para demonstrações.
-- **🎨 v1.2.0**: Simplicity Edition - Arquitetura limpa, zero complexidade desnecessária, foco em simplicidade.
+- **🎨 v2.0.0**: Legacy Cleanup Edition - 18% code reduction, modern namespaces, routing externalized, zero deprecated code.
 
 ---
 
@@ -34,15 +34,17 @@
 - 🔐 **Autenticação Multi-método**
 - 🛡️ **Segurança Avançada**
 - 📡 **Streaming & SSE**
-- 📚 **OpenAPI/Swagger Automático** (v1.2.0+ Middleware)
+- 📚 **OpenAPI/Swagger Automático** (v2.0.0 Middleware)
 - 🔄 **PSR-7 Híbrido**
 - ♻️ **Object Pooling**
-- 🚀 **JSON Optimization** (v1.2.0 Intelligent)
-- 🎯 **Array Callables** (v1.2.0 Native)
-- 🔍 **Enhanced Error Diagnostics** (v1.2.0)
+- 🚀 **JSON Optimization** (Intelligent Caching)
+- 🎯 **Array Callables** (Native Support)
+- 🔍 **Enhanced Error Diagnostics**
 - ⚡ **Performance Extrema**
 - 🧪 **Qualidade e Testes**
-- 🎯 **Simplicidade sobre Otimização** (v1.2.0)
+- 🎯 **Simplicidade sobre Otimização**
+- 🧹 **v2.0.0 Legacy Cleanup** (18% code reduction)
+- 🔌 **Modular Routing** (External package, pluggable in v2.1.0)
 
 ---
 
@@ -116,7 +118,7 @@ $app->get('/posts/:year<\d{4}>/:month<\d{2}>/:slug<slug>', function($req, $res) 
 $app->run();
 ```
 
-### 🛣️ Sintaxes de Roteamento Suportadas (v1.2.0)
+### 🛣️ Sintaxes de Roteamento Suportadas
 
 O PivotPHP oferece suporte robusto para múltiplas sintaxes de roteamento:
 
@@ -160,37 +162,37 @@ $app->get('/users/:id', [Controller::class, 'show']);
 
 namespace App\Controllers;
 
-class UserController 
+class UserController
 {
     // ✅ Métodos devem ser PÚBLICOS
-    public function index($req, $res) 
+    public function index($req, $res)
     {
         $users = User::paginate($req->query('limit', 10));
         return $res->json(['users' => $users]);
     }
-    
-    public function show($req, $res) 
+
+    public function show($req, $res)
     {
         $id = $req->param('id');
         $user = User::find($id);
-        
+
         if (!$user) {
             return $res->status(404)->json(['error' => 'User not found']);
         }
-        
+
         return $res->json(['user' => $user]);
     }
-    
-    public function store($req, $res) 
+
+    public function store($req, $res)
     {
         $data = $req->body();
         $user = User::create($data);
-        
+
         return $res->status(201)->json(['user' => $user]);
     }
 }
 
-// ✅ Registrar rotas com array callable v1.2.0
+// ✅ Registrar rotas com array callable
 $app->get('/users', [UserController::class, 'index']);
 $app->get('/users/:id<\d+>', [UserController::class, 'show']);    // Apenas números
 $app->post('/users', [UserController::class, 'store']);
@@ -200,10 +202,10 @@ $app->put('/users/:id', [UserController::class, 'update'])
     ->middleware($authMiddleware);
 ```
 
-#### ⚡ Validação Automática (v1.2.0)
+#### ⚡ Validação Automática
 
 ```php
-// O PivotPHP v1.2.0 valida automaticamente array callables:
+// O PivotPHP valida automaticamente array callables:
 
 // ✅ Método público - ACEITO
 class PublicController {
@@ -265,9 +267,9 @@ $response = OptimizedHttpFactory::createResponse();
 - ✅ **API Express.js** mantida para produtividade
 - ✅ **Zero breaking changes** - código existente funciona sem alterações
 
-### 🚀 JSON Optimization (v1.2.0 Intelligent System)
+### 🚀 JSON Optimization (Intelligent System)
 
-O PivotPHP v1.2.0 mantém o **threshold inteligente de 256 bytes** no sistema de otimização JSON, eliminando overhead para dados pequenos:
+O PivotPHP mantém o **threshold inteligente de 256 bytes** no sistema de otimização JSON, eliminando overhead para dados pequenos:
 
 #### ⚡ Sistema Inteligente Automático
 
@@ -275,7 +277,7 @@ O PivotPHP v1.2.0 mantém o **threshold inteligente de 256 bytes** no sistema de
 // ✅ OTIMIZAÇÃO AUTOMÁTICA - Zero configuração necessária
 $app->get('/api/users', function($req, $res) {
     $users = User::all();
-    
+
     // Sistema decide automaticamente:
     // • Poucos usuários (<256 bytes): json_encode() direto
     // • Muitos usuários (≥256 bytes): pooling automático
@@ -288,10 +290,10 @@ $app->get('/api/users', function($req, $res) {
 ```php
 // Dados pequenos (<256 bytes) - json_encode() direto
 $smallData = ['status' => 'ok', 'count' => 42];
-$json = JsonBufferPool::encodeWithPool($smallData); 
+$json = JsonBufferPool::encodeWithPool($smallData);
 // Performance: 500K+ ops/sec (sem overhead)
 
-// Dados médios (256 bytes - 10KB) - pooling automático  
+// Dados médios (256 bytes - 10KB) - pooling automático
 $mediumData = User::paginate(20);
 $json = JsonBufferPool::encodeWithPool($mediumData);
 // Performance: 119K+ ops/sec (15-30% ganho)
@@ -327,7 +329,7 @@ echo "Eficiência: {$stats['efficiency']}%\n";
 echo "Operações: {$stats['total_operations']}\n";
 ```
 
-#### ✨ Mantido v1.2.0
+#### ✨ Mantido v2.0.0
 
 - ✅ **Threshold Inteligente** - Elimina overhead para dados <256 bytes
 - ✅ **Detecção Automática** - Sistema decide quando usar pooling
@@ -336,7 +338,7 @@ echo "Operações: {$stats['total_operations']}\n";
 - ✅ **Monitoramento Integrado** - Estatísticas em tempo real
 - ✅ **Compatibilidade Total** - Drop-in replacement transparente
 
-### 🔍 Enhanced Error Diagnostics (v1.2.0)
+### 🔍 Enhanced Error Diagnostics
 
 PivotPHP v1.2.0 mantém **ContextualException** para diagnósticos avançados de erros:
 
@@ -367,7 +369,7 @@ try {
 ```php
 // Automaticamente detectadas pelo sistema
 ContextualException::CATEGORY_ROUTING      // Problemas de roteamento
-ContextualException::CATEGORY_PARAMETER    // Validação de parâmetros  
+ContextualException::CATEGORY_PARAMETER    // Validação de parâmetros
 ContextualException::CATEGORY_VALIDATION   // Validação de dados
 ContextualException::CATEGORY_MIDDLEWARE   // Problemas de middleware
 ContextualException::CATEGORY_HTTP         // Erros HTTP
@@ -402,9 +404,9 @@ ContextualException::configure([
 - ✅ **Segurança por Ambiente** - Detalhes reduzidos em produção
 - ✅ **Logging Integrado** - Registro automático para análise posterior
 
-📖 **Documentação completa:** 
+📖 **Documentação completa:**
 - [Array Callable Guide](docs/technical/routing/ARRAY_CALLABLE_GUIDE.md)
-- [JsonBufferPool Optimization Guide](docs/technical/json/BUFFER_POOL_OPTIMIZATION.md)  
+- [JsonBufferPool Optimization Guide](docs/technical/json/BUFFER_POOL_OPTIMIZATION.md)
 - [Enhanced Error Diagnostics](docs/technical/error-handling/CONTEXTUAL_EXCEPTION_GUIDE.md)
 
 ### 📖 Documentação OpenAPI/Swagger Automática (v1.2.0+)
@@ -735,9 +737,7 @@ Se você precisa de um framework com equipe dedicada e suporte empresarial, cons
 
 Junte-se à nossa comunidade crescente de desenvolvedores:
 
-- **Discord**: [Entre no nosso servidor](https://discord.gg/DMtxsP7z) - Obtenha ajuda, compartilhe ideias e conecte-se com outros desenvolvedores
 - **GitHub Discussions**: [Inicie uma discussão](https://github.com/PivotPHP/pivotphp-core/discussions) - Compartilhe feedback e ideias
-- **Twitter**: [@PivotPHP](https://twitter.com/pivotphp) - Siga para atualizações e anúncios
 
 ## 🤝 Como Contribuir
 

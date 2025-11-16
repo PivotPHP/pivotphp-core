@@ -11,7 +11,7 @@ Welcome to the complete documentation for **PivotPHP Core v1.1.4** - a high-perf
 
 ### Core Guides
 - **[Architecture Guide](guides/architecture.md)** - v1.1.3 architecture overview
-- **[Performance Guide](guides/performance.md)** - Optimization and benchmarks  
+- **[Performance Guide](guides/performance.md)** - Optimization and benchmarks
 - **[Testing Guide](guides/testing.md)** - Testing strategies and examples
 
 ### Reference Materials
@@ -50,7 +50,7 @@ scripts/quality/quality-check.sh    # Consolidated validation
 scripts/release/version-bump.sh     # Automatic version management
 ```
 
-### 📦 **Automatic Version Management**  
+### 📦 **Automatic Version Management**
 - **VERSION file requirement** - Single source of truth
 - **Automatic version detection** - No more hardcoded versions
 - **Strict validation** - X.Y.Z semantic versioning enforced
@@ -73,7 +73,7 @@ scripts/release/version-bump.sh     # Automatic version management
 - **Current Version**: v1.1.4 (Infrastructure Consolidation & Automation Edition)
 - **PHP Requirements**: 8.1+ with strict typing
 - **Production Ready**: Enterprise-grade quality with type safety
-- **Community**: [Discord](https://discord.gg/DMtxsP7z) | [GitHub](https://github.com/PivotPHP/pivotphp-core)
+- **Community**: [GitHub](https://github.com/PivotPHP)
 
 ## 🧩 Ecosystem
 
@@ -84,7 +84,6 @@ scripts/release/version-bump.sh     # Automatic version management
 ### Community Resources
 - **[Benchmarks Repository](https://github.com/PivotPHP/pivotphp-benchmarks)** - Performance testing
 - **[Examples Collection](examples/)** - Practical usage examples
-- **[Community Discord](https://discord.gg/DMtxsP7z)** - Support and discussion
 
 ## 📖 Technical Documentation
 
@@ -105,7 +104,7 @@ scripts/release/version-bump.sh     # Automatic version management
 
 Interested in contributing to PivotPHP Core? See our [Contributing Guide](contributing/README.md) for:
 - Development setup
-- Code style requirements  
+- Code style requirements
 - Testing procedures
 - Pull request process
 

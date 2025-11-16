@@ -2,13 +2,14 @@
 
 This directory contains production-ready examples that demonstrate the full potential of PivotPHP Core v1.2.0, including simplified performance mode and clean architecture.
 
-## 🎯 What's New in v1.2.0
+## 🎯 What's New in v2.0.0
 
-- **Simplified Performance**: Clean PerformanceMode following "Simplicidade sobre Otimização Prematura"
-- **Architectural Excellence**: Removed enterprise complexity, focused on microframework essentials
-- **100% Test Coverage**: All tests passing (1259 tests), comprehensive CI/CD pipeline
-- **Enhanced Documentation**: Updated examples and clear migration path
-- **100% Backward Compatibility**: All existing code continues to work via automatic aliases
+- **Legacy Cleanup**: 18% code reduction (11,871 lines removed)
+- **Modern Namespaces**: Eliminated 110 legacy aliases (PSR-15, Simple*, v1.1.x)
+- **Better Performance**: 59% fewer aliases to autoload
+- **Zero Regressions**: All 5,548 tests passing (100%)
+- **Breaking Changes**: Namespace updates required (see migration guide)
+- **Cleaner Architecture**: Removed deprecated classes and complex features
 
 ## 📁 Examples Structure
 
@@ -208,7 +209,6 @@ $app->get('/users/:id<\\d+>', function($req, $res) {
 
 ## 🆘 Support & Documentation
 
-- 💬 **Discord**: [Join our community](https://discord.gg/DMtxsP7z)
 - 📚 **Documentation**: [Complete guides](../docs/README.md)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 - 🚀 **Quick Start**: [5-minute setup guide](../docs/quick-start.md)
@@ -255,5 +255,5 @@ PerformanceMode::enable(PerformanceMode::PROFILE_PRODUCTION);
 
 ---
 
-**PivotPHP Core v1.2.0** - Express.js for PHP with simplified architecture! 🐘⚡  
+**PivotPHP Core v1.2.0** - Express.js for PHP with simplified architecture! 🐘⚡
 **Examples updated:** July 2025

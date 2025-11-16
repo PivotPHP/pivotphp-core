@@ -24,7 +24,7 @@ Este diretório contém a documentação completa de todas as versões do PivotP
 
 **Documentação específica:**
 - [📖 Release Notes](v1.1.4/RELEASE_NOTES.md)
-- [🔄 Migration Guide](v1.1.4/MIGRATION_GUIDE.md)  
+- [🔄 Migration Guide](v1.1.4/MIGRATION_GUIDE.md)
 - [📝 Detailed Changelog](v1.1.4/CHANGELOG.md)
 
 ## 📈 Histórico de Versões
@@ -119,7 +119,7 @@ Este diretório contém a documentação completa de todas as versões do PivotP
 - **v1.1.2** - Architecture consolidation
 - **v1.1.0** - Performance infrastructure
 
-### 📚 Documentation Releases  
+### 📚 Documentation Releases
 - **v1.1.3** - Examples & API reference
 - **v1.0.1** - Feature documentation
 
@@ -189,7 +189,6 @@ docs/releases/
 - [API Reference](../API_REFERENCE.md)
 
 ### Comunidade
-- [Discord](https://discord.gg/DMtxsP7z)
 - [GitHub Repository](https://github.com/PivotPHP/pivotphp-core)
 - [Packagist](https://packagist.org/packages/pivotphp/core)
 

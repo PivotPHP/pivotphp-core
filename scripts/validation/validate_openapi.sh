@@ -10,23 +10,23 @@ get_version() {
         echo "❌ PivotPHP Core requer um arquivo VERSION para identificação de versão"
         exit 1
     fi
-    
+
     local version
     version=$(cat VERSION | tr -d '\n')
-    
+
     if [ -z "$version" ]; then
         echo "❌ ERRO CRÍTICO: Arquivo VERSION está vazio ou inválido"
         echo "❌ Arquivo VERSION deve conter uma versão semântica válida (X.Y.Z)"
         exit 1
     fi
-    
+
     # Validate semantic version format
     if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "❌ ERRO CRÍTICO: Formato de versão inválido no arquivo VERSION: $version"
         echo "❌ Formato esperado: X.Y.Z (versionamento semântico)"
         exit 1
     fi
-    
+
     echo "$version"
 }
 
@@ -34,13 +34,9 @@ VERSION=$(get_version)
 echo "🔍 Validando recursos OpenAPI/Swagger do PivotPHP v$VERSION..."
 echo
 
-# Verificar se o OpenApiExporter existe
-if [ -f "src/Utils/OpenApiExporter.php" ]; then
-    echo "✅ OpenApiExporter encontrado"
-else
-    echo "❌ OpenApiExporter não encontrado"
-    exit 1
-fi
+# OpenApiExporter foi removido na v2.0.0
+# Use ApiDocumentationMiddleware para documentação automática
+echo "ℹ️  OpenApiExporter removido na v2.0.0 - use ApiDocumentationMiddleware"
 
 # Verificar se o exemplo OpenAPI existe
 if [ -f "examples/example_openapi_docs.php" ]; then
@@ -73,32 +69,24 @@ else
     echo "⚠️  Suporte para Swagger UI pode estar incompleto"
 fi
 
-# Verificar se o OpenApiExporter pode ser carregado
+# Verificar se ApiDocumentationMiddleware está disponível
 php -r "
 require_once 'vendor/autoload.php';
 try {
-    if (class_exists('PivotPHP\Core\\Utils\\OpenApiExporter')) {
-        echo '✅ OpenApiExporter pode ser carregado' . PHP_EOL;
-
-        // Testar método export básico
-        if (method_exists('PivotPHP\Core\\Utils\\OpenApiExporter', 'export')) {
-            echo '✅ Método export() disponível' . PHP_EOL;
-        } else {
-            echo '❌ Método export() não encontrado' . PHP_EOL;
-            exit(1);
-        }
+    if (class_exists('PivotPHP\Core\Middleware\Http\ApiDocumentationMiddleware')) {
+        echo '✅ ApiDocumentationMiddleware disponível (v2.0.0)' . PHP_EOL;
     } else {
-        echo '❌ OpenApiExporter não pode ser carregado' . PHP_EOL;
+        echo '❌ ApiDocumentationMiddleware não encontrado' . PHP_EOL;
         exit(1);
     }
 } catch (Exception \$e) {
-    echo '❌ Erro ao carregar OpenApiExporter: ' . \$e->getMessage() . PHP_EOL;
+    echo '❌ Erro ao verificar ApiDocumentationMiddleware: ' . \$e->getMessage() . PHP_EOL;
     exit(1);
 }
 "
 
 if [ $? -ne 0 ]; then
-    echo "❌ Falha na validação do OpenApiExporter"
+    echo "❌ Falha na validação do ApiDocumentationMiddleware"
     exit 1
 fi
 
@@ -147,17 +135,19 @@ if [ $? -ne 0 ]; then
 fi
 
 echo
-echo "🎉 Todos os recursos OpenAPI/Swagger estão funcionando corretamente!"
+echo "🎉 Recursos OpenAPI/Swagger validados (v2.0.0)!"
 echo
 echo "📋 Recursos validados:"
-echo "  ✓ OpenApiExporter disponível e funcional"
+echo "  ✓ ApiDocumentationMiddleware disponível"
 echo "  ✓ Exemplo completo com Swagger UI"
 echo "  ✓ Documentação no README atualizada"
-echo "  ✓ Geração de OpenAPI 3.0.0 funcional"
-echo "  ✓ Suporte para metadados de rotas"
+echo
+echo "ℹ️  Mudanças na v2.0.0:"
+echo "  • OpenApiExporter removido (deprecated)"
+echo "  • Use ApiDocumentationMiddleware para documentação automática"
 echo
 echo "🚀 Para testar manualmente:"
-echo "  1. Execute: php -S localhost:8080 examples/example_openapi_docs.php"
+echo "  1. Execute: php -S localhost:8080 examples/api_documentation_example.php"
 echo "  2. Acesse: http://localhost:8080/docs (Swagger UI)"
-echo "  3. Acesse: http://localhost:8080/docs/openapi.json (JSON spec)"
+echo "  3. Acesse: http://localhost:8080/openapi.json (JSON spec)"
 echo

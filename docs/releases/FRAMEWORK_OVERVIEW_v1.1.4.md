@@ -1,8 +1,8 @@
 # PivotPHP Core v1.1.4 - Framework Overview
 
-**Versão:** 1.1.4 (Script Consolidation & Infrastructure Optimization Edition)  
-**Data de Release:** Janeiro 2025  
-**Status:** Production Release  
+**Versão:** 1.1.4 (Script Consolidation & Infrastructure Optimization Edition)
+**Data de Release:** Janeiro 2025
+**Status:** Production Release
 
 ## 📋 Visão Geral
 
@@ -304,7 +304,6 @@ scripts/
 - **Preparação Release:** `scripts/release/prepare_release.sh`
 
 ### 🌐 Comunidade:
-- **Discord:** https://discord.gg/DMtxsP7z
 - **GitHub:** https://github.com/PivotPHP/pivotphp-core
 - **Packagist:** https://packagist.org/packages/pivotphp/core
 

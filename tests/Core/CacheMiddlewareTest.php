@@ -3,7 +3,7 @@
 namespace PivotPHP\Core\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Http\Psr15\Middleware\CacheMiddleware;
+use PivotPHP\Core\Middleware\Performance\CacheMiddleware;
 use PivotPHP\Core\Http\Psr7\ServerRequest;
 use PivotPHP\Core\Http\Psr7\Response;
 use Psr\Http\Server\RequestHandlerInterface;

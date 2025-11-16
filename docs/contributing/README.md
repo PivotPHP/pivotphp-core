@@ -565,8 +565,6 @@ Todos os contribuidores são reconhecidos:
 
 - **GitHub Issues**: Para bugs e feature requests
 - **GitHub Discussions**: Para discussões gerais
-- **Email**: contato@pivotphp-core.com
-- **Discord**: [Link do servidor]
 
 ### Documentação Útil
 

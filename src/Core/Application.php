@@ -16,6 +16,7 @@ use PivotPHP\Core\Providers\EventServiceProvider;
 use PivotPHP\Core\Providers\LoggingServiceProvider;
 use PivotPHP\Core\Providers\HookServiceProvider;
 use PivotPHP\Core\Providers\ExtensionServiceProvider;
+use PivotPHP\Core\Providers\RoutingServiceProvider;
 use PivotPHP\Core\Support\HookManager;
 use PivotPHP\Core\Events\ApplicationStarted;
 use PivotPHP\Core\Events\RequestReceived;
@@ -40,7 +41,7 @@ class Application
     /**
      * Versão do framework.
      */
-    public const VERSION = '1.2.0';
+    public const VERSION = '2.0.0';
 
     /**
      * Container de dependências PSR-11.
@@ -88,6 +89,7 @@ class Application
         LoggingServiceProvider::class,
         HookServiceProvider::class,
         ExtensionServiceProvider::class,
+        RoutingServiceProvider::class,
     ];
 
     /**
@@ -543,29 +545,6 @@ class Application
     }
 
     /**
-     * Registra uma rota estática pré-compilada (apenas GET).
-     *
-     * Esta é a implementação simplificada da pré-compilação, onde o desenvolvedor
-     * DECLARA explicitamente que a rota é estática, eliminando complexidade
-     * de análise automática.
-     *
-     * @param  string   $path    Caminho da rota
-     * @param  callable $handler Handler que DEVE retornar dados estáticos
-     * @param  array    $options Opções adicionais
-     * @return $this
-     */
-    public function static(string $path, callable $handler, array $options = []): self
-    {
-        // Importa StaticRouteManager apenas quando necessário
-        $optimizedHandler = \PivotPHP\Core\Routing\StaticRouteManager::register($path, $handler, $options);
-
-        // Registra como rota GET com handler otimizado
-        $this->router->get($path, $optimizedHandler);
-
-        return $this;
-    }
-
-    /**
      * Registra arquivos específicos como rotas estáticas.
      *
      * Abordagem direta: registra cada arquivo encontrado como uma rota individual.
@@ -800,18 +779,18 @@ class Application
         // Determinar status code
         $statusCode = $e instanceof HttpException ? $e->getStatusCode() : 500;
 
-        $response->status($statusCode);
-
         if ($debug) {
-            return $response->json(
-                [
-                    'error' => true,
-                    'message' => $e->getMessage(),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString()
-                ]
-            );
+            return $response
+                ->status($statusCode)
+                ->json(
+                    [
+                        'error' => true,
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
+                    ]
+                );
         } else {
             // Em produção, gerar ID único para o erro e logar detalhes
             $errorId = uniqid('err_', true);
@@ -819,13 +798,15 @@ class Application
             // Log detalhado para análise posterior
             $this->logException($e, $errorId);
 
-            return $response->json(
-                [
-                    'error' => true,
-                    'message' => $statusCode === 404 ? 'Not Found' : 'Internal Server Error',
-                    'error_id' => $errorId
-                ]
-            );
+            return $response
+                ->status($statusCode)
+                ->json(
+                    [
+                        'error' => true,
+                        'message' => $statusCode === 404 ? 'Not Found' : 'Internal Server Error',
+                        'error_id' => $errorId
+                    ]
+                );
         }
     }
 

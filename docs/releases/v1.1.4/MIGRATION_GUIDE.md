@@ -1,9 +1,9 @@
 # Migration Guide - PivotPHP Core v1.1.4
 
-**From:** v1.1.3 and earlier  
-**To:** v1.1.4  
-**Migration Type:** Infrastructure (Non-Breaking)  
-**Effort:** Low (mostly optional)  
+**From:** v1.1.3 and earlier
+**To:** v1.1.4
+**Migration Type:** Infrastructure (Non-Breaking)
+**Effort:** Low (mostly optional)
 
 ## 🎯 Migration Overview
 
@@ -302,7 +302,6 @@ git push origin feature/test-migration
 - **Release Overview:** `docs/releases/FRAMEWORK_OVERVIEW_v1.1.4.md`
 
 ### Community:
-- **Discord:** https://discord.gg/DMtxsP7z
 - **GitHub Issues:** https://github.com/PivotPHP/pivotphp-core/issues
 - **GitHub Discussions:** https://github.com/PivotPHP/pivotphp-core/discussions
 
@@ -311,7 +310,7 @@ If you encounter migration issues:
 1. Check this guide first
 2. Review error messages (now in Portuguese for clarity)
 3. Consult updated documentation
-4. Ask in Discord community
+4. Ask in GitHub Discussions
 5. Create GitHub issue if needed
 
 ---

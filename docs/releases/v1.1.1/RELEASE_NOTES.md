@@ -1,7 +1,7 @@
 # PivotPHP Core v1.1.1 - JSON Optimization Edition
 
-**Release Date:** July 10, 2025  
-**Type:** Minor Release (Performance Enhancement)  
+**Release Date:** July 10, 2025
+**Type:** Minor Release (Performance Enhancement)
 **Compatibility:** 100% Backward Compatible
 
 ## 🚀 Overview
@@ -11,7 +11,7 @@ PivotPHP Core v1.1.1 introduces a revolutionary JSON optimization system that dr
 ## 📊 Performance Highlights
 
 - **101,000+ operations/second** sustained JSON processing
-- **100% buffer reuse rate** in high-frequency scenarios  
+- **100% buffer reuse rate** in high-frequency scenarios
 - **70% reduction** in garbage collection pressure
 - **Zero configuration** required - automatic optimization
 - **Zero breaking changes** - all existing code continues working
@@ -265,15 +265,15 @@ $app->get('/api/users', function($req, $res) {
 // Streaming data endpoint
 $app->get('/api/metrics', function($req, $res) {
     $buffer = JsonBufferPool::getBuffer(32768);
-    
+
     try {
         $buffer->append('{"metrics":[');
-        
+
         foreach ($this->streamMetrics() as $i => $metric) {
             if ($i > 0) $buffer->append(',');
             $buffer->appendJson($metric);
         }
-        
+
         $buffer->append(']}');
         return $res->setBody($buffer->finalize());
     } finally {
@@ -303,16 +303,16 @@ $app->get('/api/metrics', function($req, $res) {
 ```php
 function monitorJsonPool() {
     $stats = JsonBufferPool::getStatistics();
-    
+
     // Alert thresholds
     if ($stats['reuse_rate'] < 50 && $stats['total_operations'] > 1000) {
         alert("Low JSON pool efficiency: {$stats['reuse_rate']}%");
     }
-    
+
     if ($stats['current_usage'] > 1000) {
         alert("High JSON pool memory usage");
     }
-    
+
     return $stats;
 }
 ```
@@ -379,8 +379,7 @@ The implementation maintains PivotPHP's core principles:
 
 ## 📞 Support
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/PivotPHP/pivotphp-core/issues)
-- **Discord Community**: [Join our community](https://discord.gg/DMtxsP7z)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/PivotPHP)
 - **Documentation**: [Complete guides and API reference](../../)
 
 ---

@@ -3,7 +3,7 @@
 namespace PivotPHP\Core\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Http\Psr15\Middleware\SecurityHeadersMiddleware;
+use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
 use PivotPHP\Core\Http\Psr7\ServerRequest;
 use PivotPHP\Core\Http\Psr7\Response;
 use Psr\Http\Server\RequestHandlerInterface;

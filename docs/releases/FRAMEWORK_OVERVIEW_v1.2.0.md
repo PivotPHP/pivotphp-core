@@ -51,13 +51,7 @@ src/
 └── Utils/                  # Helper utilities
 ```
 
-### **Deprecated/Legacy**
-```
-src/Legacy/
-├── Performance/            # HighPerformanceMode (deprecated)
-├── Middleware/            # Complex middleware (deprecated)
-└── Utils/                 # Legacy utilities
-```
+**Nota**: O diretório `src/Legacy/` foi removido na v2.0.0. Classes legacy foram completamente eliminadas em favor de implementações simplificadas.
 
 ## 🔧 Performance Mode (Simplified)
 

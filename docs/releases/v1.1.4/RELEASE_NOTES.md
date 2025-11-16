@@ -1,9 +1,9 @@
 # PivotPHP Core v1.1.4 - Release Notes
 
-**Release Date:** Janeiro 2025  
-**Type:** Infrastructure Optimization Release  
-**Breaking Changes:** None  
-**Migration Required:** Optional (recommended)  
+**Release Date:** Janeiro 2025
+**Type:** Infrastructure Optimization Release
+**Breaking Changes:** None
+**Migration Required:** Optional (recommended)
 
 ## 🎯 Release Highlights
 
@@ -175,7 +175,6 @@ This release represents a significant infrastructure improvement that will benef
 - **Versioning Guide:** `docs/VERSIONING_GUIDE.md`
 - **Script Reference:** `scripts/README.md`
 - **Migration Guide:** `docs/MIGRATION_v114.md`
-- **Community:** [Discord](https://discord.gg/DMtxsP7z)
 
 ---
 
