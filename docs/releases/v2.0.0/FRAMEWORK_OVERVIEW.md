@@ -611,7 +611,7 @@ use PivotPHP\Core\Middleware\CorsMiddleware;
 - **Release Notes:** [RELEASE_NOTES.md](RELEASE_NOTES.md)
 - **Changelog:** [CHANGELOG.md](../../CHANGELOG.md)
 - **Examples:** [examples/](../../examples/)
-- **GitHub Issues:** [github.com/HelixPHP/helixphp-core/issues](https://github.com/HelixPHP/helixphp-core/issues)
+- **GitHub Issues:** [github.com/PivotPHP/pivotphp-core/issues](https://github.com/PivotPHP/pivotphp-core/issues)
 
 ---
 

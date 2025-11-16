@@ -7,7 +7,7 @@ O PivotPHP Core segue rigorosamente o **Versionamento Semântico (SemVer)** no f
 ```
 X.Y.Z
 │ │ └─── PATCH: Correções de bugs (compatível com versões anteriores)
-│ └───── MINOR: Novas funcionalidades (compatível com versões anteriores)  
+│ └───── MINOR: Novas funcionalidades (compatível com versões anteriores)
 └─────── MAJOR: Mudanças incompatíveis (quebra compatibilidade)
 ```
 
@@ -39,7 +39,7 @@ Incremente o número MAJOR quando fizer mudanças **incompatíveis** com versõe
 1. **Documentar breaking changes** detalhadamente
 2. **Criar guia de migração** (`MIGRATION_v2.0.0.md`)
 3. **Deprecar funcionalidades** por pelo menos 1 versão MINOR antes
-4. **Avisar a comunidade** com antecedência (Discord, GitHub)
+4. **Avisar a comunidade** com antecedência (GitHub)
 5. **Testar intensivamente** todas as mudanças
 
 ---
@@ -115,7 +115,7 @@ O PivotPHP Core inclui um script automatizado para gerenciar versões:
 # Incrementar PATCH (1.1.4 → 1.1.5)
 scripts/release/version-bump.sh patch
 
-# Incrementar MINOR (1.1.4 → 1.2.0)  
+# Incrementar MINOR (1.1.4 → 1.2.0)
 scripts/release/version-bump.sh minor
 
 # Incrementar MAJOR (1.1.4 → 2.0.0)
@@ -196,7 +196,7 @@ Confirma o bump de 1.1.4 para 1.1.5? (y/N): y
 ### Para MINOR e MAJOR:
 
 #### ✅ Comunicação:
-- [ ] Anunciar no Discord da comunidade
+- [ ] Anunciar no GitHub da comunidade
 - [ ] Criar release notes detalhadas
 - [ ] Atualizar roadmap (se aplicável)
 
@@ -284,7 +284,6 @@ git push origin main --tags
 - `scripts/quality/quality-check.sh` - Validação de qualidade
 
 ### Comunidade:
-- [Discord PivotPHP](https://discord.gg/DMtxsP7z)
 - [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 - [GitHub Discussions](https://github.com/PivotPHP/pivotphp-core/discussions)
 

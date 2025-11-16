@@ -1,9 +1,9 @@
 # 🚀 PivotPHP Core v1.2.0 - Simplicity Edition
 ## "Simplicidade sobre Otimização Prematura"
 
-**Data de Lançamento**: 21 de Julho de 2025  
-**Versão**: 1.2.0 (Simplicity Edition)  
-**Compatibilidade**: PHP 8.1+ | 100% Backward Compatible  
+**Data de Lançamento**: 21 de Julho de 2025
+**Versão**: 1.2.0 (Simplicity Edition)
+**Compatibilidade**: PHP 8.1+ | 100% Backward Compatible
 **Status**: Estável para uso em produção
 
 ---
@@ -35,7 +35,7 @@ use PivotPHP\Core\Middleware\Http\ApiDocumentationMiddleware;
 // Ativar documentação automática em 3 linhas
 $app->use(new ApiDocumentationMiddleware([
     'docs_path' => '/docs',        // JSON OpenAPI 3.0.0
-    'swagger_path' => '/swagger',  // Interface Swagger UI  
+    'swagger_path' => '/swagger',  // Interface Swagger UI
     'base_url' => 'http://localhost:8080'
 ]));
 
@@ -292,13 +292,12 @@ A versão 1.2.0 "Simplicity Edition" marca um momento de maturidade do PivotPHP 
 ## 📞 **Suporte e Comunidade**
 
 - **📚 Documentação**: [GitHub Wiki](https://github.com/PivotPHP/pivotphp-core/wiki)
-- **💬 Discord**: [Comunidade PivotPHP](https://discord.gg/DMtxsP7z)
 - **🐛 Issues**: [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 - **📖 Examples**: [Diretório examples/](examples/) com 11 exemplos práticos
 - **🎓 Tutoriais**: [docs/](docs/) com guias detalhados
 
 ---
 
-**PivotPHP v1.2.0 - Onde simplicidade encontra performance. Onde produtividade encontra qualidade. Onde desenvolvedores encontram felicidade.** 
+**PivotPHP v1.2.0 - Onde simplicidade encontra performance. Onde produtividade encontra qualidade. Onde desenvolvedores encontram felicidade.**
 
 🚀 **Happy Coding!**

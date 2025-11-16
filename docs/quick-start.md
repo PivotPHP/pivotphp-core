@@ -72,14 +72,14 @@ curl -X POST -H "Content-Type: application/json" \
 Use array callables with PHP 8.4+ compatibility:
 
 ```php
-class UserController 
+class UserController
 {
-    public function index($req, $res) 
+    public function index($req, $res)
     {
         return $res->json(['users' => User::all()]);
     }
-    
-    public function show($req, $res) 
+
+    public function show($req, $res)
     {
         $id = $req->param('id');
         return $res->json(['user' => User::find($id)]);
@@ -133,7 +133,7 @@ PivotPHP supports powerful routing patterns:
 // Basic parameters
 $app->get('/users/:id', $handler);
 
-// Regex constraints  
+// Regex constraints
 $app->get('/users/:id<\\d+>', $handler);           // Only numeric IDs
 $app->get('/posts/:slug<[a-z0-9-]+>', $handler);   // Slug format
 
@@ -206,7 +206,7 @@ use PivotPHP\Core\Core\Application;
 class BasicTest extends TestCase
 {
     private Application $app;
-    
+
     protected function setUp(): void
     {
         $this->app = new Application();
@@ -214,7 +214,7 @@ class BasicTest extends TestCase
             return $res->json(['status' => 'ok']);
         });
     }
-    
+
     public function testBasicRoute(): void
     {
         // Test implementation here
@@ -258,7 +258,6 @@ $app->use(new CorsMiddleware(['allowed_origins' => ['*']]));
 ## 🆘 Suporte e Aprendizado
 
 - **[Documentação](README.md)** - Documentação completa
-- **[Discord Community](https://discord.gg/DMtxsP7z)** - Suporte em tempo real
 - **[GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)** - Relatar problemas e sugerir melhorias
 - **[Examples Repository](examples/)** - Exemplos práticos para aprendizado
 

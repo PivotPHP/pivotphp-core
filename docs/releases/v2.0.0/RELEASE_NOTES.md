@@ -344,7 +344,7 @@ Building on the clean foundation of v2.0.0, we plan to:
 ## 📞 Support
 
 - **Documentation:** [docs/](../)
-- **Issues:** [GitHub Issues](https://github.com/HelixPHP/helixphp-core/issues)
+- **Issues:** [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 - **Migration Help:** [MIGRATION_GUIDE_v2.0.0.md](MIGRATION_GUIDE_v2.0.0.md)
 - **Changelog:** [CHANGELOG.md](../../CHANGELOG.md)
 

@@ -1,7 +1,7 @@
 # PivotPHP Core - API Reference
 
-**Version:** 1.2.0  
-**Last Updated:** July 2025  
+**Version:** 1.2.0
+**Last Updated:** July 2025
 
 > ⚠️ **Nota**: Este projeto é mantido por apenas uma pessoa e pode não receber atualizações constantemente. Ideal para provas de conceito, protótipos e estudos, mas não recomendado para aplicações críticas de produção.
 
@@ -118,7 +118,7 @@ $app->get('/protected', $authMiddleware, function ($req, $res) {
 
 #### Multiple Middleware
 ```php
-$app->post('/api/data', 
+$app->post('/api/data',
     $corsMiddleware,
     $authMiddleware,
     $validationMiddleware,
@@ -273,7 +273,7 @@ $app->get('/users', 'getUsersHandler');
 #### String Format (Does NOT work)
 ```php
 // This will cause a TypeError!
-$app->get('/users', 'UserController@index'); 
+$app->get('/users', 'UserController@index');
 ```
 
 **Use this instead:**
@@ -299,7 +299,7 @@ PerformanceMode::disable();
 
 **Performance Profiles:**
 - `PROFILE_DEVELOPMENT` - Development optimization
-- `PROFILE_PRODUCTION` - Production optimization  
+- `PROFILE_PRODUCTION` - Production optimization
 - `PROFILE_TEST` - Test optimization
 
 ### JSON Optimization (v1.1.1+)
@@ -321,7 +321,7 @@ $stats = JsonBufferPool::getStatistics();
 
 **Automatic Optimization:**
 - Arrays with 10+ elements use pooling
-- Objects with 5+ properties use pooling  
+- Objects with 5+ properties use pooling
 - Strings >1KB use pooling
 - Smaller data uses traditional `json_encode()`
 
@@ -331,11 +331,11 @@ $stats = JsonBufferPool::getStatistics();
 ```php
 $middleware = function ($req, $res, $next) {
     // Pre-processing
-    
+
     $response = $next($req, $res); // Continue to next middleware
-    
+
     // Post-processing
-    
+
     return $response;
 };
 ```
@@ -346,7 +346,7 @@ $authMiddleware = function ($req, $res, $next) {
     if (!$req->header('Authorization')) {
         return $res->status(401)->json(['error' => 'Unauthorized']);
     }
-    
+
     return $next($req, $res);
 };
 ```
@@ -356,13 +356,13 @@ $authMiddleware = function ($req, $res, $next) {
 $enrichMiddleware = function ($req, $res, $next) {
     // Add data to request
     $req->startTime = microtime(true);
-    
+
     $response = $next($req, $res);
-    
+
     // Add headers to response
     $duration = microtime(true) - $req->startTime;
     $res->header('X-Response-Time', $duration . 'ms');
-    
+
     return $response;
 };
 ```
@@ -460,7 +460,7 @@ Application::VERSION  // Current version string
 
 Complete working examples are available in the `/examples` directory:
 - **01-basics** - Hello World, CRUD, Request/Response, JSON API
-- **02-routing** - Regex, Parameters, Groups, Constraints  
+- **02-routing** - Regex, Parameters, Groups, Constraints
 - **03-middleware** - Custom, Stack, Auth, CORS
 - **04-api** - RESTful API with pagination and validation
 - **05-performance** - High-performance mode demonstrations
@@ -488,7 +488,6 @@ Complete working examples are available in the `/examples` directory:
 
 ## Community & Support
 
-- **Discord**: https://discord.gg/DMtxsP7z
 - **GitHub**: https://github.com/PivotPHP/pivotphp-core
 - **Issues**: https://github.com/PivotPHP/pivotphp-core/issues
 - **Examples**: Ready-to-run examples in `/examples` directory

@@ -19,8 +19,8 @@ This comprehensive guide showcases all available examples in the PivotPHP Core f
 ### 01-basics - Foundation Examples
 
 #### hello-world.php
-**Purpose**: Simplest possible PivotPHP application  
-**Features**: Basic routing, JSON response  
+**Purpose**: Simplest possible PivotPHP application
+**Features**: Basic routing, JSON response
 **Run**: `php -S localhost:8000 examples/01-basics/hello-world.php`
 
 ```php
@@ -32,8 +32,8 @@ $app->run();
 ```
 
 #### basic-routes.php
-**Purpose**: Complete CRUD operations  
-**Features**: GET, POST, PUT, DELETE methods  
+**Purpose**: Complete CRUD operations
+**Features**: GET, POST, PUT, DELETE methods
 **Run**: `php -S localhost:8000 examples/01-basics/basic-routes.php`
 
 ```bash
@@ -50,20 +50,20 @@ curl -X DELETE http://localhost:8000/users/1               # DELETE
 ```
 
 #### request-response.php
-**Purpose**: Advanced Request/Response handling  
-**Features**: Headers, body parsing, parameter extraction  
+**Purpose**: Advanced Request/Response handling
+**Features**: Headers, body parsing, parameter extraction
 **Run**: `php -S localhost:8000 examples/01-basics/request-response.php`
 
 #### json-api.php
-**Purpose**: JSON API with validation  
-**Features**: Structured responses, error handling  
+**Purpose**: JSON API with validation
+**Features**: Structured responses, error handling
 **Run**: `php -S localhost:8000 examples/01-basics/json-api.php`
 
 ### 02-routing - Advanced Routing
 
 #### regex-routing.php
-**Purpose**: Custom regex route patterns  
-**Features**: Parameter validation, custom constraints  
+**Purpose**: Custom regex route patterns
+**Features**: Parameter validation, custom constraints
 **Run**: `php -S localhost:8000 examples/02-routing/regex-routing.php`
 
 ```bash
@@ -73,23 +73,23 @@ curl http://localhost:8000/api/v1/posts/2024/01/15        # Date format
 ```
 
 #### route-parameters.php
-**Purpose**: Parameter handling and query strings  
-**Features**: Required/optional params, wildcards  
+**Purpose**: Parameter handling and query strings
+**Features**: Required/optional params, wildcards
 **Run**: `php -S localhost:8000 examples/02-routing/route-parameters.php`
 
 #### route-groups.php
-**Purpose**: Route grouping with shared middleware  
-**Features**: Group prefixes, middleware inheritance  
+**Purpose**: Route grouping with shared middleware
+**Features**: Group prefixes, middleware inheritance
 **Run**: `php -S localhost:8000 examples/02-routing/route-groups.php`
 
 #### route-constraints.php
-**Purpose**: Advanced parameter constraints  
-**Features**: Custom validation, error handling  
+**Purpose**: Advanced parameter constraints
+**Features**: Custom validation, error handling
 **Run**: `php -S localhost:8000 examples/02-routing/route-constraints.php`
 
 #### static-files.php
-**Purpose**: Demonstrates both static file serving and optimized static routes  
-**Features**: `$app->staticFiles()` for file serving, `$app->static()` for pre-compiled responses  
+**Purpose**: Demonstrates both static file serving and optimized static routes
+**Features**: `$app->staticFiles()` for file serving, `$app->static()` for pre-compiled responses
 **Run**: `php -S localhost:8000 examples/02-routing/static-files.php`
 
 ```bash
@@ -106,30 +106,30 @@ curl http://localhost:8000/static-info                  # Implementation details
 ### 03-middleware - Middleware Systems
 
 #### custom-middleware.php
-**Purpose**: Building custom middleware  
-**Features**: Logging, validation, transformation  
+**Purpose**: Building custom middleware
+**Features**: Logging, validation, transformation
 **Run**: `php -S localhost:8000 examples/03-middleware/custom-middleware.php`
 
 #### middleware-stack.php
-**Purpose**: Complex middleware stacks  
-**Features**: Execution order, pipeline management  
+**Purpose**: Complex middleware stacks
+**Features**: Execution order, pipeline management
 **Run**: `php -S localhost:8000 examples/03-middleware/middleware-stack.php`
 
 #### auth-middleware.php
-**Purpose**: Authentication systems  
-**Features**: JWT, API Key, Session, Basic Auth  
+**Purpose**: Authentication systems
+**Features**: JWT, API Key, Session, Basic Auth
 **Run**: `php -S localhost:8000 examples/03-middleware/auth-middleware.php`
 
 #### cors-middleware.php
-**Purpose**: CORS configuration  
-**Features**: Dynamic policies, preflight handling  
+**Purpose**: CORS configuration
+**Features**: Dynamic policies, preflight handling
 **Run**: `php -S localhost:8000 examples/03-middleware/cors-middleware.php`
 
 ### 04-api - Complete API Examples
 
 #### rest-api.php
-**Purpose**: Production-ready RESTful API  
-**Features**: Pagination, filtering, validation, error handling  
+**Purpose**: Production-ready RESTful API
+**Features**: Pagination, filtering, validation, error handling
 **Run**: `php -S localhost:8000 examples/04-api/rest-api.php`
 
 ```bash
@@ -144,8 +144,8 @@ curl -X POST http://localhost:8000/api/v1/products \
 ### 05-performance - Performance Optimization
 
 #### high-performance.php
-**Purpose**: Performance features showcase  
-**Features**: Object pooling, JSON optimization, monitoring  
+**Purpose**: Performance features showcase
+**Features**: Object pooling, JSON optimization, monitoring
 **Run**: `php -S localhost:8000 examples/05-performance/high-performance.php`
 
 ```bash
@@ -157,8 +157,8 @@ curl http://localhost:8000/performance/json-test
 ### 06-security - Security Features
 
 #### jwt-auth.php
-**Purpose**: Complete JWT authentication system  
-**Features**: Login, refresh tokens, protected routes  
+**Purpose**: Complete JWT authentication system
+**Features**: Login, refresh tokens, protected routes
 **Run**: `php -S localhost:8000 examples/06-security/jwt-auth.php`
 
 ```bash
@@ -175,8 +175,8 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ### 07-advanced - v1.1.3 New Features ✨
 
 #### array-callables.php
-**Purpose**: Array callable syntax demonstration  
-**Features**: Instance methods, static methods, controller organization  
+**Purpose**: Array callable syntax demonstration
+**Features**: Instance methods, static methods, controller organization
 **Run**: `php -S localhost:8000 examples/07-advanced/array-callables.php`
 
 ```php
@@ -201,8 +201,8 @@ curl -X POST http://localhost:8000/users \
 ```
 
 #### performance-v1.1.3.php
-**Purpose**: v1.1.3 performance improvements showcase  
-**Features**: +116% framework improvement, object pool metrics  
+**Purpose**: v1.1.3 performance improvements showcase
+**Features**: +116% framework improvement, object pool metrics
 **Run**: `php -S localhost:8000 examples/07-advanced/performance-v1.1.3.php`
 
 ```bash
@@ -217,23 +217,23 @@ curl http://localhost:8000/performance/benchmark           # Framework compariso
 ## 🎯 Use Case Examples
 
 ### Quick Prototyping
-**Start with**: hello-world.php → basic-routes.php  
-**Time**: 5-10 minutes  
+**Start with**: hello-world.php → basic-routes.php
+**Time**: 5-10 minutes
 **Use case**: Rapid API prototyping
 
 ### Production API
-**Path**: basic-routes.php → rest-api.php → jwt-auth.php  
-**Time**: 1-2 hours  
+**Path**: basic-routes.php → rest-api.php → jwt-auth.php
+**Time**: 1-2 hours
 **Use case**: Full-featured production API
 
 ### High Performance Application
-**Path**: high-performance.php → performance-v1.1.3.php  
-**Time**: 30 minutes  
+**Path**: high-performance.php → performance-v1.1.3.php
+**Time**: 30 minutes
 **Use case**: Performance-critical applications
 
 ### Modern PHP Development
-**Path**: array-callables.php  
-**Time**: 15 minutes  
+**Path**: array-callables.php
+**Time**: 15 minutes
 **Use case**: Clean, modern PHP 8.4+ syntax
 
 ## 📊 Performance Examples Summary
@@ -246,7 +246,7 @@ curl http://localhost:8000/performance/benchmark           # Framework compariso
 
 ### JSON Optimization
 - **Small datasets**: 505K ops/sec
-- **Medium datasets**: 119K ops/sec  
+- **Medium datasets**: 119K ops/sec
 - **Large datasets**: 214K ops/sec
 - **Demo**: performance-v1.1.3.php → /performance/json/{size}
 
@@ -338,10 +338,9 @@ curl -X POST http://localhost:8000/api/endpoint \
 
 ### Getting Help
 - **Example not working?** Check the inline comments for setup instructions
-- **Need clarification?** Join our [Discord community](https://discord.gg/DMtxsP7z)
 - **Found a bug?** [Report on GitHub](https://github.com/PivotPHP/pivotphp-core/issues)
 
 ---
 
-**Total Examples**: 17 comprehensive examples covering all framework features  
+**Total Examples**: 17 comprehensive examples covering all framework features
 **Updated for**: PivotPHP Core v1.1.3 with latest performance improvements

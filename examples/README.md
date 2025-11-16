@@ -209,7 +209,6 @@ $app->get('/users/:id<\\d+>', function($req, $res) {
 
 ## 🆘 Support & Documentation
 
-- 💬 **Discord**: [Join our community](https://discord.gg/DMtxsP7z)
 - 📚 **Documentation**: [Complete guides](../docs/README.md)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 - 🚀 **Quick Start**: [5-minute setup guide](../docs/quick-start.md)

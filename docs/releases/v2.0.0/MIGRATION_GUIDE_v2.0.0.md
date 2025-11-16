@@ -579,7 +579,7 @@ Need help with migration?
 
 1. **Check examples**: `examples/` directory has updated code
 2. **Review changelog**: Complete list of changes
-3. **Ask community**: [Discord](https://discord.gg/DMtxsP7z)
+3. **Ask community**: [GitHub Discussions](https://github.com/PivotPHP/pivotphp-core/discussions)
 4. **Create issue**: [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 
 ---

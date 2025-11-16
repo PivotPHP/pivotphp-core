@@ -737,9 +737,7 @@ Se você precisa de um framework com equipe dedicada e suporte empresarial, cons
 
 Junte-se à nossa comunidade crescente de desenvolvedores:
 
-- **Discord**: [Entre no nosso servidor](https://discord.gg/DMtxsP7z) - Obtenha ajuda, compartilhe ideias e conecte-se com outros desenvolvedores
 - **GitHub Discussions**: [Inicie uma discussão](https://github.com/PivotPHP/pivotphp-core/discussions) - Compartilhe feedback e ideias
-- **Twitter**: [@PivotPHP](https://twitter.com/pivotphp) - Siga para atualizações e anúncios
 
 ## 🤝 Como Contribuir
 

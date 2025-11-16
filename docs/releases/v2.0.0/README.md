@@ -199,7 +199,7 @@ docs/releases/v2.0.0/
 
 1. Check: [Troubleshooting Guide](RELEASE_NOTES.md#troubleshooting)
 2. Review: [Common Issues](MIGRATION_GUIDE_v2.0.0.md#troubleshooting)
-3. Search: [GitHub Issues](https://github.com/HelixPHP/helixphp-core/issues)
+3. Search: [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 
 ### "I want to plan migration timeline"
 
@@ -261,9 +261,9 @@ docs/releases/v2.0.0/
 
 ## 🔗 External Resources
 
-- **Main Repository:** [github.com/HelixPHP/helixphp-core](https://github.com/HelixPHP/helixphp-core)
+- **Main Repository:** [github.com/PivotPHP/pivotphp-core](https://github.com/PivotPHP/pivotphp-core)
 - **Packagist:** [packagist.org/packages/pivotphp/core](https://packagist.org/packages/pivotphp/core)
-- **Issue Tracker:** [GitHub Issues](https://github.com/HelixPHP/helixphp-core/issues)
+- **Issue Tracker:** [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 - **Main Changelog:** [CHANGELOG.md](../../CHANGELOG.md)
 - **Examples:** [examples/](../../examples/)
 
@@ -275,7 +275,7 @@ docs/releases/v2.0.0/
 
 1. **Documentation:** Read this documentation set thoroughly
 2. **Examples:** Check [examples/](../../examples/) for working code
-3. **Issues:** Search [existing issues](https://github.com/HelixPHP/helixphp-core/issues)
+3. **Issues:** Search [existing issues](https://github.com/PivotPHP/pivotphp-core/issues)
 4. **New Issue:** Open issue with [migration] tag
 
 ### Reporting Bugs
@@ -283,7 +283,7 @@ docs/releases/v2.0.0/
 If you encounter issues during migration:
 
 1. Check [Troubleshooting Guide](RELEASE_NOTES.md#troubleshooting)
-2. Search [GitHub Issues](https://github.com/HelixPHP/helixphp-core/issues)
+2. Search [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
 3. Open new issue with:
    - PHP version
    - PivotPHP version (before/after)

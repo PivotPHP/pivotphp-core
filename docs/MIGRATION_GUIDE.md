@@ -55,7 +55,6 @@ If you encounter migration issues:
 1. **Check the specific migration guide** for your version
 2. **Review error messages** (now in Portuguese for clarity)
 3. **Consult the troubleshooting section** in the migration guide
-4. **Ask in Discord community**: https://discord.gg/DMtxsP7z
 5. **Create GitHub issue**: https://github.com/PivotPHP/pivotphp-core/issues
 
 ---
