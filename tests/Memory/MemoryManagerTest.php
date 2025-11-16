@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Memory;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Memory\MemoryManager;
-use PivotPHP\Core\Http\Pool\DynamicPoolManager;
+use PivotPHP\Core\Http\Pool\PoolManager;
 
 /**
  * Comprehensive test suite for MemoryManager class
@@ -267,7 +267,7 @@ class MemoryManagerTest extends TestCase
     public function testPoolIntegration(): void
     {
         // Create mock pool manager
-        $poolManager = $this->createMock(DynamicPoolManager::class);
+        $poolManager = $this->createMock(PoolManager::class);
         $poolManager->method('getStats')->willReturn(
             [
                 'config' => [
@@ -290,7 +290,7 @@ class MemoryManagerTest extends TestCase
 
     public function testPoolAdjustmentOnPressureChange(): void
     {
-        $poolManager = $this->createMock(DynamicPoolManager::class);
+        $poolManager = $this->createMock(PoolManager::class);
         $poolManager->method('getStats')->willReturn(
             [
                 'config' => [

@@ -4,19 +4,21 @@
 
 **For detailed migration instructions, please refer to the official release documentation:**
 
-### 🔄 Latest Version: v1.1.4
-**[Complete Migration Guide →](releases/v1.1.4/MIGRATION_GUIDE.md)**
+### 🔄 Latest Version: v2.0.0 ⚠️ BREAKING RELEASE
+**[Complete Migration Guide →](releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md)**
 
 **Migration highlights:**
-- **🔧 Infrastructure Consolidation**: 40% script reduction (25 → 15)
-- **📦 Automatic Version Management**: VERSION file requirement with strict validation
-- **🚀 GitHub Actions Optimization**: 25% workflow reduction (4 → 3)
-- **✅ Zero Breaking Changes**: 100% backward compatibility maintained
+- **🗑️ Legacy Cleanup**: 18% code reduction (11,871 lines removed)
+- **📦 Namespace Modernization**: 110 legacy aliases removed
+- **🚀 Performance**: 59% fewer aliases to autoload
+- **⚠️ Breaking Changes**: Required namespace updates for middleware
+- **✅ Zero Regressions**: All 5,548 tests passing (100%)
 
 ### 📚 Version-Specific Migration Guides
 
 | From Version | Migration Guide | Effort Level |
 |--------------|----------------|--------------|
+| **v1.x → v2.0.0** | [v2.0.0 Migration Guide](releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md) | **Medium** ⚠️ BREAKING |
 | **v1.1.3** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Low** (mostly optional) |
 | **v1.1.2** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Low** (infrastructure only) |
 | **v1.1.1** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Low** (backward compatible) |
@@ -25,15 +27,19 @@
 
 ### 🎯 Quick Migration Checklist
 
-#### ⚠️ Required Actions (v1.1.4):
-- [ ] **Create VERSION file** in project root: `echo "1.1.4" > VERSION`
-- [ ] **Update script references** in custom CI/CD (if any)
-- [ ] **Test consolidated scripts** work correctly
+#### ⚠️ Required Actions (v2.0.0) - BREAKING CHANGES:
+- [ ] **Update PSR-15 middleware imports** (8 classes - see migration guide)
+- [ ] **Remove "Simple*" prefixes** (7 classes - PerformanceMode, LoadShedder, etc.)
+- [ ] **Replace OpenApiExporter** with ApiDocumentationMiddleware
+- [ ] **Update DynamicPoolManager** → PoolManager
+- [ ] **Run tests**: `composer test`
+- [ ] **Regenerate autoloader**: `composer dump-autoload`
 
-#### ✅ Recommended Actions:
-- [ ] **Use consolidated scripts** (`scripts/quality/quality-check.sh`)
-- [ ] **Adopt automatic versioning** (`scripts/release/version-bump.sh`)
-- [ ] **Read versioning guide** ([docs/VERSIONING_GUIDE.md](VERSIONING_GUIDE.md))
+#### ✅ Recommended Actions (v2.0.0):
+- [ ] **Use migration script** (provided in v2.0.0 migration guide)
+- [ ] **Review cleanup analysis** ([docs/v2.0.0-cleanup-analysis.md](v2.0.0-cleanup-analysis.md))
+- [ ] **Update IDE configuration** for new namespaces
+- [ ] **Review updated examples** in `examples/` directory
 
 ### 📖 Additional Resources
 

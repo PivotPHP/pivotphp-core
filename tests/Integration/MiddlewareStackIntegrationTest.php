@@ -117,7 +117,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         );
 
         $this->app->get(
-            '/error-test',
+            '/error-test-middleware',
             function ($req, $res) {
                 return $res->json(['should' => 'not reach']);
             }
@@ -125,7 +125,7 @@ class MiddlewareStackIntegrationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/error-test', '/error-test');
+        $request = new Request('GET', '/error-test-middleware', '/error-test-middleware');
         $response = $this->app->handle($request);
 
         $this->assertTrue($errorHandled);

@@ -779,10 +779,10 @@ class Application
         // Determinar status code
         $statusCode = $e instanceof HttpException ? $e->getStatusCode() : 500;
 
-        $response->status($statusCode);
-
         if ($debug) {
-            return $response->json(
+            return $response
+                ->status($statusCode)
+                ->json(
                 [
                     'error' => true,
                     'message' => $e->getMessage(),
@@ -798,7 +798,9 @@ class Application
             // Log detalhado para análise posterior
             $this->logException($e, $errorId);
 
-            return $response->json(
+            return $response
+                ->status($statusCode)
+                ->json(
                 [
                     'error' => true,
                     'message' => $statusCode === 404 ? 'Not Found' : 'Internal Server Error',

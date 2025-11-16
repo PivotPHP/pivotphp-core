@@ -20,28 +20,28 @@ class ProjectValidator
     private function getCurrentVersion(): string
     {
         $versionFile = dirname(__DIR__, 2) . '/VERSION';
-        
+
         if (!file_exists($versionFile)) {
             echo "❌ ERRO CRÍTICO: Arquivo VERSION não encontrado em: $versionFile\n";
             echo "❌ PivotPHP Core requer um arquivo VERSION na raiz do projeto\n";
             exit(1);
         }
-        
+
         $version = trim(file_get_contents($versionFile));
-        
+
         if (empty($version)) {
             echo "❌ ERRO CRÍTICO: Arquivo VERSION está vazio ou inválido\n";
             echo "❌ Arquivo VERSION deve conter uma versão semântica válida (X.Y.Z)\n";
             exit(1);
         }
-        
+
         // Validate semantic version format
         if (!preg_match('/^\d+\.\d+\.\d+$/', $version)) {
             echo "❌ ERRO CRÍTICO: Formato de versão inválido no arquivo VERSION: $version\n";
             echo "❌ Formato esperado: X.Y.Z (versionamento semântico)\n";
             exit(1);
         }
-        
+
         return $version;
     }
 
@@ -458,33 +458,14 @@ class ProjectValidator
     {
         echo "📚 Validando recursos OpenAPI/Swagger...\n";
 
-        // Verificar se OpenApiExporter existe
-        if (class_exists('PivotPHP\\Core\\Utils\\OpenApiExporter')) {
-            $this->passed[] = "OpenApiExporter carregado";
+        // OpenApiExporter removido na v2.0.0 - usar ApiDocumentationMiddleware
+        $this->passed[] = "OpenApiExporter removido na v2.0.0 (esperado)";
 
-            // Testar export básico
-            try {
-                if (class_exists('PivotPHP\\Core\\Routing\\Router')) {
-                    $docs = PivotPHP\Core\Utils\OpenApiExporter::export('PivotPHP\\Core\\Routing\\Router');
-                    if (is_array($docs) && isset($docs['openapi'])) {
-                        $this->passed[] = "OpenApiExporter pode gerar documentação";
-
-                        if ($docs['openapi'] === '3.0.0') {
-                            $this->passed[] = "OpenApiExporter gera OpenAPI 3.0.0";
-                        } else {
-                            $this->warnings[] = "OpenApiExporter pode não estar usando OpenAPI 3.0.0";
-                        }
-                    } else {
-                        $this->errors[] = "OpenApiExporter não gera documentação válida";
-                    }
-                } else {
-                    $this->warnings[] = "Router não encontrado para testar OpenApiExporter";
-                }
-            } catch (Exception $e) {
-                $this->errors[] = "Erro ao testar OpenApiExporter: " . $e->getMessage();
-            }
+        // Verificar se ApiDocumentationMiddleware existe
+        if (class_exists('PivotPHP\\Core\\Middleware\\Http\\ApiDocumentationMiddleware')) {
+            $this->passed[] = "ApiDocumentationMiddleware disponível (v2.0.0)";
         } else {
-            $this->errors[] = "OpenApiExporter não encontrado";
+            $this->errors[] = "ApiDocumentationMiddleware não encontrado";
         }
 
         // Verificar se o README principal menciona OpenAPI
@@ -493,10 +474,10 @@ class ProjectValidator
             if (strpos($readme, 'OpenAPI') !== false || strpos($readme, 'Swagger') !== false) {
                 $this->passed[] = "README principal menciona OpenAPI/Swagger";
 
-                if (strpos($readme, 'OpenApiExporter') !== false) {
-                    $this->passed[] = "README explica como usar OpenApiExporter";
+                if (strpos($readme, 'ApiDocumentationMiddleware') !== false) {
+                    $this->passed[] = "README explica como usar ApiDocumentationMiddleware";
                 } else {
-                    $this->warnings[] = "README pode não explicar como usar OpenApiExporter";
+                    $this->warnings[] = "README pode não explicar ApiDocumentationMiddleware";
                 }
             } else {
                 $this->warnings[] = "README principal pode não mencionar recursos OpenAPI";
@@ -550,7 +531,7 @@ class ProjectValidator
                     $this->warnings[] = "FRAMEWORK_OVERVIEW_v{$version}.md pode estar incompleto (faltam métricas v{$version})";
                 }
             }
-            
+
             // Verificar se ainda existem versões anteriores (para compatibilidade)
             if (file_exists('docs/releases/FRAMEWORK_OVERVIEW_v1.0.0.md')) {
                 $this->passed[] = "FRAMEWORK_OVERVIEW_v1.0.0.md mantido para compatibilidade";

@@ -242,22 +242,31 @@ class ArrayCallableIntegrationTest extends TestCase
         $errorController = new class {
             public function throwError($req, $res)
             {
-                throw new \Exception('Test error from array callable');
+                throw new \Exception('Test error from array callable', 500);
             }
         };
+        $this->app = new Application(__DIR__ . '/../../..');
+        $this->app->boot();
 
         $this->app->get('/error-test', [$errorController, 'throwError']);
 
         $request = new Request('GET', '/error-test', '/error-test');
 
-        // The application should handle the exception (might return 500)
+        // The application should catch the exception and return 500 Internal Server Error
         $response = $this->app->handle($request);
+        // Status should be 500 for unhandled exceptions
+        $this->assertEquals(500, $response->getStatusCode());
 
-        // Status should be 500 or the error should be handled gracefully
-        $this->assertContains($response->getStatusCode(), [500, 400, 404]);
-    }
-
-    /**
+        // Response should be JSON with error information
+        $responseBody = $response->getBody();
+        $body = json_decode(
+            is_string($responseBody) ? $responseBody : $responseBody->__toString(),
+            true
+        );
+        $this->assertIsArray($body);
+        $this->assertTrue($body['error']);
+        $this->assertArrayHasKey('message', $body);
+    }    /**
      * @test
      */
     public function testResponseTypesFromArrayCallable(): void
