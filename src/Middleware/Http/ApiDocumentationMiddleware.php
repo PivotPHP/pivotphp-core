@@ -7,7 +7,7 @@ namespace PivotPHP\Core\Middleware\Http;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
-use PivotPHP\Core\Utils\OpenApiExporter;
+use PivotPHP\Core\Routing\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -75,9 +75,8 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
                 return $this->createErrorResponse('Application not found in request', 500);
             }
 
-            // Generate OpenAPI documentation
-            $exporter = new OpenApiExporter($app);
-            $docs = $exporter->generate($this->baseUrl);
+            // Generate OpenAPI documentation from routes
+            $docs = $this->generateOpenApiDocs($app);
 
             // Create response
             $response = new Response();
@@ -92,6 +91,52 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
         } catch (\Exception $e) {
             return $this->createErrorResponse('Error generating documentation: ' . $e->getMessage(), 500);
         }
+    }
+
+    /**
+     * Generate OpenAPI documentation from application routes
+     *
+     * @param Application $app
+     * @return array<string, mixed>
+     */
+    private function generateOpenApiDocs(Application $app): array
+    {
+        $baseUrl = $this->baseUrl ?? 'http://localhost:8080';
+
+        // Get routes from Router (static class)
+        $routes = Router::getRoutes();
+
+        $paths = [];
+        foreach ($routes as $route) {
+            $path = $route['path'] ?? '/';
+            $method = strtolower($route['method'] ?? 'get');
+
+            if (!isset($paths[$path])) {
+                $paths[$path] = [];
+            }
+
+            $paths[$path][$method] = [
+                'summary' => 'Route: ' . $method . ' ' . $path,
+                'responses' => [
+                    '200' => [
+                        'description' => 'Successful response'
+                    ]
+                ]
+            ];
+        }
+
+        return [
+            'openapi' => '3.0.0',
+            'info' => [
+                'title' => 'PivotPHP API',
+                'version' => '2.0.0',
+                'description' => 'Auto-generated API documentation'
+            ],
+            'servers' => [
+                ['url' => $baseUrl]
+            ],
+            'paths' => $paths
+        ];
     }
 
     /**
