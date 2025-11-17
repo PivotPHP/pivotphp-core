@@ -35,20 +35,60 @@ class CsrfMiddleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        if (strtoupper($request->getMethod()) === 'POST') {
-            $parsedBody = $request->getParsedBody();
-            $token = is_array($parsedBody) ? ($parsedBody[$this->fieldName] ?? null) : null;
+        // Validate CSRF token for all state-changing methods
+        $method = strtoupper($request->getMethod());
+        if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            $token = $this->getTokenFromRequest($request);
+
+            // Ensure session is started
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+
             $sessionToken = $_SESSION[$this->fieldName] ?? null;
+
             if (!$token || !$sessionToken || !hash_equals($sessionToken, $token)) {
-                throw new HttpException(403, 'CSRF token inválido ou ausente', ['Content-Type' => 'application/json']);
+                throw new HttpException(
+                    403,
+                    'CSRF token inválido ou ausente',
+                    ['Content-Type' => 'application/json']
+                );
             }
         }
-        // Gera novo token para próxima requisição
+
+        // Generate new token for next request
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
         $_SESSION[$this->fieldName] = bin2hex(random_bytes(32));
+
         return $handler->handle($request);
+    }
+
+    /**
+     * Get CSRF token from request (form data or header)
+     */
+    private function getTokenFromRequest(ServerRequestInterface $request): ?string
+    {
+        // Priority 1: Form data
+        $parsedBody = $request->getParsedBody();
+        if (is_array($parsedBody) && isset($parsedBody[$this->fieldName])) {
+            return $parsedBody[$this->fieldName];
+        }
+
+        // Priority 2: X-CSRF-TOKEN header (for APIs)
+        $headers = $request->getHeader('X-CSRF-TOKEN');
+        if (!empty($headers)) {
+            return $headers[0];
+        }
+
+        // Priority 3: X-XSRF-TOKEN header (alternative naming)
+        $headers = $request->getHeader('X-XSRF-TOKEN');
+        if (!empty($headers)) {
+            return $headers[0];
+        }
+
+        return null;
     }
 
     /**

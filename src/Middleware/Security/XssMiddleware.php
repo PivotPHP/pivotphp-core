@@ -21,10 +21,12 @@ use Psr\Http\Message\ResponseInterface;
 class XssMiddleware implements MiddlewareInterface
 {
     private string $allowedTags;
+    private bool $enableCsp;
 
-    public function __construct(string $allowedTags = '')
+    public function __construct(string $allowedTags = '', bool $enableCsp = true)
     {
         $this->allowedTags = $allowedTags;
+        $this->enableCsp = $enableCsp;
     }
 
     /**
@@ -32,44 +34,69 @@ class XssMiddleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        // Sanitize input
         $parsedBody = $request->getParsedBody();
         if (is_array($parsedBody)) {
             $parsedBody = $this->sanitizeArray($parsedBody, $this->allowedTags);
             $request = $request->withParsedBody($parsedBody);
         }
-        return $handler->handle($request);
+
+        // Handle request
+        $response = $handler->handle($request);
+
+        // Add security headers
+        if ($this->enableCsp) {
+            $response = $this->addSecurityHeaders($response);
+        }
+
+        return $response;
     }
 
     /**
-     * Sanitize method
+     * Add security headers to response
+     */
+    private function addSecurityHeaders(ResponseInterface $response): ResponseInterface
+    {
+        return $response
+            ->withHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'")
+            ->withHeader('X-Content-Type-Options', 'nosniff')
+            ->withHeader('X-Frame-Options', 'DENY')
+            ->withHeader('X-XSS-Protection', '1; mode=block')
+            ->withHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    }
+
+    /**
+     * Sanitize method (optimized with single regex pass)
      */
     public static function sanitize(string $input, string $allowedTags = ''): string
     {
-        // Remove <script> e conteúdo, depois strip_tags
         if ($input === '') {
             return '';
         }
+
         $input = trim($input);
-        $input = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $input);
+
+        // Optimized: Remove dangerous elements in a single pass
+        $patterns = [
+            '/<script\b[^>]*>(.*?)<\/script>/is',  // Remove script tags
+            '/<iframe\b[^>]*>(.*?)<\/iframe>/is',  // Remove iframe tags
+            '/<svg\b[^>]*>(.*?)<\/svg>/is',        // Remove svg tags
+            '/<embed\b[^>]*>(.*?)<\/embed>/is',    // Remove embed tags
+            '/<object\b[^>]*>(.*?)<\/object>/is',  // Remove object tags
+            '/on\w+\s*=\s*(["\']).*?\1/is',        // Remove event handlers
+            '/javascript:/is',                      // Remove javascript: protocol
+            '/vbscript:/is',                        // Remove vbscript: protocol
+            '/data:text\/html/is',                  // Remove data:text/html
+        ];
+
+        $input = preg_replace($patterns, '', $input);
+
+        // Handle null result from preg_replace
         if ($input === null) {
-            $input = '';
+            return '';
         }
-        $input = preg_replace('/<iframe\b[^>]*>(.*?)<\/iframe>/is', '', $input);
-        if ($input === null) {
-            $input = '';
-        }
-        $input = preg_replace('/<svg\b[^>]*>(.*?)<\/svg>/is', '', $input);
-        if ($input === null) {
-            $input = '';
-        }
-        $input = preg_replace('/<img\b[^>]*onerror=[^>]+>/is', '', $input);
-        if ($input === null) {
-            $input = '';
-        }
-        $input = preg_replace('/on\w+\s*=\s*(["\']).*?\1/is', '', $input);
-        if ($input === null) {
-            $input = '';
-        }
+
+        // Final cleanup with strip_tags
         return strip_tags($input, $allowedTags);
     }
 
