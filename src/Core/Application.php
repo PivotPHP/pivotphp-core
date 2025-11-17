@@ -5,6 +5,8 @@ namespace PivotPHP\Core\Core;
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Routing\Router;
+use PivotPHP\Core\Routing\Contracts\RouterInterface;
+use PivotPHP\Core\Routing\Adapters\FastRouteAdapter;
 use PivotPHP\Core\Utils\CallableResolver;
 use PivotPHP\Core\Middleware\MiddlewareStack;
 use PivotPHP\Core\Exceptions\HttpException;
@@ -41,7 +43,7 @@ class Application
     /**
      * Versão do framework.
      */
-    public const VERSION = '2.0.0';
+    public const VERSION = '2.0.1';
 
     /**
      * Container de dependências PSR-11.
@@ -60,9 +62,9 @@ class Application
     /**
      * Router da aplicação.
      *
-     * @var Router
+     * @var RouterInterface
      */
-    protected Router $router;
+    protected RouterInterface $router;
 
     /**
      * Stack de middlewares globais.
@@ -129,8 +131,9 @@ class Application
      * Construtor da aplicação.
      *
      * @param string|null $basePath Caminho base da aplicação
+     * @param array<string, mixed> $options Opções de configuração (router, etc.)
      */
-    public function __construct(?string $basePath = null)
+    public function __construct(?string $basePath = null, array $options = [])
     {
         $this->startTime = new \DateTime();
         $this->container = new Container();
@@ -140,7 +143,7 @@ class Application
             $this->setBasePath($basePath);
         }
 
-        $this->registerCoreServices();
+        $this->registerCoreServices($options);
 
         // Configurar error handling o mais cedo possível
         $this->configureBasicErrorHandling();
@@ -160,19 +163,25 @@ class Application
     /**
      * Registra serviços core da aplicação.
      *
+     * @param array<string, mixed> $options Opções de configuração
      * @return void
      */
-    protected function registerCoreServices(): void
+    protected function registerCoreServices(array $options = []): void
     {
         // Configuração
         $this->config = new Config();
         $this->container->instance(Config::class, $this->config);
         $this->container->alias('config', Config::class);
 
-        // Router
-        $this->router = new Router();
-        $this->container->instance(Router::class, $this->router);
-        $this->container->alias('router', Router::class);
+        // Router - Use custom router if provided, otherwise use FastRouteAdapter
+        if (isset($options['router']) && $options['router'] instanceof RouterInterface) {
+            $this->router = $options['router'];
+        } else {
+            $this->router = new FastRouteAdapter();
+        }
+
+        $this->container->instance(RouterInterface::class, $this->router);
+        $this->container->alias('router', RouterInterface::class);
 
         // Middleware Stack
         $this->middlewares = new MiddlewareStack();
@@ -483,12 +492,13 @@ class Application
      * Registra uma rota GET.
      *
      * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  callable|array|string  $handler Handler da rota
+     * @param  array<string, mixed>  $options Opções da rota (middleware, etc.)
      * @return $this
      */
-    public function get(string $path, $handler): self
+    public function get(string $path, callable|array|string $handler, array $options = []): self
     {
-        $this->router->get($path, $handler);
+        $this->router->addRoute('GET', $path, $handler, $options);
         return $this;
     }
 
@@ -496,12 +506,13 @@ class Application
      * Registra uma rota POST.
      *
      * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  callable|array|string  $handler Handler da rota
+     * @param  array<string, mixed>  $options Opções da rota (middleware, etc.)
      * @return $this
      */
-    public function post(string $path, $handler): self
+    public function post(string $path, callable|array|string $handler, array $options = []): self
     {
-        $this->router->post($path, $handler);
+        $this->router->addRoute('POST', $path, $handler, $options);
         return $this;
     }
 
@@ -509,12 +520,13 @@ class Application
      * Registra uma rota PUT.
      *
      * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  callable|array|string  $handler Handler da rota
+     * @param  array<string, mixed>  $options Opções da rota (middleware, etc.)
      * @return $this
      */
-    public function put(string $path, $handler): self
+    public function put(string $path, callable|array|string $handler, array $options = []): self
     {
-        $this->router->put($path, $handler);
+        $this->router->addRoute('PUT', $path, $handler, $options);
         return $this;
     }
 
@@ -522,12 +534,13 @@ class Application
      * Registra uma rota DELETE.
      *
      * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  callable|array|string  $handler Handler da rota
+     * @param  array<string, mixed>  $options Opções da rota (middleware, etc.)
      * @return $this
      */
-    public function delete(string $path, $handler): self
+    public function delete(string $path, callable|array|string $handler, array $options = []): self
     {
-        $this->router->delete($path, $handler);
+        $this->router->addRoute('DELETE', $path, $handler, $options);
         return $this;
     }
 
@@ -535,12 +548,34 @@ class Application
      * Registra uma rota PATCH.
      *
      * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  callable|array|string  $handler Handler da rota
+     * @param  array<string, mixed>  $options Opções da rota (middleware, etc.)
      * @return $this
      */
-    public function patch(string $path, $handler): self
+    public function patch(string $path, callable|array|string $handler, array $options = []): self
     {
-        $this->router->patch($path, $handler);
+        $this->router->addRoute('PATCH', $path, $handler, $options);
+        return $this;
+    }
+
+    /**
+     * Registra um grupo de rotas com prefixo e opções compartilhadas.
+     *
+     * @param  string $prefix Prefixo para as rotas (ex: '/api/v1')
+     * @param  callable $callback Callback que recebe a aplicação para registrar rotas
+     * @param  array<string, mixed>  $options Opções compartilhadas (middleware, etc.)
+     * @return $this
+     */
+    public function group(string $prefix, callable $callback, array $options = []): self
+    {
+        $this->router->group(
+            $prefix,
+            function () use ($callback) {
+                $callback($this);
+            },
+            $options
+        );
+
         return $this;
     }
 
@@ -588,13 +623,14 @@ class Application
 
         try {
             // Encontrar rota
-            $route = $this->router::identify($request->getMethod(), $request->getPathCallable());
+            $route = $this->router->dispatch($request->getMethod(), $request->getPathCallable());
 
             if (!$route) {
                 // Buscar rotas disponíveis para suggestions
+                $routes = $this->router->getRoutes();
                 $availableRoutes = array_map(
                     fn($r) => "{$r['method']} {$r['path']}",
-                    array_slice($this->router::getRoutes(), 0, 10)
+                    array_slice($routes, 0, 10)
                 );
 
                 throw ContextualException::routeNotFound(
@@ -1010,9 +1046,9 @@ class Application
     /**
      * Obtém o router.
      *
-     * @return Router
+     * @return RouterInterface
      */
-    public function getRouter(): Router
+    public function getRouter(): RouterInterface
     {
         return $this->router;
     }
