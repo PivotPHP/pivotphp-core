@@ -315,14 +315,12 @@ class ExpressRequest implements ExpressRequestInterface, ServerRequestInterface,
      */
     public function setHeaders(array $headers): self
     {
-        $request = $this->psr7Request;
-
         foreach ($headers as $name => $value) {
-            $request = $request->withHeader($name, $value);
+            $this->psr7Request = $this->psr7Request->withHeader($name, $value);
         }
 
-        // Return new instance with updated PSR-7 request
-        return new self($request, $this->path, $this->pathCallable);
+        // Return same instance for backward compatibility with tests
+        return $this;
     }
 
     // ========================================================================
@@ -482,18 +480,31 @@ class ExpressRequest implements ExpressRequestInterface, ServerRequestInterface,
      */
     public function __get(string $name): mixed
     {
-        // Handle special properties that map to class properties/methods
-        return match ($name) {
-            'method' => $this->getMethod(),
-            'path' => $this->getPath(),
-            'pathCallable' => $this->getPathCallable(),
-            'params' => $this->cachedParams ??= $this->getParams(),
-            'query' => $this->cachedQuery ??= $this->getQuerys(),
-            'body' => $this->cachedBody ??= $this->getParsedBodyAsObject(),
-            'headers' => $this->getHeaderRequest(),
-            'files' => $this->getUploadedFiles(),
-            default => $this->psr7Request->getAttribute($name),
-        };
+        // Check if it's a special property first
+        $specialProperties = ['method', 'path', 'pathCallable', 'params', 'query', 'body', 'headers', 'files'];
+
+        if (in_array($name, $specialProperties, true)) {
+            // Handle special properties that map to class properties/methods
+            return match ($name) {
+                'method' => $this->getMethod(),
+                'path' => $this->getPath(),
+                'pathCallable' => $this->getPathCallable(),
+                'params' => $this->cachedParams ??= $this->getParams(),
+                'query' => $this->cachedQuery ??= $this->getQuerys(),
+                'body' => $this->cachedBody ??= $this->getParsedBodyAsObject(),
+                'headers' => $this->getHeaderRequest(),
+                'files' => $this->getUploadedFiles(),
+            };
+        }
+
+        // Check PSR-7 attributes
+        $attribute = $this->psr7Request->getAttribute($name);
+        if ($attribute !== null) {
+            return $attribute;
+        }
+
+        // Property doesn't exist - throw exception for compatibility
+        throw new \InvalidArgumentException("Property {$name} does not exist in Request class");
     }
 
     /**
