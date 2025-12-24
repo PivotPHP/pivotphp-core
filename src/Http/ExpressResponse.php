@@ -331,6 +331,7 @@ class ExpressResponse implements ExpressResponseInterface, ResponseInterface
         }
 
         $this->header('Cache-Control', 'no-cache');
+        $this->header('Connection', 'keep-alive');
         $this->header('X-Accel-Buffering', 'no');
 
         if (!$this->testMode) {
@@ -487,6 +488,11 @@ class ExpressResponse implements ExpressResponseInterface, ResponseInterface
         ?string $id = null,
         ?int $retry = null
     ): self {
+        // Auto-start streaming if not already started
+        if (!$this->streaming) {
+            $this->startStream('text/event-stream');
+        }
+
         $output = '';
 
         if ($id !== null) {
@@ -665,16 +671,22 @@ class ExpressResponse implements ExpressResponseInterface, ResponseInterface
      */
     private function encodeJson(mixed $data): string
     {
-        // Use JSON pooling for better performance
-        $encoded = JsonBufferPool::encodeWithPool($data, self::JSON_ENCODE_FLAGS);
+        try {
+            // Use JSON pooling for better performance
+            $encoded = JsonBufferPool::encodeWithPool($data, self::JSON_ENCODE_FLAGS);
 
-        // encodeWithPool returns string, but we check for safety
-        if (!is_string($encoded) || $encoded === '') {
-            error_log('JSON encoding failed: ' . json_last_error_msg());
+            // encodeWithPool returns string, but we check for safety
+            if (!is_string($encoded) || $encoded === '') {
+                error_log('JSON encoding failed: ' . json_last_error_msg());
+                return '{}';
+            }
+
+            return $encoded;
+        } catch (\JsonException $e) {
+            // Sanitize invalid data by returning empty JSON object
+            error_log('JSON encoding error: ' . $e->getMessage());
             return '{}';
         }
-
-        return $encoded;
     }
 
     /**

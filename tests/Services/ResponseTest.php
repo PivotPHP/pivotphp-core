@@ -40,9 +40,8 @@ class ResponseTest extends TestCase
         $this->assertInstanceOf(Response::class, $result);
         $this->assertSame($this->response, $result); // Should return same instance for chaining
 
-        $headers = $this->response->getHeaders();
-        $this->assertArrayHasKey('Content-Type', $headers);
-        $this->assertEquals('application/json', $headers['Content-Type']);
+        // PSR-7 getHeaderLine() returns header value as string
+        $this->assertEquals('application/json', $this->response->getHeaderLine('Content-Type'));
     }
 
     public function testJsonResponse(): void
@@ -54,10 +53,8 @@ class ResponseTest extends TestCase
         $this->assertInstanceOf(Response::class, $result);
         $this->assertEquals(json_encode($data), $this->response->getBody());
 
-        // Verificar se os headers foram definidos corretamente
-        $headers = $this->response->getHeaders();
-        $this->assertArrayHasKey('Content-Type', $headers);
-        $this->assertStringContainsString('application/json', $headers['Content-Type']);
+        // Verificar se os headers foram definidos corretamente (PSR-7 getHeaderLine)
+        $this->assertStringContainsString('application/json', $this->response->getHeaderLine('Content-Type'));
     }
 
     public function testTextResponse(): void
@@ -69,8 +66,8 @@ class ResponseTest extends TestCase
         $this->assertInstanceOf(Response::class, $result);
         $this->assertEquals($text, $this->response->getBody());
 
-        $headers = $this->response->getHeaders();
-        $this->assertEquals('text/plain; charset=utf-8', $headers['Content-Type']);
+        // PSR-7 getHeaderLine() returns header value as string
+        $this->assertEquals('text/plain; charset=utf-8', $this->response->getHeaderLine('Content-Type'));
     }
 
     public function testHtmlResponse(): void
@@ -82,8 +79,8 @@ class ResponseTest extends TestCase
         $this->assertInstanceOf(Response::class, $result);
         $this->assertEquals($html, $this->response->getBody());
 
-        $headers = $this->response->getHeaders();
-        $this->assertEquals('text/html; charset=utf-8', $headers['Content-Type']);
+        // PSR-7 getHeaderLine() returns header value as string
+        $this->assertEquals('text/html; charset=utf-8', $this->response->getHeaderLine('Content-Type'));
     }
 
     public function testMethodChaining(): void
@@ -99,8 +96,8 @@ class ResponseTest extends TestCase
         $this->assertEquals(json_encode($data), $this->response->getBody());
         $this->assertEquals(201, $this->response->getStatusCode());
 
-        $headers = $this->response->getHeaders();
-        $this->assertEquals('custom-value', $headers['X-Custom-Header']);
+        // PSR-7 getHeaderLine() returns header value as string
+        $this->assertEquals('custom-value', $this->response->getHeaderLine('X-Custom-Header'));
     }
 
     public function testComplexJsonResponse(): void
@@ -207,13 +204,13 @@ class ResponseTest extends TestCase
 
         $this->assertInstanceOf(Response::class, $result);
 
-        $headers = $this->response->getHeaders();
-        $this->assertArrayHasKey('Content-Type', $headers);
-        $this->assertArrayHasKey('X-Custom-Header', $headers);
-        $this->assertArrayHasKey('Cache-Control', $headers);
-        $this->assertEquals('application/json', $headers['Content-Type']);
-        $this->assertEquals('custom-value', $headers['X-Custom-Header']);
-        $this->assertEquals('no-cache', $headers['Cache-Control']);
+        // PSR-7 hasHeader() and getHeaderLine() for checking headers
+        $this->assertTrue($this->response->hasHeader('Content-Type'));
+        $this->assertTrue($this->response->hasHeader('X-Custom-Header'));
+        $this->assertTrue($this->response->hasHeader('Cache-Control'));
+        $this->assertEquals('application/json', $this->response->getHeaderLine('Content-Type'));
+        $this->assertEquals('custom-value', $this->response->getHeaderLine('X-Custom-Header'));
+        $this->assertEquals('no-cache', $this->response->getHeaderLine('Cache-Control'));
     }
 
     public function testStatusCodes(): void

@@ -31,10 +31,10 @@ class ResponseStreamingTest extends TestCase
 
         $this->assertTrue($this->response->isStreaming());
 
-        $headers = $this->response->getHeaders();
-        $this->assertEquals('no-cache', $headers['Cache-Control']);
-        $this->assertEquals('keep-alive', $headers['Connection']);
-        $this->assertEquals('text/plain', $headers['Content-Type']);
+        // PSR-7 getHeaderLine() returns header value as string
+        $this->assertEquals('no-cache', $this->response->getHeaderLine('Cache-Control'));
+        $this->assertEquals('keep-alive', $this->response->getHeaderLine('Connection'));
+        $this->assertEquals('text/plain', $this->response->getHeaderLine('Content-Type'));
     }
 
     public function testSetStreamBufferSize(): void
@@ -133,9 +133,8 @@ class ResponseStreamingTest extends TestCase
         unlink($tempFile);
 
         $this->assertInstanceOf(Response::class, $result);
-        // Verificar se os headers foram configurados
-        $headers = $this->response->getHeaders();
-        $this->assertEquals('text/plain', $headers['Content-Type']);
+        // Verificar se os headers foram configurados (PSR-7 getHeaderLine)
+        $this->assertEquals('text/plain', $this->response->getHeaderLine('Content-Type'));
     }
 
     public function testStreamFileWithInvalidFile(): void
@@ -211,8 +210,8 @@ class ResponseStreamingTest extends TestCase
         unlink($tempFile);
 
         $this->assertInstanceOf(Response::class, $result);
-        $headers = $this->response->getHeaders();
-        $this->assertEquals('text/plain', $headers['Content-Type']);
-        $this->assertEquals('custom-value', $headers['X-Custom-Header']);
+        // PSR-7 getHeaderLine() returns header value as string
+        $this->assertEquals('text/plain', $this->response->getHeaderLine('Content-Type'));
+        $this->assertEquals('custom-value', $this->response->getHeaderLine('X-Custom-Header'));
     }
 }
