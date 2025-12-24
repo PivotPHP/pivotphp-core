@@ -6,6 +6,8 @@ namespace PivotPHP\Core\Http\Factory;
 
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
+use PivotPHP\Core\Http\ExpressRequest;
+use PivotPHP\Core\Http\ExpressResponse;
 use PivotPHP\Core\Http\Pool\Psr7Pool;
 use PivotPHP\Core\Http\Psr7\Uri;
 use PivotPHP\Core\Http\Psr7\Stream;
@@ -61,6 +63,8 @@ class OptimizedHttpFactory
 
     /**
      * Cria Request híbrido otimizado
+     *
+     * Creates an Express.js-style Request that wraps a PSR-7 ServerRequest
      */
     public static function createRequest(
         string $method,
@@ -68,16 +72,39 @@ class OptimizedHttpFactory
         string $pathCallable
     ): Request {
         self::ensureInitialized();
-        return new Request($method, $path, $pathCallable);
+
+        // Create PSR-7 ServerRequest first
+        $uri = self::createUri($pathCallable);
+        $serverParams = $_SERVER ?? [];
+        $headers = getallheaders() ?: [];
+
+        $psr7Request = Psr7Pool::getServerRequest(
+            $method,
+            $uri,
+            self::createStream(''),
+            $headers,
+            '1.1',
+            $serverParams
+        );
+
+        // Wrap with Express.js adapter
+        return new ExpressRequest($psr7Request, $path, $pathCallable);
     }
 
     /**
      * Cria Response híbrido otimizado
+     *
+     * Creates an Express.js-style Response that wraps a PSR-7 Response
      */
     public static function createResponse(): Response
     {
         self::ensureInitialized();
-        return new Response();
+
+        // Create PSR-7 Response from pool
+        $psr7Response = Psr7Pool::getResponse();
+
+        // Wrap with Express.js adapter
+        return new ExpressResponse($psr7Response);
     }
 
     /**

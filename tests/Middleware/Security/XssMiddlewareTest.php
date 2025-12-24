@@ -134,10 +134,12 @@ class XssMiddlewareTest extends TestCase
     public function testSanitizesRequestBody(): void
     {
         $request = new Request('POST', '/', '/');
-        $request = $request->withParsedBody([
-            'name' => 'John<script>alert(1)</script>',
-            'email' => 'test@example.com'
-        ]);
+        $request = $request->withParsedBody(
+            [
+                'name' => 'John<script>alert(1)</script>',
+                'email' => 'test@example.com'
+            ]
+        );
 
         $result = $this->middleware->process($request, $this->handler);
 
@@ -147,14 +149,16 @@ class XssMiddlewareTest extends TestCase
     public function testSanitizesNestedArrays(): void
     {
         $request = new Request('POST', '/', '/');
-        $request = $request->withParsedBody([
-            'user' => [
-                'name' => 'John<script>alert(1)</script>',
-                'profile' => [
-                    'bio' => '<iframe src="evil.com"></iframe>Hello'
+        $request = $request->withParsedBody(
+            [
+                'user' => [
+                    'name' => 'John<script>alert(1)</script>',
+                    'profile' => [
+                        'bio' => '<iframe src="evil.com"></iframe>Hello'
+                    ]
                 ]
             ]
-        ]);
+        );
 
         $result = $this->middleware->process($request, $this->handler);
 

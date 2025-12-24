@@ -75,7 +75,8 @@
         },
         "files": [
             "src/functions.php",
-            "src/aliases.php"
+            "src/aliases.php",
+            "src/Http/aliases.php"
         ]
     },
     "autoload-dev": {
