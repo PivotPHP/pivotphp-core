@@ -87,6 +87,22 @@ class OptimizedHttpFactory
             $serverParams
         );
 
+        // Parse query parameters from $_SERVER['QUERY_STRING'] if available
+        if (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '') {
+            parse_str($_SERVER['QUERY_STRING'], $queryParams);
+            $psr7Request = $psr7Request->withQueryParams($queryParams);
+        }
+
+        // Set parsed body from $_POST if available
+        if (!empty($_POST)) {
+            $psr7Request = $psr7Request->withParsedBody($_POST);
+        }
+
+        // Set uploaded files from $_FILES if available
+        if (!empty($_FILES)) {
+            $psr7Request = $psr7Request->withUploadedFiles($_FILES);
+        }
+
         // Wrap with Express.js adapter
         return new ExpressRequest($psr7Request, $path, $pathCallable);
     }

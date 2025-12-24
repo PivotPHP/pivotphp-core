@@ -45,6 +45,26 @@ class ExpressRequest implements ExpressRequestInterface, ServerRequestInterface,
     private string $pathCallable = '';
 
     /**
+     * Cached HeaderRequest instance for legacy compatibility
+     */
+    private ?HeaderRequest $headerRequest = null;
+
+    /**
+     * Cached query parameters as stdClass for legacy compatibility
+     */
+    private ?stdClass $cachedQuery = null;
+
+    /**
+     * Cached body for legacy compatibility
+     */
+    private mixed $cachedBody = null;
+
+    /**
+     * Cached params as stdClass for legacy compatibility
+     */
+    private ?stdClass $cachedParams = null;
+
+    /**
      * Constructor
      *
      * @param ServerRequestInterface $psr7Request PSR-7 request to wrap
@@ -462,7 +482,54 @@ class ExpressRequest implements ExpressRequestInterface, ServerRequestInterface,
      */
     public function __get(string $name): mixed
     {
-        return $this->psr7Request->getAttribute($name);
+        // Handle special properties that map to class properties/methods
+        return match ($name) {
+            'method' => $this->getMethod(),
+            'path' => $this->getPath(),
+            'pathCallable' => $this->getPathCallable(),
+            'params' => $this->cachedParams ??= $this->getParams(),
+            'query' => $this->cachedQuery ??= $this->getQuerys(),
+            'body' => $this->cachedBody ??= $this->getParsedBodyAsObject(),
+            'headers' => $this->getHeaderRequest(),
+            'files' => $this->getUploadedFiles(),
+            default => $this->psr7Request->getAttribute($name),
+        };
+    }
+
+    /**
+     * Get parsed body as stdClass for legacy compatibility
+     *
+     * @return stdClass|array
+     */
+    private function getParsedBodyAsObject(): stdClass|array
+    {
+        $body = $this->getParsedBody();
+
+        // If body is null (GET requests), return empty array
+        if ($body === null) {
+            return [];
+        }
+
+        // If body is array, convert to stdClass for property access
+        if (is_array($body)) {
+            return (object) $body;
+        }
+
+        // Otherwise return as-is (could be object already)
+        return $body;
+    }
+
+    /**
+     * Get HeaderRequest instance (lazy loading for legacy compatibility)
+     *
+     * @return HeaderRequest
+     */
+    private function getHeaderRequest(): HeaderRequest
+    {
+        if ($this->headerRequest === null) {
+            $this->headerRequest = new HeaderRequest();
+        }
+        return $this->headerRequest;
     }
 
     /**
@@ -485,6 +552,11 @@ class ExpressRequest implements ExpressRequestInterface, ServerRequestInterface,
      */
     public function __isset(string $name): bool
     {
+        // Check special properties first
+        if (in_array($name, ['method', 'path', 'pathCallable', 'params', 'query', 'body', 'headers', 'files'], true)) {
+            return true;
+        }
+
         return $this->psr7Request->getAttribute($name) !== null;
     }
 
