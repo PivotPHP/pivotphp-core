@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Middleware\Core;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Core\BaseMiddleware;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Exceptions\HttpException;
 
@@ -26,7 +27,7 @@ class BaseMiddlewareTest extends TestCase
     {
         parent::setUp();
         $this->middleware = new TestableBaseMiddleware();
-        $this->request = new Request('GET', '/test', '/test');
+        $this->request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $this->response = new Response();
     }
 

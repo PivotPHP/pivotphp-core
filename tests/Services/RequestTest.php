@@ -4,6 +4,7 @@ namespace PivotPHP\Core\Tests\Services;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\HeaderRequest;
 use InvalidArgumentException;
 
@@ -20,7 +21,7 @@ class RequestTest extends TestCase
 
     public function testRequestInitialization(): void
     {
-        $request = new Request('GET', '/users/:id', '/users/123');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users/:id', '/users/123');
 
         $this->assertEquals('GET', $request->method);
         $this->assertEquals('/users/:id', $request->path);
@@ -34,20 +35,20 @@ class RequestTest extends TestCase
 
     public function testMethodNormalization(): void
     {
-        $request = new Request('post', '/users', '/users');
+        $request = OptimizedHttpFactory::createRequest('post', '/users', '/users');
         $this->assertEquals('POST', $request->method);
 
-        $request = new Request('PUT', '/users/:id', '/users/123');
+        $request = OptimizedHttpFactory::createRequest('PUT', '/users/:id', '/users/123');
         $this->assertEquals('PUT', $request->method);
     }
 
     public function testPathCallableSlashNormalization(): void
     {
         // pathCallable should be preserved as-is for proper route matching
-        $request = new Request('GET', '/users', '/users');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users', '/users');
         $this->assertEquals('/users', $request->pathCallable);
 
-        $request = new Request('GET', '/users/', '/users/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users/', '/users/');
         $this->assertEquals('/users/', $request->pathCallable);
     }
 
@@ -55,7 +56,7 @@ class RequestTest extends TestCase
     {
         $_SERVER['QUERY_STRING'] = 'page=1&limit=10';
 
-        $request = new Request('GET', '/users/:id', '/users/123');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users/:id', '/users/123');
 
         $this->assertEquals('1', $request->query->page ?? null);
         $this->assertEquals('10', $request->query->limit ?? null);
@@ -68,7 +69,7 @@ class RequestTest extends TestCase
     {
         $_POST = ['name' => 'John', 'email' => 'john@example.com'];
 
-        $request = new Request('POST', '/users', '/users');
+        $request = OptimizedHttpFactory::createRequest('POST', '/users', '/users');
 
         $this->assertEquals('John', $request->body->name ?? null);
         $this->assertEquals('john@example.com', $request->body->email ?? null);
@@ -89,7 +90,7 @@ class RequestTest extends TestCase
             ]
         ];
 
-        $request = new Request('POST', '/upload', '/upload');
+        $request = OptimizedHttpFactory::createRequest('POST', '/upload', '/upload');
 
         $this->assertArrayHasKey('avatar', $request->files);
         $this->assertEquals('avatar.jpg', $request->files['avatar']['name']);
@@ -97,7 +98,7 @@ class RequestTest extends TestCase
 
     public function testInvalidPropertyAccess(): void
     {
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Property invalid does not exist in Request class');
@@ -107,7 +108,7 @@ class RequestTest extends TestCase
 
     public function testRouteParameterParsing(): void
     {
-        $request = new Request('GET', '/users/:id/posts/:postId', '/users/123/posts/456');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users/:id/posts/:postId', '/users/123/posts/456');
 
         // O método parseRoute deve extrair os parâmetros
         $this->assertInstanceOf('stdClass', $request->params);
@@ -117,7 +118,7 @@ class RequestTest extends TestCase
     {
         $_GET = [];
 
-        $request = new Request('GET', '/users', '/users');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users', '/users');
 
         $this->assertInstanceOf('stdClass', $request->query);
         $this->assertEmpty((array)$request->query);
@@ -127,7 +128,7 @@ class RequestTest extends TestCase
     {
         $_POST = [];
 
-        $request = new Request('POST', '/users', '/users');
+        $request = OptimizedHttpFactory::createRequest('POST', '/users', '/users');
 
         // Para POST sem dados, o corpo fica como null (json_decode de string vazia)
         // ou pode ser um objeto vazio se $_POST foi processado
@@ -140,7 +141,7 @@ class RequestTest extends TestCase
 
     public function testComplexRoutePattern(): void
     {
-        $request = new Request(
+        $request = OptimizedHttpFactory::createRequest(
             'GET',
             '/api/v1/users/:userId/posts/:postId/comments',
             '/api/v1/users/123/posts/456/comments'
@@ -153,7 +154,7 @@ class RequestTest extends TestCase
 
     public function testSpecialCharactersInPath(): void
     {
-        $request = new Request('GET', '/search', '/search');
+        $request = OptimizedHttpFactory::createRequest('GET', '/search', '/search');
 
         $this->assertEquals('/search', $request->pathCallable);
     }
@@ -162,7 +163,7 @@ class RequestTest extends TestCase
     {
         $_SERVER['QUERY_STRING'] = 'tags[]=php&tags[]=javascript&filters[active]=true&filters[category]=tech';
 
-        $request = new Request('GET', '/posts', '/posts');
+        $request = OptimizedHttpFactory::createRequest('GET', '/posts', '/posts');
 
         $this->assertIsArray($request->query->tags ?? []);
         $this->assertEquals(['php', 'javascript'], $request->query->tags ?? []);

@@ -76,7 +76,7 @@ class OptimizedHttpFactory
         // Create PSR-7 ServerRequest first
         $uri = self::createUri($pathCallable);
         $serverParams = $_SERVER ?? [];
-        $headers = getallheaders() ?: [];
+        $headers = function_exists('getallheaders') ? (getallheaders() ?: []) : [];
 
         $psr7Request = Psr7Pool::getServerRequest(
             $method,

@@ -5,6 +5,132 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-11-15 - Pluggable Router Architecture
+
+### ✨ **Added - Extensibility Features**
+
+#### 🔌 **Pluggable Router System**
+
+**New Components**:
+- ✅ `src/Routing/Contracts/RouterInterface.php` - Contract for custom router implementations
+- ✅ `src/Routing/Adapters/FastRouteAdapter.php` - Default router adapter (wraps pivotphp/core-routing)
+- ✅ `Application::group()` - Route grouping support with shared prefixes and options
+- ✅ Route options parameter - All HTTP method helpers now accept `$options` parameter
+
+**Custom Router Support**:
+```php
+// Use default router (FastRouteAdapter)
+$app = new Application();
+
+// Inject custom router
+$customRouter = new MyCustomRouter(); // implements RouterInterface
+$app = new Application(null, ['router' => $customRouter]);
+
+// Route groups with shared prefix
+$app->group('/api/v1', function($app) {
+    $app->get('/users', [UserController::class, 'index']);
+    $app->post('/users', [UserController::class, 'create']);
+}, ['middleware' => ['auth']]);
+
+// Routes with options
+$app->get('/protected', $handler, ['middleware' => ['auth', 'cors']]);
+```
+
+**RouterInterface Methods**:
+- `addRoute(string $method, string $path, callable|array|string $handler, array $options = []): void`
+- `dispatch(string $method, string $path): ?array`
+- `getRoutes(): array`
+- `group(string $prefix, callable $callback, array $options = []): void`
+- `clear(): void`
+
+**Benefits**:
+- 🎯 **Zero Breaking Changes** - Fully backward compatible via FastRouteAdapter
+- 🔧 **Extensible** - Easy to implement custom routing strategies
+- 📦 **Testable** - Clean separation allows easy testing with mock routers
+- 🚀 **Flexible** - Support for route grouping, options, and middleware configuration
+
+### 🔄 **Changed - API Enhancements**
+
+**Application Constructor**:
+```php
+// Before v2.0.1
+public function __construct(?string $basePath = null)
+
+// After v2.0.1 (backward compatible)
+public function __construct(?string $basePath = null, array $options = [])
+```
+
+**HTTP Method Helpers** - Now accept optional `$options` parameter:
+```php
+$app->get(string $path, $handler, array $options = []): self
+$app->post(string $path, $handler, array $options = []): self
+$app->put(string $path, $handler, array $options = []): self
+$app->delete(string $path, $handler, array $options = []): self
+$app->patch(string $path, $handler, array $options = []): self
+```
+
+**Router Property Type**:
+```php
+// Before v2.0.1
+private Router $router;
+
+// After v2.0.1
+private RouterInterface $router;
+```
+
+### 🧪 **Testing**
+
+**New Test Suites**:
+- ✅ `tests/Unit/Routing/FastRouteAdapterTest.php` (23 tests, 55 assertions - 100% pass)
+- ✅ `tests/Integration/Routing/CustomRouterIntegrationTest.php` (12 tests, 26 assertions - 100% pass)
+
+**Test Coverage**:
+- Route registration with parameters
+- Route dispatching and parameter extraction
+- Route grouping with nested groups
+- Options and metadata preservation
+- Custom router injection
+- Multiple HTTP methods
+- Edge cases and error handling
+
+### 📝 **Version Updates**
+
+- Application::VERSION: `2.0.0` → `2.0.1`
+- VERSION file: `2.0.0` → `2.0.1`
+
+### 🎯 **Migration Guide**
+
+**No migration required** - v2.0.1 is fully backward compatible with v2.0.0.
+
+**Optional enhancements you can adopt**:
+
+1. **Use route options** (previously required separate methods):
+   ```php
+   // New way - cleaner
+   $app->get('/admin', $handler, ['middleware' => ['auth']]);
+
+   // Old way - still works
+   $app->get('/admin', $handler);
+   $app->addMiddleware('auth');
+   ```
+
+2. **Use route groups** for better organization:
+   ```php
+   $app->group('/api/v1', function($app) {
+       $app->get('/users', $handler);
+       $app->get('/posts', $handler);
+   }, ['middleware' => ['api']]);
+   ```
+
+3. **Implement custom router** for specialized routing needs:
+   ```php
+   class RegexRouter implements RouterInterface {
+       // Custom implementation
+   }
+
+   $app = new Application(null, ['router' => new RegexRouter()]);
+   ```
+
 ## [2.0.0] - 2025-11-15 - Modular Routing & Legacy Cleanup Edition
 
 ### 🎯 **Major Breaking Changes - Architectural Modernization**

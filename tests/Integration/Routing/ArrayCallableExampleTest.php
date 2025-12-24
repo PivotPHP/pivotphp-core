@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Integration\Routing;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Tests\Integration\Routing\ExampleController;
 
 /**
@@ -43,7 +44,7 @@ class ArrayCallableExampleTest extends TestCase
      */
     public function testHealthCheckArrayCallable(): void
     {
-        $request = new Request('GET', '/health', '/health');
+        $request = OptimizedHttpFactory::createRequest('GET', '/health', '/health');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -61,7 +62,7 @@ class ArrayCallableExampleTest extends TestCase
      */
     public function testStaticMethodArrayCallable(): void
     {
-        $request = new Request('GET', '/api/info', '/api/info');
+        $request = OptimizedHttpFactory::createRequest('GET', '/api/info', '/api/info');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -79,7 +80,7 @@ class ArrayCallableExampleTest extends TestCase
      */
     public function testParameterizedArrayCallable(): void
     {
-        $request = new Request('GET', '/users/:id', '/users/12345');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users/:id', '/users/12345');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -113,7 +114,7 @@ class ArrayCallableExampleTest extends TestCase
         // Test array callable performance
         $start = microtime(true);
         for ($i = 0; $i < $iterations; $i++) {
-            $request = new Request('GET', '/health', '/health');
+            $request = OptimizedHttpFactory::createRequest('GET', '/health', '/health');
             $response = $this->app->handle($request);
             $this->assertEquals(200, $response->getStatusCode());
         }
@@ -122,7 +123,7 @@ class ArrayCallableExampleTest extends TestCase
         // Test closure performance
         $start = microtime(true);
         for ($i = 0; $i < $iterations; $i++) {
-            $request = new Request('GET', '/closure-perf', '/closure-perf');
+            $request = OptimizedHttpFactory::createRequest('GET', '/closure-perf', '/closure-perf');
             $response = $this->app->handle($request);
             $this->assertEquals(200, $response->getStatusCode());
         }

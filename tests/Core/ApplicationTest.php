@@ -7,8 +7,10 @@ namespace PivotPHP\Core\Tests\Core;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 // Response class removed - not used in tests
 use PivotPHP\Core\Routing\Router;
+use PivotPHP\Core\Routing\Contracts\RouterInterface;
 use PivotPHP\Core\Core\Config;
 use PivotPHP\Core\Providers\Container;
 use PivotPHP\Core\Exceptions\HttpException;
@@ -67,8 +69,8 @@ class ApplicationTest extends TestCase
     public function testApplicationInitialization(): void
     {
         $this->assertInstanceOf(Application::class, $this->app);
-        $this->assertEquals('2.0.0', Application::VERSION);
-        $this->assertEquals('2.0.0', $this->app->version());
+        $this->assertEquals('2.0.1', Application::VERSION);
+        $this->assertEquals('2.0.1', $this->app->version());
         $this->assertFalse($this->app->isBooted());
     }
 
@@ -194,7 +196,7 @@ class ApplicationTest extends TestCase
         );
 
         $router = $this->app->getRouter();
-        $this->assertInstanceOf(Router::class, $router);
+        $this->assertInstanceOf(RouterInterface::class, $router);
     }
 
     /**
@@ -220,7 +222,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $response = $this->app->handle($request);
 
         $this->assertTrue($middlewareCalled);
@@ -288,7 +290,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/hello/:name', '/hello/world');
+        $request = OptimizedHttpFactory::createRequest('GET', '/hello/:name', '/hello/world');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -305,7 +307,7 @@ class ApplicationTest extends TestCase
     {
         $this->app->boot();
 
-        $request = new Request('GET', '/nonexistent', '/nonexistent');
+        $request = OptimizedHttpFactory::createRequest('GET', '/nonexistent', '/nonexistent');
         $response = $this->app->handle($request);
 
         $this->assertEquals(404, $response->getStatusCode());
@@ -327,7 +329,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/error', '/error');
+        $request = OptimizedHttpFactory::createRequest('GET', '/error', '/error');
         $response = $this->app->handle($request);
 
         $this->assertEquals(500, $response->getStatusCode());
@@ -357,7 +359,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/error', '/error');
+        $request = OptimizedHttpFactory::createRequest('GET', '/error', '/error');
         $response = $this->app->handle($request);
 
         $this->assertEquals(500, $response->getStatusCode());
@@ -383,7 +385,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/forbidden', '/forbidden');
+        $request = OptimizedHttpFactory::createRequest('GET', '/forbidden', '/forbidden');
         $response = $this->app->handle($request);
 
         $this->assertEquals(403, $response->getStatusCode());
@@ -563,7 +565,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $this->app->handle($request);
 
         // Test that middleware was executed in some order

@@ -5,6 +5,7 @@ namespace PivotPHP\Core\Tests\Middleware\Performance;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Performance\CacheMiddleware;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +17,7 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -43,7 +44,7 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware(3600);
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -71,7 +72,7 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware();
 
-        $request = new Request('POST', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('POST', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -99,7 +100,7 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware(300, '/tmp/test_cache');
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 

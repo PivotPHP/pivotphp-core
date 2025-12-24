@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Middleware;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\LoadShedder;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Http\Psr7\Uri;
 
@@ -21,7 +22,7 @@ class SimpleLoadShedderTest extends TestCase
 
     public function testAllowsRequestsUnderLimit(): void
     {
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $response = new Response(200);
 
         $called = false;
@@ -40,7 +41,7 @@ class SimpleLoadShedderTest extends TestCase
     {
         $this->loadShedder->disable();
 
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $response = new Response(200);
 
         $called = false;
@@ -63,7 +64,7 @@ class SimpleLoadShedderTest extends TestCase
         $this->loadShedder->disable();
         $this->loadShedder->enable();
 
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $response = new Response(200);
 
         $called = false;

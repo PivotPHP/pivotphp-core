@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Routing;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Routing\StaticFileManager;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 
 class StaticFileManagerTest extends TestCase
@@ -108,7 +109,7 @@ class StaticFileManagerTest extends TestCase
         $this->assertIsCallable($handler);
 
         // Test that the handler works with a mock request/response
-        $request = new Request('GET', '/public/test.txt', '/public/test.txt');
+        $request = OptimizedHttpFactory::createRequest('GET', '/public/test.txt', '/public/test.txt');
         $response = new Response(200);
 
         try {

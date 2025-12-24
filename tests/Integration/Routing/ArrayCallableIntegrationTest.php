@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Integration\Routing;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Tests\Integration\Routing\HealthController;
 
 /**
@@ -55,7 +56,7 @@ class ArrayCallableIntegrationTest extends TestCase
     public function testInstanceMethodArrayCallable(): void
     {
         $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-        $request = new Request('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
+        $request = OptimizedHttpFactory::createRequest('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -76,7 +77,7 @@ class ArrayCallableIntegrationTest extends TestCase
     public function testStaticMethodArrayCallable(): void
     {
         $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-        $request = new Request('GET', "/health-{$uniqueId}/static", "/health-{$uniqueId}/static");
+        $request = OptimizedHttpFactory::createRequest('GET', "/health-{$uniqueId}/static", "/health-{$uniqueId}/static");
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -94,7 +95,7 @@ class ArrayCallableIntegrationTest extends TestCase
     public function testArrayCallableWithParameters(): void
     {
         $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-        $request = new Request('GET', "/users/:userId/health-{$uniqueId}", "/users/12345/health-{$uniqueId}");
+        $request = OptimizedHttpFactory::createRequest('GET', "/users/:userId/health-{$uniqueId}", "/users/12345/health-{$uniqueId}");
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -113,7 +114,7 @@ class ArrayCallableIntegrationTest extends TestCase
     public function testArrayCallableInGroup(): void
     {
         $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-        $request = new Request('GET', "/api/v1/status-{$uniqueId}", "/api/v1/status-{$uniqueId}");
+        $request = OptimizedHttpFactory::createRequest('GET', "/api/v1/status-{$uniqueId}", "/api/v1/status-{$uniqueId}");
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -130,12 +131,12 @@ class ArrayCallableIntegrationTest extends TestCase
     public function testClosureVsArrayCallableComparison(): void
     {
         // Test closure
-        $closureRequest = new Request('GET', '/closure-test', '/closure-test');
+        $closureRequest = OptimizedHttpFactory::createRequest('GET', '/closure-test', '/closure-test');
         $closureResponse = $this->app->handle($closureRequest);
 
         // Test array callable
         $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-        $arrayRequest = new Request('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
+        $arrayRequest = OptimizedHttpFactory::createRequest('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
         $arrayResponse = $this->app->handle($arrayRequest);
 
         // Both should work
@@ -178,7 +179,7 @@ class ArrayCallableIntegrationTest extends TestCase
         // Make multiple requests to array callable route
         for ($i = 0; $i < 10; $i++) {
             $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-            $request = new Request('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
+            $request = OptimizedHttpFactory::createRequest('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
             $response = $this->app->handle($request);
             $this->assertEquals(200, $response->getStatusCode());
         }
@@ -208,11 +209,11 @@ class ArrayCallableIntegrationTest extends TestCase
 
         // Test original controller
         $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-        $healthRequest = new Request('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
+        $healthRequest = OptimizedHttpFactory::createRequest('GET', "/health-{$uniqueId}", "/health-{$uniqueId}");
         $healthResponse = $this->app->handle($healthRequest);
 
         // Test new controller
-        $anotherRequest = new Request('GET', '/another', '/another');
+        $anotherRequest = OptimizedHttpFactory::createRequest('GET', '/another', '/another');
         $anotherResponse = $this->app->handle($anotherRequest);
 
         $this->assertEquals(200, $healthResponse->getStatusCode());
@@ -250,7 +251,7 @@ class ArrayCallableIntegrationTest extends TestCase
 
         $this->app->get('/error-test', [$errorController, 'throwError']);
 
-        $request = new Request('GET', '/error-test', '/error-test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/error-test', '/error-test');
 
         // The application should catch the exception and return 500 Internal Server Error
         $response = $this->app->handle($request);
@@ -296,7 +297,7 @@ class ArrayCallableIntegrationTest extends TestCase
         $this->app->get('/status', [$responseController, 'statusResponse']);
 
         // Test JSON response
-        $jsonRequest = new Request('GET', '/json', '/json');
+        $jsonRequest = OptimizedHttpFactory::createRequest('GET', '/json', '/json');
         $jsonResponse = $this->app->handle($jsonRequest);
         $this->assertEquals(200, $jsonResponse->getStatusCode());
         $jsonResponseBody = $jsonResponse->getBody();
@@ -307,7 +308,7 @@ class ArrayCallableIntegrationTest extends TestCase
         $this->assertEquals('json', $jsonBody['type']);
 
         // Test text response
-        $textRequest = new Request('GET', '/text', '/text');
+        $textRequest = OptimizedHttpFactory::createRequest('GET', '/text', '/text');
         $textResponse = $this->app->handle($textRequest);
         $this->assertEquals(200, $textResponse->getStatusCode());
         $textResponseBody = $textResponse->getBody();
@@ -317,7 +318,7 @@ class ArrayCallableIntegrationTest extends TestCase
         );
 
         // Test status response
-        $statusRequest = new Request('GET', '/status', '/status');
+        $statusRequest = OptimizedHttpFactory::createRequest('GET', '/status', '/status');
         $statusResponse = $this->app->handle($statusRequest);
         $this->assertEquals(201, $statusResponse->getStatusCode());
         $statusResponseBody = $statusResponse->getBody();

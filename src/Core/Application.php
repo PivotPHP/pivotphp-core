@@ -643,6 +643,13 @@ class Application
             // Isso é necessário para middlewares que dependem do path para definir os parâmetros
             $request->setPath($route['path']);
 
+            // Adicionar parâmetros de rota como attributes do PSR-7 request
+            if (isset($route['params']) && is_array($route['params'])) {
+                foreach ($route['params'] as $key => $value) {
+                    $request = $request->withAttribute("route_params.{$key}", $value);
+                }
+            }
+
             // Executar middlewares e handler
             $result = $this->middlewares->execute(
                 $request,

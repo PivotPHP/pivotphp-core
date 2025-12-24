@@ -5,6 +5,7 @@ namespace PivotPHP\Core\Tests\Middleware\Security;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Security\XssMiddleware;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -133,7 +134,7 @@ class XssMiddlewareTest extends TestCase
 
     public function testSanitizesRequestBody(): void
     {
-        $request = new Request('POST', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('POST', '/', '/');
         $request = $request->withParsedBody(
             [
                 'name' => 'John<script>alert(1)</script>',
@@ -148,7 +149,7 @@ class XssMiddlewareTest extends TestCase
 
     public function testSanitizesNestedArrays(): void
     {
-        $request = new Request('POST', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('POST', '/', '/');
         $request = $request->withParsedBody(
             [
                 'user' => [
@@ -167,7 +168,7 @@ class XssMiddlewareTest extends TestCase
 
     public function testAddsSecurityHeaders(): void
     {
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $result = $this->middleware->process($request, $this->handler);
 
         // Check CSP header
@@ -185,7 +186,7 @@ class XssMiddlewareTest extends TestCase
     {
         $middleware = new XssMiddleware('', false);
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $result = $middleware->process($request, $this->handler);
 
         $this->assertEmpty($result->getHeaderLine('Content-Security-Policy'));

@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Middleware;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\RateLimiter;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 
 /**
@@ -24,7 +25,7 @@ class RateLimiterTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->request = new Request('GET', '/test', '/test');
+        $this->request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $this->response = new Response();
     }
 
@@ -221,7 +222,7 @@ class RateLimiterTest extends TestCase
         );
 
         // Create request with whitelisted IP
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
 
         // Should allow unlimited requests from whitelisted IP
         for ($i = 0; $i < 5; $i++) {
@@ -259,7 +260,7 @@ class RateLimiterTest extends TestCase
         );
 
         // Create request with blacklisted IP
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
 
         // Should immediately reject blacklisted IP
         $response = $rateLimiter->handle(
@@ -294,7 +295,7 @@ class RateLimiterTest extends TestCase
         );
 
         // Create request with API key (mock the header by adding to $_SERVER)
-        $request = new Request('GET', '/test', '/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
         $_SERVER['HTTP_X_API_KEY'] = 'test-key-123';
 
         // Should allow requests based on API key

@@ -4,6 +4,7 @@ namespace PivotPHP\Core\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 
 class ModularFrameworkTest extends TestCase
@@ -23,7 +24,7 @@ class ModularFrameworkTest extends TestCase
 
     public function testHttpRequestBasic()
     {
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
 
         $this->assertEquals('GET', $request->method);
         $this->assertEquals('/', $request->path);
@@ -39,7 +40,7 @@ class ModularFrameworkTest extends TestCase
 
     public function testRequestWithParameters()
     {
-        $request = new Request('GET', '/users/:id', '/users/123');
+        $request = OptimizedHttpFactory::createRequest('GET', '/users/:id', '/users/123');
 
         $this->assertEquals(123, $request->param('id'));
     }

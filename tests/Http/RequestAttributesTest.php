@@ -3,6 +3,7 @@
 namespace PivotPHP\Core\Tests\Http;
 
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -12,7 +13,7 @@ class RequestAttributesTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->request = new Request('GET', '/test', '/test');
+        $this->request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
     }
 
     public function testSetAndGetAttribute(): void

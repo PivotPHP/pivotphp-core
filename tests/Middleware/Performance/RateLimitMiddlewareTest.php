@@ -5,6 +5,7 @@ namespace PivotPHP\Core\Tests\Middleware\Performance;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Performance\RateLimitMiddleware;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +17,7 @@ class RateLimitMiddlewareTest extends TestCase
     {
         $middleware = new RateLimitMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -43,7 +44,7 @@ class RateLimitMiddlewareTest extends TestCase
     {
         $middleware = new RateLimitMiddleware(['limit' => 100, 'window' => 3600]);
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -71,7 +72,7 @@ class RateLimitMiddlewareTest extends TestCase
     {
         $middleware = new RateLimitMiddleware(['key' => 'custom-key']);
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -98,7 +99,7 @@ class RateLimitMiddlewareTest extends TestCase
     {
         $middleware = new RateLimitMiddleware(['skip' => true]);
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 

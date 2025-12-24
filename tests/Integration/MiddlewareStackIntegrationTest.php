@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Integration;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Middleware\MiddlewareStack;
 
@@ -75,7 +76,7 @@ class MiddlewareStackIntegrationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/api/test', '/api/test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/api/test', '/api/test');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -125,7 +126,7 @@ class MiddlewareStackIntegrationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/error-test-middleware', '/error-test-middleware');
+        $request = OptimizedHttpFactory::createRequest('GET', '/error-test-middleware', '/error-test-middleware');
         $response = $this->app->handle($request);
 
         $this->assertTrue($errorHandled);
@@ -178,7 +179,7 @@ class MiddlewareStackIntegrationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/modify-test', '/modify-test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/modify-test', '/modify-test');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -248,7 +249,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $this->app->boot();
 
         // Test regular route
-        $request1 = new Request('GET', '/api/user', '/api/user');
+        $request1 = OptimizedHttpFactory::createRequest('GET', '/api/user', '/api/user');
         $response1 = $this->app->handle($request1);
 
         $this->assertTrue($authCheckRan);
@@ -260,7 +261,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $adminCheckRan = false;
 
         // Test admin route
-        $request2 = new Request('GET', '/admin/users', '/admin/users');
+        $request2 = OptimizedHttpFactory::createRequest('GET', '/admin/users', '/admin/users');
         $response2 = $this->app->handle($request2);
 
         $this->assertTrue($authCheckRan);
@@ -310,7 +311,7 @@ class MiddlewareStackIntegrationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/async-test', '/async-test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/async-test', '/async-test');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -374,7 +375,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         for ($j = 0; $j < $iterations; $j++) {
             $start = microtime(true);
 
-            $request = new Request('GET', $uniquePath, $uniquePath);
+            $request = OptimizedHttpFactory::createRequest('GET', $uniquePath, $uniquePath);
             $response = $this->app->handle($request);
 
             $end = microtime(true);
@@ -452,7 +453,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $this->app->boot();
 
         // Test GET
-        $getRequest = new Request('GET', '/method-test', '/method-test');
+        $getRequest = OptimizedHttpFactory::createRequest('GET', '/method-test', '/method-test');
         $getResponse = $this->app->handle($getRequest);
 
         $this->assertEquals(200, $getResponse->getStatusCode());
@@ -461,7 +462,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $this->assertEquals('GET', $getBody['method']);
 
         // Test POST
-        $postRequest = new Request('POST', '/method-test', '/method-test');
+        $postRequest = OptimizedHttpFactory::createRequest('POST', '/method-test', '/method-test');
         $postResponse = $this->app->handle($postRequest);
 
         $this->assertEquals(200, $postResponse->getStatusCode());
@@ -474,7 +475,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $this->assertTrue($postBody['validated']);
 
         // Test PUT
-        $putRequest = new Request('PUT', '/method-test', '/method-test');
+        $putRequest = OptimizedHttpFactory::createRequest('PUT', '/method-test', '/method-test');
         $putResponse = $this->app->handle($putRequest);
 
         $this->assertEquals(200, $putResponse->getStatusCode());
@@ -544,7 +545,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $this->app->boot();
 
         // Test early termination
-        $terminateRequest = new Request('GET', '/terminate', '/terminate');
+        $terminateRequest = OptimizedHttpFactory::createRequest('GET', '/terminate', '/terminate');
         $terminateResponse = $this->app->handle($terminateRequest);
 
         $this->assertEquals(403, $terminateResponse->getStatusCode());
@@ -557,7 +558,7 @@ class MiddlewareStackIntegrationTest extends TestCase
         $middlewareLog = [];
 
         // Test normal flow
-        $continueRequest = new Request('GET', '/continue', '/continue');
+        $continueRequest = OptimizedHttpFactory::createRequest('GET', '/continue', '/continue');
         $continueResponse = $this->app->handle($continueRequest);
 
         $this->assertEquals(200, $continueResponse->getStatusCode());
@@ -622,7 +623,7 @@ class MiddlewareStackIntegrationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/context-test', '/context-test');
+        $request = OptimizedHttpFactory::createRequest('GET', '/context-test', '/context-test');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());

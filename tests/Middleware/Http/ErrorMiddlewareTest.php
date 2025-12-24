@@ -5,6 +5,7 @@ namespace PivotPHP\Core\Tests\Middleware\Http;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Http\ErrorMiddleware;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Exceptions\HttpException;
 use Psr\Http\Message\ResponseInterface;
@@ -18,7 +19,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
 
         $handler = new class implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface
@@ -37,7 +38,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
 
         $handler = new class implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface
@@ -56,7 +57,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $expectedResponse = new Response();
         $expectedResponse->status(200);
 
@@ -84,7 +85,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware(true);
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
 
         $handler = new class implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface

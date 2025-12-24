@@ -7,6 +7,7 @@ namespace PivotPHP\Core\Tests\Integration\Performance;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 
 /**
  * Performance route integration test
@@ -173,7 +174,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testPerformanceJsonSmallRoute(): void
     {
-        $request = new Request('GET', '/performance/json/:size', '/performance/json/small');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/json/:size', '/performance/json/small');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -194,7 +195,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testPerformanceJsonMediumRoute(): void
     {
-        $request = new Request('GET', '/performance/json/:size', '/performance/json/medium');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/json/:size', '/performance/json/medium');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -215,7 +216,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testPerformanceJsonLargeRoute(): void
     {
-        $request = new Request('GET', '/performance/json/:size', '/performance/json/large');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/json/:size', '/performance/json/large');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -236,7 +237,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testPerformanceJsonInvalidSize(): void
     {
-        $request = new Request('GET', '/performance/json/:size', '/performance/json/invalid');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/json/:size', '/performance/json/invalid');
         $response = $this->app->handle($request);
 
         $this->assertEquals(400, $response->getStatusCode());
@@ -254,7 +255,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testPerformanceMemoryTest(): void
     {
-        $request = new Request('GET', '/performance/test/:type', '/performance/test/memory');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/test/:type', '/performance/test/memory');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -275,7 +276,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testPerformanceTimeTest(): void
     {
-        $request = new Request('GET', '/performance/test/:type', '/performance/test/time');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/test/:type', '/performance/test/time');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -297,7 +298,7 @@ class PerformanceRouteTest extends TestCase
     public function testRouteParameterExtraction(): void
     {
         // Test that parameters are correctly extracted by the router
-        $request = new Request('GET', '/performance/json/:size', '/performance/json/small');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/json/:size', '/performance/json/small');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -313,7 +314,7 @@ class PerformanceRouteTest extends TestCase
      */
     public function testJsonResponseStructure(): void
     {
-        $request = new Request('GET', '/performance/json/:size', '/performance/json/medium');
+        $request = OptimizedHttpFactory::createRequest('GET', '/performance/json/:size', '/performance/json/medium');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());

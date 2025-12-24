@@ -31,7 +31,7 @@ interface RouterInterface
      *
      * @param string $method HTTP method
      * @param string $path Request path
-     * @return array{handler: callable|array|string, params: array<string, string>, options: array<string, mixed>, path: string}|null
+     * @return array{handler: callable|array<class-string|object, string>|string, params: array<string, string>, options: array<string, mixed>, path: string, method: string}|null
      * @throws \RuntimeException If route not found or invalid
      */
     public function dispatch(string $method, string $path): ?array;

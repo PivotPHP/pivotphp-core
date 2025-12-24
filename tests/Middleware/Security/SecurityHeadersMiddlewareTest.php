@@ -5,6 +5,7 @@ namespace PivotPHP\Core\Tests\Middleware\Security;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
 use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Http\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +17,7 @@ class SecurityHeadersMiddlewareTest extends TestCase
     {
         $middleware = new SecurityHeadersMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -43,7 +44,7 @@ class SecurityHeadersMiddlewareTest extends TestCase
     {
         $middleware = new SecurityHeadersMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -77,7 +78,7 @@ class SecurityHeadersMiddlewareTest extends TestCase
             ]
         );
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
@@ -110,7 +111,7 @@ class SecurityHeadersMiddlewareTest extends TestCase
             ]
         );
 
-        $request = new Request('GET', '/', '/');
+        $request = OptimizedHttpFactory::createRequest('GET', '/', '/');
         $response = new Response();
         $response->status(200);
 
