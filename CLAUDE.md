@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-PivotPHP Core is a high-performance PHP microframework inspired by Express.js, designed for building APIs and web applications. Current version: 1.2.0 (Simplicity Edition - Simplicidade sobre Otimização Prematura).
+PivotPHP Core is a high-performance PHP microframework inspired by Express.js, designed for building APIs and web applications. Current version: 2.0.1 (Simplicity Edition - Simplicidade sobre Otimização Prematura).
 
 ## Essential Commands
 
@@ -197,7 +197,7 @@ pivotphp-core/
 
 3. **Middleware Pipeline** (`src/Middleware/`): PSR-15 compliant middleware system organized by responsibility
    - **Security**: `src/Middleware/Security/` - AuthMiddleware, CsrfMiddleware, XssMiddleware, SecurityHeadersMiddleware
-   - **Performance**: `src/Middleware/Performance/` - CacheMiddleware, RateLimitMiddleware  
+   - **Performance**: `src/Middleware/Performance/` - CacheMiddleware, RateLimitMiddleware
    - **HTTP**: `src/Middleware/Http/` - CorsMiddleware, ErrorMiddleware
    - **Core**: `src/Middleware/Core/` - BaseMiddleware, MiddlewareInterface
    - **Advanced**: LoadShedder, TrafficClassifier
@@ -209,7 +209,7 @@ pivotphp-core/
 5. **Performance Components**:
    - **JSON Optimization**: `JsonBufferPool`, `JsonBuffer` (v1.1.1)
    - **Pool Management**: `DynamicPoolManager` (consolidated in v1.1.2)
-   - **Memory Management**: `MemoryManager` 
+   - **Memory Management**: `MemoryManager`
    - **Performance Monitoring**: `PerformanceMonitor` (unified in v1.1.2)
    - **Distributed Coordination**: `DistributedPoolManager`
 
@@ -386,7 +386,7 @@ When creating new middleware, follow the organized structure:
 // Security middleware
 namespace PivotPHP\Core\Middleware\Security;
 
-// Performance middleware  
+// Performance middleware
 namespace PivotPHP\Core\Middleware\Performance;
 
 // HTTP protocol middleware
