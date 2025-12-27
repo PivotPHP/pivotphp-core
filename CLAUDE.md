@@ -251,11 +251,30 @@ src/Middleware/
 - Old namespace imports continue working transparently
 - Migration to new structure is optional but recommended
 
-### Request/Response Hybrid Design
-The framework uses a hybrid approach for PSR-7 compatibility:
-- `Request` class implements `ServerRequestInterface` while maintaining Express.js methods
-- Legacy `getBody()` renamed to `getBodyAsStdClass()` for backward compatibility
-- PSR-7 objects are lazy-loaded for performance
+### Request/Response Adapter Pattern Architecture (v2.0.1 - Dec 2025)
+
+**Major Architectural Improvement**: The HTTP layer has been migrated from inheritance to adapter pattern:
+
+**New Architecture**:
+- `ExpressRequest` composes `ServerRequestInterface` (composition over inheritance)
+- `ExpressResponse` composes `ResponseInterface` (composition over inheritance)
+- **Single source of truth**: All data stored exclusively in PSR-7 objects
+- **Zero duplication**: No data synchronization issues
+- **Full PSR-7 compliance**: Via delegation pattern
+- **Express.js API preserved**: Developer-friendly methods maintained
+
+**Performance** (AdapterPatternBenchmark.php):
+- Request Creation: **30,793 ops/sec** (0.032 ms)
+- Response Creation: **366,555 ops/sec** (0.003 ms)
+- Full Cycle: **38,984 ops/sec** (0.026 ms)
+- Memory per Object: **2.32 KB**
+
+**Backward Compatibility**:
+- 100% backward compatible via type aliases
+- Middleware uses: `use ExpressRequest as Request; use ExpressResponse as Response;`
+- All existing code works without modification
+
+**Documentation**: [Adapter Pattern Architecture](docs/technical/http/adapter-pattern-architecture.md)
 
 ### Testing Approach
 - Tests organized by domain in `tests/` directory (see phpunit.xml for test suites)

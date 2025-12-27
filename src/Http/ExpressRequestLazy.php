@@ -28,7 +28,7 @@ use stdClass;
  *
  * @package PivotPHP\Core\Http
  */
-class ExpressRequest implements ServerRequestInterface
+class ExpressRequestLazy implements ServerRequestInterface
 {
     /**
      * PSR-7 ServerRequest instance (lazy loaded)
@@ -224,12 +224,6 @@ class ExpressRequest implements ServerRequestInterface
      */
     private function extractHeaders(): array
     {
-        // If PSR-7 request exists, use its headers (handles withHeader/withAddedHeader)
-        if ($this->psr7Request !== null) {
-            $this->headers = $this->psr7Request->getHeaders();
-            return $this->headers;
-        }
-
         if ($this->headers !== null) {
             return $this->headers;
         }
@@ -449,163 +443,7 @@ class ExpressRequest implements ServerRequestInterface
      */
     public function ip(): string
     {
-        return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-    }
-
-    /**
-     * Alias for ip()
-     */
-    public function getIp(): string
-    {
-        return $this->ip();
-    }
-
-    /**
-     * Get user agent string
-     */
-    public function userAgent(): string
-    {
-        return $_SERVER['HTTP_USER_AGENT'] ?? '';
-    }
-
-    /**
-     * Check if request is AJAX
-     */
-    public function isAjax(): bool
-    {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    }
-
-    /**
-     * Check if request is secure (HTTPS)
-     */
-    public function isSecure(): bool
-    {
-        return !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-    }
-
-    /**
-     * Get full URL
-     */
-    public function fullUrl(): string
-    {
-        $scheme = $this->isSecure() ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
-        $uri = $_SERVER['REQUEST_URI'] ?? $this->pathCallable;
-        return $scheme . '://' . $host . $uri;
-    }
-
-    /**
-     * Get path
-     */
-    public function getPath(): string
-    {
-        return $this->path;
-    }
-
-    /**
-     * Set path
-     */
-    public function setPath(string $path): self
-    {
-        $this->path = $path;
-        return $this;
-    }
-
-    /**
-     * Get path callable
-     */
-    public function getPathCallable(): string
-    {
-        return $this->pathCallable;
-    }
-
-    /**
-     * Alias for param()
-     */
-    public function getParam(string $key, mixed $default = null): mixed
-    {
-        return $this->param($key, $default);
-    }
-
-    /**
-     * Alias for get()
-     */
-    public function getQuery(string $key, mixed $default = null): mixed
-    {
-        return $this->get($key, $default);
-    }
-
-    /**
-     * Get all query params as stdClass
-     */
-    public function getQuerys(): stdClass
-    {
-        return (object) $this->extractQueryParams();
-    }
-
-    /**
-     * Set attribute
-     */
-    public function setAttribute(string $name, mixed $value): self
-    {
-        $nativeProperties = ['method', 'path', 'pathCallable', 'url', 'params', 'query', 'body', 'headers', 'files'];
-
-        if (in_array($name, $nativeProperties, true)) {
-            throw new \RuntimeException("Cannot override native property: {$name}");
-        }
-
-        $this->attributes[$name] = $value;
-        if ($this->psr7Request !== null) {
-            $this->psr7Request = $this->psr7Request->withAttribute($name, $value);
-        }
-        return $this;
-    }
-
-    /**
-     * Has attribute
-     */
-    public function hasAttribute(string $name): bool
-    {
-        return isset($this->attributes[$name]);
-    }
-
-    /**
-     * Remove attribute
-     */
-    public function removeAttribute(string $name): self
-    {
-        unset($this->attributes[$name]);
-        if ($this->psr7Request !== null) {
-            $this->psr7Request = $this->psr7Request->withoutAttribute($name);
-        }
-        return $this;
-    }
-
-    /**
-     * Set multiple attributes
-     */
-    public function setAttributes(array $attributes): self
-    {
-        foreach ($attributes as $name => $value) {
-            $this->setAttribute($name, $value);
-        }
-        return $this;
-    }
-
-    /**
-     * Set headers
-     */
-    public function setHeaders(array $headers): self
-    {
-        $this->headers = $headers;
-        if ($this->psr7Request !== null) {
-            foreach ($headers as $name => $value) {
-                $this->psr7Request = $this->psr7Request->withHeader($name, $value);
-            }
-        }
-        return $this;
+        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
     }
 
     /**
@@ -624,51 +462,13 @@ class ExpressRequest implements ServerRequestInterface
         return match($name) {
             'method' => $this->method,
             'path' => $this->path,
-            'pathCallable' => $this->pathCallable,
             'url' => $this->pathCallable,
             'params' => $this->cachedParams ?? ($this->cachedParams = (object) $this->extractRouteParams()),
             'query' => $this->cachedQuery ?? ($this->cachedQuery = (object) $this->extractQueryParams()),
             'body' => $this->cachedBody ?? ($this->cachedBody = (object) ($this->extractParsedBody() ?? [])),
             'headers' => $this->headerRequest ?? ($this->headerRequest = new HeaderRequest()),
-            'files' => $this->extractUploadedFiles(),
             default => $this->getAttribute($name)
         };
-    }
-
-    /**
-     * Magic setter - allow setting custom attributes but protect native properties
-     */
-    public function __set(string $name, mixed $value): void
-    {
-        $nativeProperties = ['method', 'path', 'pathCallable', 'url', 'params', 'query', 'body', 'headers', 'files'];
-
-        if (in_array($name, $nativeProperties, true)) {
-            throw new \RuntimeException("Cannot override native property: {$name}");
-        }
-
-        $this->setAttribute($name, $value);
-    }
-
-    /**
-     * Magic isset - check if attribute exists
-     */
-    public function __isset(string $name): bool
-    {
-        return $this->hasAttribute($name);
-    }
-
-    /**
-     * Magic unset - remove custom attribute but protect native properties
-     */
-    public function __unset(string $name): void
-    {
-        $nativeProperties = ['method', 'path', 'pathCallable', 'url', 'params', 'query', 'body', 'headers', 'files'];
-
-        if (in_array($name, $nativeProperties, true)) {
-            throw new \RuntimeException("Cannot unset native property: {$name}");
-        }
-
-        $this->removeAttribute($name);
     }
 
     // ========================================================================

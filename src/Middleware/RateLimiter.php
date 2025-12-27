@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Core\Http\ExpressRequest as Request;
+use PivotPHP\Core\Http\ExpressResponse as Response;
 
 /**
  * Rate limiting middleware for v1.1.0
@@ -65,7 +65,7 @@ class RateLimiter
         // Set default key generator if not provided
         if (!$this->config['key_generator']) {
             $this->config['key_generator'] = function (Request $request) {
-                return $request->getIp();
+                return $request->ip();
             };
         }
     }

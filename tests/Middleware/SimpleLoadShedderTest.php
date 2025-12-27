@@ -23,7 +23,7 @@ class SimpleLoadShedderTest extends TestCase
     public function testAllowsRequestsUnderLimit(): void
     {
         $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
-        $response = new Response(200);
+        $response = OptimizedHttpFactory::createResponse();
 
         $called = false;
         $next = function ($req, $res) use (&$called) {
@@ -42,7 +42,7 @@ class SimpleLoadShedderTest extends TestCase
         $this->loadShedder->disable();
 
         $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
-        $response = new Response(200);
+        $response = OptimizedHttpFactory::createResponse();
 
         $called = false;
         $next = function ($req, $res) use (&$called) {
@@ -65,7 +65,7 @@ class SimpleLoadShedderTest extends TestCase
         $this->loadShedder->enable();
 
         $request = OptimizedHttpFactory::createRequest('GET', '/test', '/test');
-        $response = new Response(200);
+        $response = OptimizedHttpFactory::createResponse();
 
         $called = false;
         $next = function ($req, $res) use (&$called) {

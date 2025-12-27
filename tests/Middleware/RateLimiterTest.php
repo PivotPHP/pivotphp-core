@@ -125,7 +125,7 @@ class RateLimiterTest extends TestCase
         );
         $this->assertEquals(429, $response->getStatusCode());
 
-        $body = json_decode($response->getBody(), true);
+        $body = json_decode((string) $response->getBody(), true);
         $this->assertEquals('Too Many Requests', $body['error']);
     }
 
@@ -273,7 +273,7 @@ class RateLimiterTest extends TestCase
 
         $this->assertEquals(429, $response->getStatusCode());
         $this->assertArrayHasKey('X-RateLimit-Reason', $response->getHeaders());
-        $this->assertEquals('blacklisted', $response->getHeaders()['X-RateLimit-Reason']);
+        $this->assertEquals('blacklisted', $response->getHeaderLine('X-RateLimit-Reason'));
 
         // Cleanup
         unset($_SERVER['REMOTE_ADDR']);
@@ -361,9 +361,9 @@ class RateLimiterTest extends TestCase
         );
 
         $this->assertEquals(503, $response->getStatusCode());
-        $this->assertEquals('120', $response->getHeaders()['Retry-After']);
+        $this->assertEquals('120', $response->getHeaderLine('Retry-After'));
 
-        $body = json_decode($response->getBody(), true);
+        $body = json_decode((string) $response->getBody(), true);
         $this->assertEquals('Service Unavailable', $body['message']);
     }
 
@@ -456,7 +456,7 @@ class RateLimiterTest extends TestCase
         // Request should be allowed again after reset
         $response = $rateLimiter->handle(
             $this->request,
-            new Response(),
+            OptimizedHttpFactory::createResponse(),
             function ($req, $res) {
                 return $res->json(['status' => 'ok']);
             }
@@ -573,10 +573,9 @@ class RateLimiterTest extends TestCase
             }
         );
 
-        $headers = $response->getHeaders();
-        $this->assertEquals('5', $headers['X-RateLimit-Limit']);
-        $this->assertEquals('4', $headers['X-RateLimit-Remaining']);
-        $this->assertIsNumeric($headers['X-RateLimit-Reset']);
+        $this->assertEquals('5', $response->getHeaderLine('X-RateLimit-Limit'));
+        $this->assertEquals('4', $response->getHeaderLine('X-RateLimit-Remaining'));
+        $this->assertIsNumeric($response->getHeaderLine('X-RateLimit-Reset'));
 
         // Second request
         $response = $rateLimiter->handle(
@@ -587,9 +586,8 @@ class RateLimiterTest extends TestCase
             }
         );
 
-        $headers = $response->getHeaders();
-        $this->assertEquals('5', $headers['X-RateLimit-Limit']);
-        $this->assertEquals('3', $headers['X-RateLimit-Remaining']);
+        $this->assertEquals('5', $response->getHeaderLine('X-RateLimit-Limit'));
+        $this->assertEquals('3', $response->getHeaderLine('X-RateLimit-Remaining'));
     }
 
     /**

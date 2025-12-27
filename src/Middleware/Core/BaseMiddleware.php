@@ -2,8 +2,8 @@
 
 namespace PivotPHP\Core\Middleware\Core;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Core\Http\ExpressRequest as Request;
+use PivotPHP\Core\Http\ExpressResponse as Response;
 use PivotPHP\Core\Exceptions\HttpException;
 
 /**

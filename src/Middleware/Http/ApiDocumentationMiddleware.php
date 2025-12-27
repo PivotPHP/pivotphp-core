@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Middleware\Http;
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Core\Http\ExpressRequest as Request;
+use PivotPHP\Core\Http\ExpressResponse as Response;
 use PivotPHP\Core\Routing\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

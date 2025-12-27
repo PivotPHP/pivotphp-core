@@ -2,8 +2,9 @@
 
 namespace PivotPHP\Core\Core;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Core\Http\ExpressRequest;
+use PivotPHP\Core\Http\ExpressResponse;
+use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
 use PivotPHP\Core\Routing\Router;
 use PivotPHP\Core\Routing\Contracts\RouterInterface;
 use PivotPHP\Core\Routing\Adapters\FastRouteAdapter;
@@ -605,17 +606,17 @@ class Application
     /**
      * Processa uma requisição HTTP.
      *
-     * @param  Request|null $request Requisição (se null, cria automaticamente)
-     * @return Response
+     * @param  ExpressRequest|null $request Requisição (se null, cria automaticamente)
+     * @return ExpressResponse
      */
-    public function handle(?Request $request = null): Response
+    public function handle(?ExpressRequest $request = null): ExpressResponse
     {
         if (!$this->booted) {
             $this->boot();
         }
 
-        $request = $request ?: Request::createFromGlobals();
-        $response = new Response();
+        $request = $request ?: ExpressRequest::createFromGlobals();
+        $response = OptimizedHttpFactory::createResponse();
         $startTime = microtime(true);
 
         // Disparar evento de requisição recebida
@@ -659,7 +660,7 @@ class Application
                 }
             );
 
-            $finalResponse = $result instanceof Response ? $result : $response;
+            $finalResponse = $result instanceof ExpressResponse ? $result : $response;
 
             // Disparar evento de resposta enviada
             $processingTime = microtime(true) - $startTime;
@@ -681,15 +682,15 @@ class Application
      * Executa o handler de uma rota.
      *
      * @param  array<string, mixed> $route    Dados da rota
-     * @param  Request              $request  Requisição
-     * @param  Response             $response Resposta
-     * @return Response
+     * @param  ExpressRequest       $request  Requisição
+     * @param  ExpressResponse      $response Resposta
+     * @return ExpressResponse
      */
     protected function callRouteHandler(
         array $route,
-        Request $request,
-        Response $response
-    ): Response {
+        ExpressRequest $request,
+        ExpressResponse $response
+    ): ExpressResponse {
         $handler = $route['handler'];
 
         // Usar CallableResolver para garantir compatibilidade com array callables
@@ -710,7 +711,7 @@ class Application
             );
         }
 
-        return $result instanceof Response ? $result : $response;
+        return $result instanceof ExpressResponse ? $result : $response;
     }
 
     /**
@@ -802,18 +803,18 @@ class Application
     /**
      * Trata exceções não capturadas.
      *
-     * @param  Throwable     $e        Exceção
-     * @param  Request|null  $request  Requisição
+     * @param  Throwable          $e        Exceção
+     * @param  ExpressRequest|null  $request  Requisição
      *                                 (opcional)
-     * @param  Response|null $response Resposta (opcional)
-     * @return Response
+     * @param  ExpressResponse|null $response Resposta (opcional)
+     * @return ExpressResponse
      */
     public function handleException(
         Throwable $e,
-        ?Request $request = null,
-        ?Response $response = null
-    ): Response {
-        $response = $response ?: new Response();
+        ?ExpressRequest $request = null,
+        ?ExpressResponse $response = null
+    ): ExpressResponse {
+        $response = $response ?: OptimizedHttpFactory::createResponse();
         $debug = $this->config->get('app.debug', false);
 
         // Log do erro usando PSR-3 logger

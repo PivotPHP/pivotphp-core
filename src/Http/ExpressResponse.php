@@ -560,26 +560,6 @@ class ExpressResponse implements ExpressResponseInterface, ResponseInterface
     }
 
     /**
-     * Get body as string (legacy compatibility)
-     *
-     * @return string
-     */
-    public function getBodyAsString(): string
-    {
-        return (string) $this->psr7Response->getBody();
-    }
-
-    /**
-     * Get body as string (alias)
-     *
-     * @return string
-     */
-    public function getBodyString(): string
-    {
-        return $this->getBodyAsString();
-    }
-
-    /**
      * Enable or disable test mode
      *
      * @param bool $testMode Test mode flag

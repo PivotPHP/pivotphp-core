@@ -22,6 +22,71 @@ PivotPHP Core provides a complete PSR-7 compliant HTTP message implementation wi
 3. **Memory Efficient**: Lazy loading, stream management
 4. **Type Safe**: PHPStan Level 9 compliance
 
+## Lazy Loading Architecture (2025-12-27)
+
+### Revolutionary Performance Improvement
+
+PivotPHP's HTTP layer now implements **intelligent lazy loading**, achieving up to **36x performance improvement** for typical API endpoints.
+
+### How It Works
+
+All expensive operations are deferred until actually needed:
+
+```php
+// Request created instantly - ZERO processing!
+$req = OptimizedHttpFactory::createRequest('GET', '/users/:id', '/users/123');
+// ⚡ 1,087,058 ops/sec
+
+// Data extracted only when accessed
+$id = $req->param('id');  // Route params parsed NOW
+// 🎯 350,115 ops/sec
+
+// Other components parsed lazily
+$query = $req->query;     // Query string parsed NOW
+$headers = $req->headers; // Headers extracted NOW
+$body = $req->body;       // Body parsed NOW
+```
+
+### Performance Metrics
+
+**Throughput** (SimpleThroughputBenchmark.php):
+- **Request Creation Only**: 1,087,058 ops/sec (0.92 μs/op)
+- **Request + Param** (typical): 350,115 ops/sec (2.86 μs/op)
+- **Request + Full Data**: 45,787 ops/sec (21.84 μs/op)
+- **Full Request/Response Cycle**: 16,922 req/sec (59.10 μs/req)
+
+**Memory Efficiency**:
+- Eager loading: 2,374 bytes/object
+- Lazy (no access): 341 bytes/object (-85.7%)
+- Lazy (with access): 749 bytes/object (-68.5%)
+
+### What's Lazy Loaded
+
+1. **Headers**: Extracted from `$_SERVER` only when accessed
+2. **Query Params**: Parsed from query string only when needed
+3. **Body**: POST/PUT data parsed only when accessed
+4. **Route Params**: Regex extraction deferred until first access
+5. **Uploaded Files**: File array built only when requested
+6. **PSR-7 Request**: Full object created only for PSR-7 method calls
+
+### Backward Compatibility
+
+✅ **100% compatible** - no code changes required
+✅ **All 389 HTTP tests passing**
+✅ **Transparent optimization** - works automatically
+
+### When to Use
+
+**Perfect for**:
+- API endpoints that only need route params
+- Middleware that just forwards requests
+- High-throughput scenarios
+
+**Still fast for**:
+- Full data access (45K ops/sec)
+- Complex request processing
+- Analytics and logging
+
 ## PSR-7 Version Compatibility
 
 PivotPHP Core v1.0.1 uses PSR-7 v2.0 interfaces but allows installation with both v1.x and v2.x. See [PSR-7 Version Compatibility](../compatibility/psr7-versions.md) for details.

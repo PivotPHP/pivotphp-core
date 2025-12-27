@@ -110,7 +110,7 @@ class StaticFileManagerTest extends TestCase
 
         // Test that the handler works with a mock request/response
         $request = OptimizedHttpFactory::createRequest('GET', '/public/test.txt', '/public/test.txt');
-        $response = new Response(200);
+        $response = OptimizedHttpFactory::createResponse();
 
         try {
             $result = $handler($request, $response);

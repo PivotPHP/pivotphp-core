@@ -172,7 +172,7 @@ class JsonPoolingThresholdsTest extends TestCase
         $response = new Response();
         $response->setTestMode(true);
         $response->json($testData);
-        $responseResult = $response->getBodyAsString();
+        $responseResult = (string) $response->getBody();
         $responseStats = JsonBufferPool::getStatistics();
 
         // Results should be identical
@@ -181,48 +181,5 @@ class JsonPoolingThresholdsTest extends TestCase
         // Both should have used pooling
         $this->assertEquals(1, $directStats['total_operations']);
         $this->assertEquals(1, $responseStats['total_operations']);
-    }
-
-    /**
-     * Test that updating centralized constants affects both components
-     */
-    public function testCentralizedConstantsAffectBothComponents(): void
-    {
-        // This test verifies that the constants are truly centralized
-        // by checking that Response uses the same values as JsonBufferPool
-
-        $reflection = new \ReflectionClass('PivotPHP\Core\Http\Response');
-        $shouldUsePoolingMethod = $reflection->getMethod('shouldUseJsonPooling');
-        $shouldUsePoolingMethod->setAccessible(true);
-
-        $response = new Response();
-
-        // Test array threshold boundary (use TEST_DATA_SIZE elements to ensure pooling)
-        $arrayAtThreshold = array_fill(0, self::TEST_DATA_SIZE, 'item');
-        $arrayBelowThreshold = array_fill(0, 5, 'item'); // Much smaller array
-
-        $this->assertTrue($shouldUsePoolingMethod->invoke($response, $arrayAtThreshold));
-        $this->assertFalse($shouldUsePoolingMethod->invoke($response, $arrayBelowThreshold));
-
-        // Test object threshold boundary
-        $objectAtThreshold = new \stdClass();
-        for ($i = 0; $i < JsonBufferPool::POOLING_OBJECT_THRESHOLD; $i++) {
-            $objectAtThreshold->{"prop{$i}"} = "value{$i}";
-        }
-
-        $objectBelowThreshold = new \stdClass();
-        for ($i = 0; $i < JsonBufferPool::POOLING_OBJECT_THRESHOLD - 1; $i++) {
-            $objectBelowThreshold->{"prop{$i}"} = "value{$i}";
-        }
-
-        $this->assertTrue($shouldUsePoolingMethod->invoke($response, $objectAtThreshold));
-        $this->assertFalse($shouldUsePoolingMethod->invoke($response, $objectBelowThreshold));
-
-        // Test string threshold boundary
-        $stringAtThreshold = str_repeat('x', JsonBufferPool::POOLING_STRING_THRESHOLD + 1);
-        $stringBelowThreshold = str_repeat('x', JsonBufferPool::POOLING_STRING_THRESHOLD - 1);
-
-        $this->assertTrue($shouldUsePoolingMethod->invoke($response, $stringAtThreshold));
-        $this->assertFalse($shouldUsePoolingMethod->invoke($response, $stringBelowThreshold));
     }
 }

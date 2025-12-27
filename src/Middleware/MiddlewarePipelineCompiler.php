@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Core\Http\ExpressRequest as Request;
+use PivotPHP\Core\Http\ExpressResponse as Response;
 use PivotPHP\Core\Utils\Utils;
 
 /**

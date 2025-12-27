@@ -34,12 +34,12 @@ class JsonConsistencyTest extends TestCase
         // Test encoding with non-pooling path
         $response1 = clone $this->response;
         $response1->json($smallData);
-        $smallResult = $response1->getBodyAsString();
+        $smallResult = (string) $response1->getBody();
 
         // Test encoding with pooling path
         $response2 = clone $this->response;
         $response2->json($largeData);
-        $largeResult = $response2->getBodyAsString();
+        $largeResult = (string) $response2->getBody();
 
         // Test manual encoding with same flags
         $manualSmall = json_encode($smallData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -65,13 +65,13 @@ class JsonConsistencyTest extends TestCase
         // Small object (non-pooling)
         $response1 = clone $this->response;
         $response1->json($unicodeData);
-        $result1 = $response1->getBodyAsString();
+        $result1 = (string) $response1->getBody();
 
         // Large object (pooling) - add more fields to trigger pooling
         $largeUnicodeData = array_merge($unicodeData, array_fill(0, 10, ['unicode' => '🌟']));
         $response2 = clone $this->response;
         $response2->json($largeUnicodeData);
-        $result2 = $response2->getBodyAsString();
+        $result2 = (string) $response2->getBody();
 
         // Both should have unescaped unicode
         $this->assertStringContainsString('🚀', $result1, 'Small objects should have unescaped unicode');
@@ -96,13 +96,13 @@ class JsonConsistencyTest extends TestCase
         // Small object (non-pooling)
         $response1 = clone $this->response;
         $response1->json($slashData);
-        $result1 = $response1->getBodyAsString();
+        $result1 = (string) $response1->getBody();
 
         // Large object (pooling)
         $largeSlashData = array_merge($slashData, array_fill(0, 10, ['url' => 'https://test.com/']));
         $response2 = clone $this->response;
         $response2->json($largeSlashData);
-        $result2 = $response2->getBodyAsString();
+        $result2 = (string) $response2->getBody();
 
         // Both should have unescaped slashes
         $this->assertStringContainsString(
