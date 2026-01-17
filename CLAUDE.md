@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-PivotPHP Core is a high-performance PHP microframework inspired by Express.js, designed for building APIs and web applications. Current version: 1.2.0 (Simplicity Edition - Simplicidade sobre Otimização Prematura).
+PivotPHP Core is a high-performance PHP microframework inspired by Express.js, designed for building APIs and web applications. Current version: **2.0.0** (Legacy Cleanup Edition - Simplicity through Elimination).
+
+**Documentação oficial em PT-BR:** `website/pt/docs/` (internacionalização EN planejada)
 
 ## Essential Commands
 
