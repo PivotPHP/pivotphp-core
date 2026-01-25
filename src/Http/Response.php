@@ -2,8 +2,11 @@
 
 namespace PivotPHP\Core\Http;
 
-use PivotPHP\Core\Http\Pool\Psr7Pool;
+use PivotPHP\Core\Http\Facades\HttpPoolFacade;
 use PivotPHP\Core\Json\Pool\JsonBufferPool;
+use PivotPHP\Core\Json\Adapters\JsonBufferPoolAdapter;
+use PivotPHP\Core\Contracts\JsonOptimizerInterface;
+use PivotPHP\Core\Contracts\Psr7PoolInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use InvalidArgumentException;
@@ -70,6 +73,16 @@ class Response implements ResponseInterface
     private bool $disableAutoEmit = false;
 
     /**
+     * JSON Optimizer para otimização de encoding
+     */
+    private ?JsonOptimizerInterface $jsonOptimizer = null;
+
+    /**
+     * PSR-7 Pool Interface
+     */
+    private ?Psr7PoolInterface $psr7Pool = null;
+
+    /**
      * Response class constructor.
      */
     public function __construct()
@@ -88,15 +101,40 @@ class Response implements ResponseInterface
     }
 
     /**
+     * Injetar JSON Optimizer
+     *
+     * @param JsonOptimizerInterface $optimizer
+     * @return self
+     */
+    public function setJsonOptimizer(JsonOptimizerInterface $optimizer): self
+    {
+        $this->jsonOptimizer = $optimizer;
+        return $this;
+    }
+
+    /**
+     * Injetar PSR-7 Pool
+     *
+     * @param Psr7PoolInterface $pool
+     * @return self
+     */
+    public function setPsr7Pool(Psr7PoolInterface $pool): self
+    {
+        $this->psr7Pool = $pool;
+        return $this;
+    }
+
+    /**
      * Obtém a instância PSR-7 interna (lazy loading)
      */
     private function getPsr7Response(): ResponseInterface
     {
         if ($this->psr7Response === null) {
-            $this->psr7Response = Psr7Pool::getResponse(
+            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
+            $this->psr7Response = $pool->getResponse(
                 $this->statusCode,
                 $this->headers,
-                Psr7Pool::getStream($this->body)
+                $pool->getStream($this->body)
             );
         }
         return $this->psr7Response;
@@ -108,7 +146,8 @@ class Response implements ResponseInterface
     public function __destruct()
     {
         if ($this->psr7Response !== null) {
-            Psr7Pool::returnResponse($this->psr7Response);
+            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
+            $pool->returnResponse($this->psr7Response);
         }
     }
 
@@ -244,7 +283,8 @@ class Response implements ResponseInterface
 
         $this->body = $encoded;
         if ($this->psr7Response !== null) {
-            $this->psr7Response = $this->psr7Response->withBody(Psr7Pool::getStream($encoded));
+            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
+            $this->psr7Response = $this->psr7Response->withBody($pool->getStream($encoded));
         }
 
         // Só faz echo se não estiver em modo teste e emissão automática estiver habilitada
@@ -268,7 +308,8 @@ class Response implements ResponseInterface
         );
         $this->body = $textString;
         if ($this->psr7Response !== null) {
-            $this->psr7Response = $this->psr7Response->withBody(Psr7Pool::getStream($textString));
+            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
+            $this->psr7Response = $this->psr7Response->withBody($pool->getStream($textString));
         }
 
         // Só faz echo se não estiver em modo teste e emissão automática estiver habilitada
@@ -292,7 +333,8 @@ class Response implements ResponseInterface
         );
         $this->body = $htmlString;
         if ($this->psr7Response !== null) {
-            $this->psr7Response = $this->psr7Response->withBody(Psr7Pool::getStream($htmlString));
+            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
+            $this->psr7Response = $this->psr7Response->withBody($pool->getStream($htmlString));
         }
 
         // Só faz echo se não estiver em modo teste e emissão automática estiver habilitada
@@ -854,20 +896,29 @@ class Response implements ResponseInterface
      */
     private function shouldUseJsonPooling(mixed $data): bool
     {
-        // Usar a mesma lógica do JsonBufferPool para consistência
+        if ($this->jsonOptimizer !== null) {
+            return $this->jsonOptimizer->shouldOptimize($data);
+        }
+
+        // Fallback para uso direto do JsonBufferPool
         return JsonBufferPool::shouldUsePooling($data);
     }
 
     /**
-     * Codifica JSON usando pooling para melhor performance
+     * Codifica JSON usando otimizador ou fallback
      */
     private function encodeWithPooling(mixed $sanitizedData): string
     {
         try {
+            if ($this->jsonOptimizer !== null) {
+                return $this->jsonOptimizer->encodeJson($sanitizedData, self::JSON_ENCODE_FLAGS);
+            }
+
+            // Fallback para uso direto do JsonBufferPool
             return JsonBufferPool::encodeWithPool($sanitizedData, self::JSON_ENCODE_FLAGS);
         } catch (\Throwable $e) {
             // Fallback para encoding tradicional em caso de erro
-            error_log('JSON pooling failed, falling back to traditional encoding: ' . $e->getMessage());
+            error_log('JSON optimization failed, falling back to traditional encoding: ' . $e->getMessage());
 
             // Fallback to traditional encoding (handle JSON encoding failures internally)
             $encoded = json_encode($sanitizedData, self::JSON_ENCODE_FLAGS);

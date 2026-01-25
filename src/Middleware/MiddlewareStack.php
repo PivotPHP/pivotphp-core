@@ -4,7 +4,11 @@ namespace PivotPHP\Core\Middleware;
 
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
-use PivotPHP\Core\Utils\SerializationCache;
+use PivotPHP\Core\Contracts\SerializationCacheInterface;
+use PivotPHP\Core\Contracts\MiddlewarePipelineCompilerInterface;
+use PivotPHP\Core\Utils\Adapters\SerializationCacheAdapter;
+use PivotPHP\Core\Middleware\Adapters\MiddlewarePipelineCompilerAdapter;
+use PivotPHP\Core\Middleware\Adapters\SimpleMiddlewarePipelineCompiler;
 
 /**
  * Classe para gerenciar e executar uma stack de middlewares com otimizações.
@@ -37,9 +41,14 @@ class MiddlewareStack
 
     /**
      * Pipeline compiler instance
-     * @var MiddlewarePipelineCompiler|null
+     * @var MiddlewarePipelineCompilerInterface|null
      */
-    private static ?MiddlewarePipelineCompiler $compiler = null;
+    private static ?MiddlewarePipelineCompilerInterface $compiler = null;
+
+    /**
+     * Serialization cache (injeção)
+     */
+    private static ?SerializationCacheInterface $serializationCache = null;
 
     /**
      * Adiciona um middleware à stack.
@@ -299,8 +308,8 @@ class MiddlewareStack
     public static function benchmarkPipeline(array $middlewares, int $iterations = 1000): array
     {
         // Usa cache de serialização otimizado para gerar chave
-        $serializedData = SerializationCache::getSerializedData($middlewares);
-        $cacheKey = 'benchmark:' . md5($serializedData ?? '');
+        $serializedData = self::getSerializationCache()->getSerializedData($middlewares);
+        $cacheKey = 'benchmark:' . md5($serializedData);
 
         // Compila pipeline
         $compilationStart = microtime(true);
@@ -375,7 +384,7 @@ class MiddlewareStack
         self::$groupMiddlewares = [];
 
         // Limpa cache de serialização relacionado
-        SerializationCache::clearCache();
+        self::getSerializationCache()->clearCache();
     }
 
     /**
@@ -450,11 +459,39 @@ class MiddlewareStack
     /**
      * Get or create pipeline compiler instance
      */
-    private static function getCompiler(): MiddlewarePipelineCompiler
+    private static function getCompiler(): MiddlewarePipelineCompilerInterface
     {
         if (self::$compiler === null) {
-            self::$compiler = new MiddlewarePipelineCompiler();
+            if (class_exists(MiddlewarePipelineCompiler::class)) {
+                self::$compiler = new MiddlewarePipelineCompilerAdapter();
+            } else {
+                self::$compiler = new SimpleMiddlewarePipelineCompiler();
+            }
         }
         return self::$compiler;
+    }
+
+    /**
+     * Setter para compiler (injeção)
+     */
+    public static function setCompiler(MiddlewarePipelineCompilerInterface $compiler): void
+    {
+        self::$compiler = $compiler;
+    }
+
+    /**
+     * Setter para cache de serialização
+     */
+    public static function setSerializationCache(SerializationCacheInterface $cache): void
+    {
+        self::$serializationCache = $cache;
+    }
+
+    /**
+     * Getter para cache de serialização com fallback
+     */
+    private static function getSerializationCache(): SerializationCacheInterface
+    {
+        return self::$serializationCache ?? new SerializationCacheAdapter();
     }
 }

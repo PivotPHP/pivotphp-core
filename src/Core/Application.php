@@ -21,7 +21,6 @@ use PivotPHP\Core\Support\HookManager;
 use PivotPHP\Core\Events\ApplicationStarted;
 use PivotPHP\Core\Events\RequestReceived;
 use PivotPHP\Core\Events\ResponseSent;
-use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;

@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Http\Psr7\Pool;
 
+use PivotPHP\Core\Contracts\Psr7\OperationsCacheInterface;
+use PivotPHP\Core\Contracts\Psr7\ResponsePoolInterface;
+use PivotPHP\Core\Contracts\Psr7\HeaderPoolInterface;
 use PivotPHP\Core\Http\Psr7\Cache\OperationsCache;
+use PivotPHP\Core\Http\Psr7\Adapters\OperationsCacheAdapter;
+use PivotPHP\Core\Http\Psr7\Adapters\ResponsePoolAdapter;
+use PivotPHP\Core\Http\Psr7\Adapters\HeaderPoolAdapter;
 
 /**
  * Pool Manager for coordinating all object pools and caches
@@ -18,6 +24,21 @@ class PoolManager
      * Whether pools have been initialized
      */
     private static bool $initialized = false;
+
+    /**
+     * Operations cache (injeção)
+     */
+    private static ?OperationsCacheInterface $operationsCache = null;
+
+    /**
+     * Response pool (injeção)
+     */
+    private static ?ResponsePoolInterface $responsePool = null;
+
+    /**
+     * Header pool (injeção)
+     */
+    private static ?HeaderPoolInterface $headerPool = null;
 
     /**
      * Pool configuration
@@ -64,15 +85,15 @@ class PoolManager
     public static function warmUpAllPools(): void
     {
         if (self::$config['enable_response_pool']) {
-            ResponsePool::warmUp();
+            self::getResponsePool()->warmUp();
         }
 
         if (self::$config['enable_header_pool']) {
-            HeaderPool::warmUp();
+            self::getHeaderPool()->warmUp();
         }
 
         if (self::$config['enable_operations_cache']) {
-            OperationsCache::warmUp();
+            self::getOperationsCache()->warmUp();
         }
     }
 
@@ -90,15 +111,15 @@ class PoolManager
         ];
 
         if (self::$config['enable_response_pool']) {
-            $stats['response_pool'] = ResponsePool::getStats();
+            $stats['response_pool'] = self::getResponsePool()->getStats();
         }
 
         if (self::$config['enable_header_pool']) {
-            $stats['header_pool'] = HeaderPool::getStats();
+            $stats['header_pool'] = self::getHeaderPool()->getStats();
         }
 
         if (self::$config['enable_operations_cache']) {
-            $stats['operations_cache'] = OperationsCache::getStats();
+            $stats['operations_cache'] = self::getOperationsCache()->getStats();
         }
 
         return $stats;
@@ -109,9 +130,9 @@ class PoolManager
      */
     public static function clearAll(): void
     {
-        ResponsePool::clearAll();
-        HeaderPool::clearAll();
-        OperationsCache::clearAll();
+        self::getResponsePool()->clearAll();
+        self::getHeaderPool()->clearAll();
+        self::getOperationsCache()->clearAll();
 
         self::$stats = [
             'pool_hits' => 0,
@@ -137,7 +158,7 @@ class PoolManager
 
         // Pool-specific garbage collection
         if (self::$config['enable_response_pool']) {
-            $results['response_objects_collected'] = ResponsePool::garbageCollect();
+            $results['response_objects_collected'] = self::getResponsePool()->garbageCollect();
         }
 
         $results['memory_after'] = memory_get_usage(true);
@@ -166,10 +187,58 @@ class PoolManager
 
             // If still high, clear some caches
             if (self::checkMemoryUsage() === false) {
-                OperationsCache::clearAll();
-                HeaderPool::clearAll();
+                self::getOperationsCache()->clearAll();
+                self::getHeaderPool()->clearAll();
             }
         }
+    }
+
+    /**
+     * Setter para operations cache (injeção)
+     */
+    public static function setOperationsCache(OperationsCacheInterface $cache): void
+    {
+        self::$operationsCache = $cache;
+    }
+
+    /**
+     * Getter com fallback para adapter
+     */
+    private static function getOperationsCache(): OperationsCacheInterface
+    {
+        return self::$operationsCache ?? new OperationsCacheAdapter();
+    }
+
+    /**
+     * Getter para response pool com fallback
+     */
+    private static function getResponsePool(): ResponsePoolInterface
+    {
+        return self::$responsePool ?? new ResponsePoolAdapter();
+    }
+
+    /**
+     * Getter para header pool com fallback
+     */
+    private static function getHeaderPool(): HeaderPoolInterface
+    {
+        return self::$headerPool ?? new HeaderPoolAdapter();
+    }
+
+    /**
+     * Setter para response pool (injeção)
+     */
+    public static function setResponsePool(ResponsePoolInterface $pool): void
+    {
+        self::$responsePool = $pool;
+    }
+
+    /**
+     * Setter para header pool (injeção)
+     */
+    public static function setHeaderPool(HeaderPoolInterface $pool): void
+    {
+        self::$headerPool = $pool;
     }
 
     /**

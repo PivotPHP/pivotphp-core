@@ -45,7 +45,7 @@ class HookManager
     public function __construct(Application $app)
     {
         $this->app = $app;
-        /** @var EventDispatcherInterface */
+        /** @var EventDispatcherInterface $dispatcher */
         $dispatcher = $app->make(EventDispatcherInterface::class);
         $this->dispatcher = $dispatcher;
     }

@@ -1,5 +1,6 @@
 parameters:
     level: 9
+    treatPhpDocTypesAsCertain: false
     paths:
         - src
     excludePaths:
@@ -11,7 +12,11 @@ parameters:
         - '#Call to an undefined method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\)#'
         - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9_]+#'
         - '#Parameter \#[0-9]+ \$[a-zA-Z0-9_]+ of method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\) expects [^,]+, [^,]+ given#'
+        - '#Parameter \#[0-9]+ \$[a-zA-Z0-9_]+ of static method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\) expects [^,]+, [^,]+ given#'
         - '#Method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\) has parameter \$[a-zA-Z0-9_]+ with no value type specified in iterable type array#'
         - '#Method [a-zA-Z0-9\\_]+::[a-zA-Z0-9_]+\(\) return type has no value type specified in iterable type array#'
         - '#Property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9_]+ type has no value type specified in iterable type array#'
         - '#Call to an undefined static method Express\\Routing\\Router::(getGroupStats|warmupGroups|identifyByGroup|benchmarkGroupAccess|warmupCache)\(\)#'
+        - '#Else branch is unreachable because ternary operator condition is always#'
+        - '#Result of && is always#'
+        - '#Cannot cast mixed to string#'

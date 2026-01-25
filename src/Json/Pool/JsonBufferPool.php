@@ -247,6 +247,34 @@ class JsonBufferPool
     }
 
     /**
+     * Compat: obter estatísticas no formato simples
+     */
+    public static function getStats(): array
+    {
+        return self::getStatistics();
+    }
+
+    /**
+     * Compat: aquecer o pool com buffers básicos
+     */
+    public static function warmUp(): void
+    {
+        $sizes = [1024, 4096, 16384];
+        foreach ($sizes as $size) {
+            $buffer = self::getBuffer($size);
+            self::returnBuffer($buffer);
+        }
+    }
+
+    /**
+     * Compat: limpar caches/pools
+     */
+    public static function clearCache(): void
+    {
+        self::clearPools();
+    }
+
+    /**
      * Get optimal capacity for data
      */
     public static function getOptimalCapacity(mixed $data): int

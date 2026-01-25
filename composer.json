@@ -66,6 +66,7 @@
         "ext-mbstring": "Required for proper string handling",
         "ext-fileinfo": "Required for file upload validation",
         "ext-apcu": "For caching middleware and performance optimization",
+        "pivotphp/performance-tools": "Separate package with advanced pooling, caching, and middleware compilation (v2.2.0+)",
         "pivotphp/cycle-orm": "Database ORM integration for PivotPHP",
         "pivotphp/reactphp": "Async runtime extension for continuous execution"
     },
@@ -75,7 +76,8 @@
         },
         "files": [
             "src/functions.php",
-            "src/aliases.php"
+            "src/aliases.php",
+            "src/aliases-performance-tools.php"
         ]
     },
     "autoload-dev": {

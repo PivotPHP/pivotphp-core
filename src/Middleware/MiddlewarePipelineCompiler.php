@@ -665,6 +665,22 @@ class MiddlewarePipelineCompiler
     }
 
     /**
+     * Compat: obter pipeline compilado pelo cache key
+     */
+    public static function getCompiledPipeline(string $cacheKey): ?callable
+    {
+        return self::$compiledPipelines[$cacheKey] ?? null;
+    }
+
+    /**
+     * Compat: limpar cache mantendo semântica histórica
+     */
+    public static function clearCache(): void
+    {
+        self::clearAll();
+    }
+
+    /**
      * Intelligent garbage collection for pipeline cache
      */
     public static function performIntelligentGC(): array

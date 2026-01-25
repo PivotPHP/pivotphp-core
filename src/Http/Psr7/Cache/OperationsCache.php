@@ -144,6 +144,14 @@ class OperationsCache
     }
 
     /**
+     * Compat helper: fetch cached parameters by cache key
+     */
+    public static function getCachedParameter(string $cacheKey): mixed
+    {
+        return self::$parameterCache[$cacheKey] ?? null;
+    }
+
+    /**
      * Check if header name is valid (cached)
      */
     public static function isValidHeaderName(string $name): bool

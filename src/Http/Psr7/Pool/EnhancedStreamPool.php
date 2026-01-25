@@ -110,6 +110,14 @@ class EnhancedStreamPool
     }
 
     /**
+     * Alias para compatibilidade com StreamPoolInterface
+     */
+    public static function releaseStream(Stream $stream): void
+    {
+        self::returnStream($stream);
+    }
+
+    /**
      * Determine size category based on expected or actual size
      */
     private static function getSizeCategory(int $size): string
@@ -227,6 +235,19 @@ class EnhancedStreamPool
             'access_times_tracked' => count(self::$accessTimes),
             'memory_usage' => self::calculatePoolMemory()
         ];
+    }
+
+    /**
+     * Pré-aquecimento opcional do pool para categorias comuns
+     */
+    public static function warmUp(): void
+    {
+        // Pequeno conjunto para reduzir custo de criação inicial
+        $preloadSizes = [256, 2048, 8192, 32768];
+        foreach ($preloadSizes as $size) {
+            $stream = self::createOptimizedStream($size, self::getSizeCategory($size));
+            self::returnStream($stream);
+        }
     }
 
     /**

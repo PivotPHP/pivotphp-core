@@ -6,10 +6,9 @@ namespace PivotPHP\Core\Http\Factory;
 
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
-use PivotPHP\Core\Http\Pool\Psr7Pool;
+use PivotPHP\Core\Http\Facades\HttpPoolFacade;
 use PivotPHP\Core\Http\Psr7\Uri;
 use PivotPHP\Core\Http\Psr7\Stream;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -53,7 +52,7 @@ class OptimizedHttpFactory
         self::$config = array_merge(self::$config, $config);
 
         if (self::$config['warm_up_pools']) {
-            Psr7Pool::warmUp();
+            HttpPoolFacade::warmUp();
         }
 
         self::$initialized = true;
@@ -91,13 +90,15 @@ class OptimizedHttpFactory
     ): ServerRequestInterface {
         self::ensureInitialized();
 
-        return Psr7Pool::getServerRequest(
+        /** @var array<string,string>|null $cookies */
+        $cookies = is_array($serverParams) ? $serverParams : null;
+        return HttpPoolFacade::getServerRequest(
             $method,
             self::createUri($uri),
             self::createStream(''),
             $headers,
             '1.1',
-            $serverParams
+            $cookies
         );
     }
 
@@ -111,7 +112,7 @@ class OptimizedHttpFactory
     ): ResponseInterface {
         self::ensureInitialized();
 
-        return Psr7Pool::getResponse(
+        return HttpPoolFacade::getResponse(
             $statusCode,
             $headers,
             self::createStream($body)
@@ -126,7 +127,7 @@ class OptimizedHttpFactory
         self::ensureInitialized();
 
         if (self::$config['enable_pooling']) {
-            return Psr7Pool::getStream($content);
+            return HttpPoolFacade::getStream($content);
         }
 
         return Stream::createFromString($content);
@@ -149,7 +150,7 @@ class OptimizedHttpFactory
         self::ensureInitialized();
 
         if (self::$config['enable_pooling']) {
-            return Psr7Pool::getUri($uri);
+            return HttpPoolFacade::getUri($uri);
         }
 
         return new Uri($uri);
@@ -174,13 +175,13 @@ class OptimizedHttpFactory
         }
 
         if ($object instanceof ServerRequestInterface) {
-            Psr7Pool::returnServerRequest($object);
+            HttpPoolFacade::returnServerRequest($object);
         } elseif ($object instanceof ResponseInterface) {
-            Psr7Pool::returnResponse($object);
+            HttpPoolFacade::returnResponse($object);
         } elseif ($object instanceof StreamInterface) {
-            Psr7Pool::returnStream($object);
+            HttpPoolFacade::returnStream($object);
         } elseif ($object instanceof UriInterface) {
-            Psr7Pool::returnUri($object);
+            HttpPoolFacade::returnUri($object);
         }
     }
 
@@ -193,7 +194,7 @@ class OptimizedHttpFactory
             return ['metrics_disabled' => true];
         }
 
-        return Psr7Pool::getStats();
+        return HttpPoolFacade::getStats();
     }
 
     /**
@@ -210,7 +211,7 @@ class OptimizedHttpFactory
     public static function disablePooling(): void
     {
         self::$config['enable_pooling'] = false;
-        Psr7Pool::clearPools();
+        HttpPoolFacade::clearPools();
     }
 
     /**
@@ -218,7 +219,7 @@ class OptimizedHttpFactory
      */
     public static function clearPools(): void
     {
-        Psr7Pool::clearPools();
+        HttpPoolFacade::clearPools();
     }
 
     /**
@@ -226,7 +227,7 @@ class OptimizedHttpFactory
      */
     public static function warmUpPools(): void
     {
-        Psr7Pool::warmUp();
+        HttpPoolFacade::warmUp();
     }
 
     /**
@@ -270,7 +271,7 @@ class OptimizedHttpFactory
             return ['metrics_disabled' => true];
         }
 
-        $stats = Psr7Pool::getStats();
+        $stats = HttpPoolFacade::getStats();
 
         return [
             'memory_usage' => [

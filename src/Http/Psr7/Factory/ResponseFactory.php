@@ -8,20 +8,30 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use PivotPHP\Core\Http\Psr7\Response;
 use PivotPHP\Core\Http\Psr7\Stream;
-use PivotPHP\Core\Http\Psr7\Pool\ResponsePool;
+use PivotPHP\Core\Contracts\Psr7\ResponsePoolInterface;
+use PivotPHP\Core\Http\Psr7\Adapters\ResponsePoolAdapter;
 
 /**
  * PSR-17 Response Factory implementation with object pooling optimization
  */
 class ResponseFactory implements ResponseFactoryInterface
 {
+    public function __construct(private ?ResponsePoolInterface $responsePool = null)
+    {
+    }
+
+    private function pool(): ResponsePoolInterface
+    {
+        return $this->responsePool ?? new ResponsePoolAdapter();
+    }
+
     /**
      * Create a new response using object pool
      */
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
     {
         // Use object pool for better performance
-        return ResponsePool::getResponse($code);
+        return $this->pool()->getResponse($code);
     }
 
     /**
@@ -29,7 +39,7 @@ class ResponseFactory implements ResponseFactoryInterface
      */
     public function createJsonResponse(array $data, int $code = 200): ResponseInterface
     {
-        return ResponsePool::getJsonResponse($data, $code);
+        return $this->pool()->getJsonResponse($data, $code);
     }
 
     /**
@@ -37,7 +47,7 @@ class ResponseFactory implements ResponseFactoryInterface
      */
     public function createTextResponse(string $text, int $code = 200): ResponseInterface
     {
-        return ResponsePool::getTextResponse($text, $code);
+        return $this->pool()->getTextResponse($text, $code);
     }
 
     /**
@@ -45,7 +55,7 @@ class ResponseFactory implements ResponseFactoryInterface
      */
     public function createHtmlResponse(string $html, int $code = 200): ResponseInterface
     {
-        return ResponsePool::getHtmlResponse($html, $code);
+        return $this->pool()->getHtmlResponse($html, $code);
     }
 
     /**
@@ -66,7 +76,7 @@ class ResponseFactory implements ResponseFactoryInterface
      */
     public static function warmUp(): void
     {
-        ResponsePool::warmUp();
+        (new ResponsePoolAdapter())->warmUp();
     }
 
     /**
@@ -74,6 +84,6 @@ class ResponseFactory implements ResponseFactoryInterface
      */
     public static function getPoolStats(): array
     {
-        return ResponsePool::getStats();
+        return (new ResponsePoolAdapter())->getStats();
     }
 }
