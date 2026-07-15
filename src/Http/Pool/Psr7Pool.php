@@ -331,20 +331,22 @@ class Psr7Pool
      */
     private static function resetStream(StreamInterface $stream, string $content): StreamInterface
     {
-        if ($stream->isSeekable()) {
-            $stream->rewind();
-        }
-
-        if ($stream->isWritable()) {
-            if (method_exists($stream, 'truncate')) {
-                $stream->truncate(0);
+        // truncate() não faz parte de StreamInterface (PSR-7) — sem ele, write()
+        // após rewind() só sobrescreve os bytes correspondentes ao novo conteúdo;
+        // se o conteúdo novo for menor que o residual do uso anterior no pool,
+        // os bytes finais antigos permaneceriam no stream (vazamento de dados
+        // entre requisições). Sem truncate() disponível, não reaproveitar.
+        if ($stream->isWritable() && method_exists($stream, 'truncate')) {
+            if ($stream->isSeekable()) {
+                $stream->rewind();
             }
+            $stream->truncate(0);
             $stream->write($content);
             $stream->rewind();
             return $stream;
         }
 
-        // Se não conseguir resetar, criar novo
+        // Se não conseguir resetar com segurança, criar novo
         return Stream::createFromString($content);
     }
 

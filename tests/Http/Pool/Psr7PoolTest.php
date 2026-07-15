@@ -294,6 +294,23 @@ class Psr7PoolTest extends TestCase
     }
 
     /**
+     * Regression test: a pooled stream without truncate() must never be
+     * reused with leftover bytes from its previous content. If the new
+     * content is shorter than what the stream held before, and truncate()
+     * isn't available, resetStream() must fall back to a brand new stream
+     * instead of writing over a subset of the old bytes.
+     */
+    public function testStreamWithoutTruncateIsNotReusedWithResidualBytes(): void
+    {
+        $stream = new WritableSeekableStreamWithoutTruncate('Original long content here');
+        Psr7Pool::returnStream($stream);
+
+        $reused = Psr7Pool::getStream('Hi');
+
+        $this->assertEquals('Hi', (string) $reused);
+    }
+
+    /**
      * Test response header reset
      */
     public function testResponseHeaderReset(): void
@@ -640,4 +657,104 @@ class NonSeekableStream implements StreamInterface
     {
         throw new \RuntimeException('Stream is not writable');
     }
+}
+
+/**
+ * A writable, seekable StreamInterface implementation that does NOT expose
+ * truncate() — simulates a third-party PSR-7 stream implementation the pool
+ * might have to reuse, where StreamInterface (PSR-7) doesn't guarantee
+ * truncate() exists at all.
+ */
+class WritableSeekableStreamWithoutTruncate implements StreamInterface
+{
+    private string $content;
+    private int $position = 0;
+
+    public function __construct(string $content)
+    {
+        $this->content = $content;
+    }
+
+    public function __toString(): string
+    {
+        return $this->content;
+    }
+
+    public function close(): void
+    {
+    }
+
+    public function detach()
+    {
+        return null;
+    }
+
+    public function getSize(): ?int
+    {
+        return strlen($this->content);
+    }
+
+    public function tell(): int
+    {
+        return $this->position;
+    }
+
+    public function eof(): bool
+    {
+        return $this->position >= strlen($this->content);
+    }
+
+    public function isSeekable(): bool
+    {
+        return true;
+    }
+
+    public function seek(int $offset, int $whence = SEEK_SET): void
+    {
+        $this->position = $offset;
+    }
+
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
+
+    public function isWritable(): bool
+    {
+        return true;
+    }
+
+    public function write(string $string): int
+    {
+        // Mimics a real stream write: overwrites from the current position
+        // without clearing whatever came after it — exactly why skipping
+        // truncate() is unsafe.
+        $this->content = substr_replace($this->content, $string, $this->position, strlen($string));
+        $this->position += strlen($string);
+        return strlen($string);
+    }
+
+    public function isReadable(): bool
+    {
+        return true;
+    }
+
+    public function read(int $length): string
+    {
+        $chunk = substr($this->content, $this->position, $length);
+        $this->position += strlen($chunk);
+        return $chunk;
+    }
+
+    public function getContents(): string
+    {
+        return substr($this->content, $this->position);
+    }
+
+    public function getMetadata(?string $key = null)
+    {
+        return null;
+    }
+
+    // Intentionally no truncate() method — that's the point of this class.
 }
