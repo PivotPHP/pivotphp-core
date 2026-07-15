@@ -82,7 +82,18 @@ Media (se apenas uso interno)
 - `CHANGELOG.md` ou `UPGRADE.md` (documentar breaking change)
 
 ## Criterios de Aceite
-- [ ] Breaking change documentado explicitamente
-- [ ] Codigo que usava dispatch() string-based recebe mensagem de erro clara (nao TypeError anonimo)
-- [ ] HookManager e Events\EventDispatcher tem integracao clara e testada
-- [ ] PHPStan Level 9 sem erros
+- [x] Breaking change documentado explicitamente — nota adicionada em `CHANGELOG.md` (`[Unreleased]`)
+- [ ] Codigo que usava dispatch() string-based recebe mensagem de erro clara (nao TypeError anonimo) —
+      nao resolvido: `dispatch(object): object` e a assinatura PSR-14 da interface implementada,
+      nao ha como interceptar um `string` no mesmo metodo sem violar o contrato da interface
+      (ver "Opcao A" acima, ja descartada). Mitigado via documentacao (CHANGELOG + docblock de `fire()`).
+- [x] HookManager e Events\EventDispatcher tem integracao clara e testada — confirmado que
+      `HookManager` nao usa `fire()`/`listen()`: ele gerencia seus proprios listeners
+      (`addAction`/`addFilter`) e os registra diretamente em `ListenerProvider` via PSR-14
+      (`registerWithEventSystem()`), disparando atraves do evento `Hook` + `dispatch()`.
+      `fire()`/`listen()` seguem sendo um mecanismo separado, deliberadamente desconectado,
+      agora coberto por `tests/Events/EventDispatcherTest.php` (antes sem nenhum teste).
+- [x] PHPStan Level 9 sem erros — confirmado (`composer phpstan`)
+
+**Status: Resolvido (2026-07-15).** Opcao B (documentacao clara) foi a adotada — nao ha
+alias retrocompativel possivel para `dispatch()` sem violar `EventDispatcherInterface` (PSR-14).

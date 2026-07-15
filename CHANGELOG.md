@@ -5,6 +5,20 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### ⚠️ Clarified Breaking Change (introduced in 2.0.0, documented here)
+
+- `Events\EventDispatcher::dispatch()` is PSR-14 only (`dispatch(object $event): object`).
+  The pre-2.0 string-based dispatch (`dispatch(string $event, array $data)`) was renamed to
+  `fire(string $event, array $data): bool` and was never given a backward-compatible alias —
+  code still calling `dispatch()` with a string now gets a `TypeError`, not a deprecation
+  notice. `fire()`/`listen()` are a separate, lightweight event mechanism, unconnected to the
+  PSR-14 `dispatch()`/`ListenerProviderInterface` path and to `HookManager` (which manages its
+  own listeners against a `ListenerProvider` directly). If you need PSR-14 interoperable
+  events, use `dispatch()`/`addEventListener()`; for simple internal string-named hooks with
+  no cross-package interop, use `fire()`/`listen()`.
+
 ## [2.0.0] - 2025-11-15 - Modular Routing & Legacy Cleanup Edition
 
 ### 🎯 **Major Breaking Changes - Architectural Modernization**
