@@ -5,12 +5,25 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Http\Pool;
 
 /**
- * Pool Manager
+ * Pool Manager (generic, instance-based)
  *
  * Simple and effective object pooling for the microframework.
  * Provides basic pooling functionality without unnecessary complexity.
  *
  * Following 'Simplicidade sobre Otimização Prematura' principle.
+ *
+ * NÃO CONFUNDIR com \PivotPHP\Core\Http\Psr7\Pool\PoolManager — são classes
+ * diferentes, com propósitos diferentes, apesar do nome igual:
+ * - Esta classe (Http\Pool\PoolManager): pool genérico por instância,
+ *   rent()/return()/borrow() em pools nomeados arbitrariamente por string.
+ *   Não tem conhecimento de HTTP/PSR-7.
+ * - Http\Psr7\Pool\PoolManager: coordenador 100% estático dos pools PSR-7
+ *   específicos (ResponsePool, HeaderPool, OperationsCache). Sendo estático,
+ *   não pode implementar a mesma interface de instância que esta classe —
+ *   unificação real exigiria reescrever um dos dois de raiz, o que não se
+ *   justifica hoje: nenhuma das duas classes é usada no caminho de produção
+ *   do framework (o pooling real de request/response é feito via
+ *   HttpPoolFacade/Psr7Pool, não por nenhum destes dois PoolManager).
  */
 class PoolManager
 {
