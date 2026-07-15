@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Middleware;
 
 use PivotPHP\Core\Http\Request;
@@ -268,38 +270,6 @@ class MiddlewareStack
 
         // Fallback para execução normal
         return $finalHandler($req, $resp);
-    }
-
-    /**
-     * Pré-aquece pipelines para grupos comuns
-     */
-    public static function warmupCommonPipelines(): void
-    {
-        $commonMiddlewarePatterns = [
-            'cors' => [
-                function ($req, $resp, $next) {
-                    $resp->setHeader('Access-Control-Allow-Origin', '*');
-                    return $next($req, $resp);
-                }
-            ],
-            'json' => [
-                function ($req, $resp, $next) {
-                    $resp->setHeader('Content-Type', 'application/json');
-                    return $next($req, $resp);
-                }
-            ],
-            'security' => [
-                function ($req, $resp, $next) {
-                    $resp->setHeader('X-Frame-Options', 'DENY');
-                    $resp->setHeader('X-Content-Type-Options', 'nosniff');
-                    return $next($req, $resp);
-                }
-            ]
-        ];
-
-        foreach ($commonMiddlewarePatterns as $name => $middlewares) {
-            self::compileGroupMiddlewares('warmup:' . $name, $middlewares);
-        }
     }
 
     /**

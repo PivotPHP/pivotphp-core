@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Http;
 
 /**
@@ -41,11 +43,7 @@ class HeaderRequest
 
         $this->headers = [];
         foreach ($headers as $key => $value) {
-            $key = trim($key, ':'); // Remove leading colon
-            $camelCaseKey = explode('-', $key); // Remove any suffix after a hyphen
-            $camelCaseKey = array_map('ucfirst', $camelCaseKey);
-            $camelCaseKey = implode('', $camelCaseKey);
-            $key = lcfirst($camelCaseKey); // Convert to camelCase
+            $key = self::headerToCamel($key);
             $this->headers[$key] = $value;
         }
     }
@@ -157,5 +155,17 @@ class HeaderRequest
     {
         $accept = $this->accept();
         return $accept && (strpos($accept, 'text/html') !== false || strpos($accept, '*/*') !== false);
+    }
+
+    /**
+     * Convert a hyphenated header name to camelCase.
+     * Example: "Content-Type" → "contentType"
+     */
+    public static function headerToCamel(string $header): string
+    {
+        $header = trim($header, ':');
+        $parts = explode('-', $header);
+        $parts = array_map('ucfirst', $parts);
+        return lcfirst(implode('', $parts));
     }
 }

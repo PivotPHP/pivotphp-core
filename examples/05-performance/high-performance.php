@@ -2,10 +2,10 @@
 
 /**
  * ⚡ PivotPHP - Modo Performance Simplificado
- * 
- * Demonstra recursos de performance do PivotPHP v1.2.0+
+ *
+ * Demonstra recursos de performance do PivotPHP v2.0.0+
  * Performance simplificada, JSON optimization, memory management e métricas
- * 
+ *
  * NOTA: Versão simplificada seguindo principio "Simplicidade sobre Otimização Prematura"
  * 
  * 🚀 Como executar:
@@ -32,7 +32,7 @@ $app = new Application();
 $app->get('/', function ($req, $res) {
     return $res->json([
         'title' => 'PivotPHP - High Performance Examples',
-        'description' => 'Demonstrações dos recursos de performance v1.2.0+',
+        'description' => 'Demonstrações dos recursos de performance v2.0.0+',
         'performance_features' => [
             'High Performance Mode' => [
                 'description' => 'Modo otimizado para throughput máximo',
@@ -40,7 +40,7 @@ $app->get('/', function ($req, $res) {
                 'benefits' => ['Object pooling', 'Memory optimization', 'Response caching']
             ],
             'JSON Buffer Pooling' => [
-                'description' => 'Pool de buffers para operações JSON v1.1.1',
+                'description' => 'Pool de buffers para operações JSON v2.0.0',
                 'auto_optimization' => 'Detecta e otimiza datasets grandes automaticamente',
                 'performance_gain' => 'Até 300% de melhoria em JSON encoding/decoding'
             ],
@@ -101,7 +101,7 @@ $app->get('/enable-high-performance', function ($req, $res) {
             'object_pooling' => $status['enabled'],
             'response_caching' => $status['enabled'],
             'memory_optimization' => $status['enabled'],
-            'json_pooling' => true // Always available in v1.1.1
+            'json_pooling' => true // Always available in v2.0.0
         ],
         'performance_impact' => [
             'expected_throughput_gain' => $profile === 'PRODUCTION' ? '50-100%' : ($profile === 'DEVELOPMENT' ? '0-25%' : '0%'),
@@ -118,7 +118,7 @@ $app->get('/disable-high-performance', function ($req, $res) {
     return $res->json([
         'message' => 'Modo alta performance desativado',
         'status' => ['enabled' => PerformanceMode::isEnabled()],
-        'note' => 'JSON pooling permanece ativo (feature v1.1.1)'
+        'note' => 'JSON pooling permanece ativo (feature v2.0.0)'
     ]);
 });
 

@@ -65,7 +65,7 @@ class RateLimiter
         // Set default key generator if not provided
         if (!$this->config['key_generator']) {
             $this->config['key_generator'] = function (Request $request) {
-                return $request->getIp();
+                return $request->ip();
             };
         }
     }

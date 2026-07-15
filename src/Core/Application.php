@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Core;
 
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Routing\Router;
+use PivotPHP\Core\Routing\StaticFileManager;
 use PivotPHP\Core\Utils\CallableResolver;
 use PivotPHP\Core\Middleware\MiddlewareStack;
 use PivotPHP\Core\Exceptions\HttpException;
@@ -19,6 +22,7 @@ use PivotPHP\Core\Providers\ExtensionServiceProvider;
 use PivotPHP\Core\Providers\RoutingServiceProvider;
 use PivotPHP\Core\Support\HookManager;
 use PivotPHP\Core\Events\ApplicationStarted;
+use PivotPHP\Core\Events\ListenerProvider as EventsListenerProvider;
 use PivotPHP\Core\Events\RequestReceived;
 use PivotPHP\Core\Events\ResponseSent;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -97,6 +101,7 @@ class Application
      * @var array<string, string>
      */
     protected array $middlewareAliases = [
+        // @deprecated v2.1.0 — 'load-shedder' alias will be removed in v3.0.0. Use RateLimiter directly.
         'load-shedder' => \PivotPHP\Core\Middleware\LoadShedder::class,
         'rate-limiter' => \PivotPHP\Core\Middleware\RateLimiter::class,
     ];
@@ -312,14 +317,15 @@ class Application
         // Configuração básica de erro que funciona mesmo sem config carregado
         error_reporting(E_ALL);
         ini_set('log_errors', '1');
-
-        // Por enquanto, mostrar erros até config ser carregado
-        ini_set('display_errors', '1');
+        ini_set('display_errors', '0');
 
         set_error_handler([$this, 'handleError']);
         set_exception_handler(
             function (Throwable $e): void {
-                $this->handleException($e);
+                $response = $this->handleException($e);
+                if (!$response->isSent()) {
+                    $response->emit();
+                }
             }
         );
     }
@@ -346,7 +352,10 @@ class Application
         set_error_handler([$this, 'handleError']);
         set_exception_handler(
             function (Throwable $e): void {
-                $this->handleException($e);
+                $response = $this->handleException($e);
+                if (!$response->isSent()) {
+                    $response->emit();
+                }
             }
         );
     }
@@ -362,7 +371,7 @@ class Application
 
         if (is_array($middlewares)) {
             foreach ($middlewares as $middleware) {
-                if (is_string($middleware) || is_callable($middleware)) {
+                if (is_callable($middleware)) {
                     $this->middlewares->add($middleware);
                 }
             }
@@ -407,44 +416,66 @@ class Application
      * @param  mixed $middleware Middleware a ser adicionado
      * @return $this
      */
-    public function use($middleware): self
+    public function use(mixed $middleware): self
     {
-        // Check if it's a middleware alias
+        // Resolve alias string ('load-shedder' → class name)
         if (is_string($middleware) && isset($this->middlewareAliases[$middleware])) {
             $middleware = $this->middlewareAliases[$middleware];
         }
 
-        // If middleware is a string class name, resolve it
         if (is_string($middleware) && class_exists($middleware)) {
-            $middlewareInstance = $this->container->has($middleware)
-                ? $this->container->get($middleware)
-                : new $middleware();
-
-            // Convert to callable format expected by MiddlewareStack
-            if (is_object($middlewareInstance) && method_exists($middlewareInstance, 'handle')) {
-                $callable = function ($request, $response, $next) use ($middlewareInstance) {
-                    return $middlewareInstance->handle($request, $response, $next);
-                };
-            } else {
-                throw new \InvalidArgumentException('Middleware must have a handle method');
-            }
-
-            $this->middlewares->add($callable);
+            $this->middlewares->add($this->resolveClassMiddleware($middleware));
         } elseif (is_callable($middleware)) {
             $this->middlewares->add($middleware);
         } else {
-            // Try to make it callable
-            if (is_object($middleware) && method_exists($middleware, 'handle')) {
-                $callable = function ($request, $response, $next) use ($middleware) {
-                    return $middleware->handle($request, $response, $next);
-                };
-                $this->middlewares->add($callable);
-            } else {
-                throw new \InvalidArgumentException('Middleware must be callable or have a handle method');
-            }
+            $this->middlewares->add($this->wrapObjectMiddleware($middleware));
         }
 
         return $this;
+    }
+
+    /**
+     * Resolve a middleware class name into a callable, using the container when available.
+     *
+     * @param  string $class Fully-qualified class name of the middleware
+     * @return callable
+     * @throws \InvalidArgumentException When the resolved instance has no handle() method
+     */
+    private function resolveClassMiddleware(string $class): callable
+    {
+        $instance = $this->container->has($class)
+            ? $this->container->get($class)
+            : new $class();
+
+        if (!is_object($instance) || !method_exists($instance, 'handle')) {
+            throw new \InvalidArgumentException(
+                "Middleware class '{$class}' must have a handle() method"
+            );
+        }
+
+        return function ($request, $response, $next) use ($instance) {
+            return $instance->handle($request, $response, $next);
+        };
+    }
+
+    /**
+     * Wraps a middleware object's handle() method into a callable.
+     *
+     * @param  mixed $middleware Object expected to expose a handle() method
+     * @return callable
+     * @throws \InvalidArgumentException When the value is not an object or lacks a handle() method
+     */
+    private function wrapObjectMiddleware(mixed $middleware): callable
+    {
+        if (!is_object($middleware) || !method_exists($middleware, 'handle')) {
+            throw new \InvalidArgumentException(
+                'Middleware must be callable or an object with a handle() method'
+            );
+        }
+
+        return function ($request, $response, $next) use ($middleware) {
+            return $middleware->handle($request, $response, $next);
+        };
     }
 
     /**
@@ -466,26 +497,30 @@ class Application
     }
 
     /**
-     * Get middleware by name
+     * Retorna as opções de um middleware registrado por nome.
      *
-     * @param string $name
-     * @return mixed
+     * As opções são armazenadas via middleware() quando chamado com o segundo argumento.
+     * Retorna null se o middleware não foi registrado ou não possui opções.
+     *
+     * @param  string $name Nome do middleware
+     * @return mixed Opções do middleware ou null se não encontrado
      */
-    public function getMiddleware(string $name)
+    public function getMiddleware(string $name): mixed
     {
-        // This would need to be implemented based on how middlewares are stored
-        // For now, return null
+        if ($this->container->has("middleware.{$name}.options")) {
+            return $this->container->get("middleware.{$name}.options");
+        }
         return null;
     }
 
     /**
      * Registra uma rota GET.
      *
-     * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  string         $path    Caminho da rota
+     * @param  callable|array $handler Handler da rota
      * @return $this
      */
-    public function get(string $path, $handler): self
+    public function get(string $path, callable|array $handler): self
     {
         $this->router->get($path, $handler);
         return $this;
@@ -494,11 +529,11 @@ class Application
     /**
      * Registra uma rota POST.
      *
-     * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  string         $path    Caminho da rota
+     * @param  callable|array $handler Handler da rota
      * @return $this
      */
-    public function post(string $path, $handler): self
+    public function post(string $path, callable|array $handler): self
     {
         $this->router->post($path, $handler);
         return $this;
@@ -507,11 +542,11 @@ class Application
     /**
      * Registra uma rota PUT.
      *
-     * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  string         $path    Caminho da rota
+     * @param  callable|array $handler Handler da rota
      * @return $this
      */
-    public function put(string $path, $handler): self
+    public function put(string $path, callable|array $handler): self
     {
         $this->router->put($path, $handler);
         return $this;
@@ -520,11 +555,11 @@ class Application
     /**
      * Registra uma rota DELETE.
      *
-     * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  string         $path    Caminho da rota
+     * @param  callable|array $handler Handler da rota
      * @return $this
      */
-    public function delete(string $path, $handler): self
+    public function delete(string $path, callable|array $handler): self
     {
         $this->router->delete($path, $handler);
         return $this;
@@ -533,11 +568,11 @@ class Application
     /**
      * Registra uma rota PATCH.
      *
-     * @param  string $path    Caminho da rota
-     * @param  mixed  $handler Handler da rota
+     * @param  string         $path    Caminho da rota
+     * @param  callable|array $handler Handler da rota
      * @return $this
      */
-    public function patch(string $path, $handler): self
+    public function patch(string $path, callable|array $handler): self
     {
         $this->router->patch($path, $handler);
         return $this;
@@ -561,7 +596,7 @@ class Application
         array $options = []
     ): self {
         // Registra cada arquivo encontrado como uma rota individual
-        \PivotPHP\Core\Routing\StaticFileManager::registerDirectory($routePrefix, $physicalPath, $this, $options);
+        StaticFileManager::registerDirectory($routePrefix, $physicalPath, $this, $options);
 
         return $this;
     }
@@ -772,13 +807,11 @@ class Application
         $response = $response ?: new Response();
         $debug = $this->config->get('app.debug', false);
 
-        // Log do erro usando PSR-3 logger
-        $this->logException($e);
-
         // Determinar status code
         $statusCode = $e instanceof HttpException ? $e->getStatusCode() : 500;
 
         if ($debug) {
+            $this->logException($e);
             return $response
                 ->status($statusCode)
                 ->json(
@@ -793,8 +826,6 @@ class Application
         } else {
             // Em produção, gerar ID único para o erro e logar detalhes
             $errorId = uniqid('err_', true);
-
-            // Log detalhado para análise posterior
             $this->logException($e, $errorId);
 
             return $response
@@ -873,7 +904,7 @@ class Application
     {
         if ($this->container->has('listeners')) {
             $listenerProvider = $this->container->get('listeners');
-            if ($listenerProvider instanceof \PivotPHP\Core\Providers\ListenerProvider) {
+            if ($listenerProvider instanceof EventsListenerProvider) {
                 $listenerProvider->addListener($eventType, $listener);
                 // Rastrear listener
                 $this->registeredListeners[$eventType][] = $listener;
@@ -891,7 +922,7 @@ class Application
     {
         if ($this->container->has('listeners')) {
             $listenerProvider = $this->container->get('listeners');
-            if ($listenerProvider instanceof \PivotPHP\Core\Providers\ListenerProvider) {
+            if ($listenerProvider instanceof EventsListenerProvider) {
                 foreach ($this->registeredListeners as $eventType => $listeners) {
                     foreach ($listeners as $listener) {
                         $listenerProvider->removeListener($eventType, $listener);
@@ -982,8 +1013,11 @@ class Application
     {
         $response = $this->handle();
 
-        // Delegar toda a lógica de emissão para o Response
-        $response->emit();
+        // Application é o único ponto de emissão do ciclo de vida da requisição.
+        // A checagem evita reemitir caso o handler já tenha chamado emit() manualmente.
+        if (!$response->isSent()) {
+            $response->emit();
+        }
     }
 
     /**

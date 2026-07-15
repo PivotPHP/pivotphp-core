@@ -340,7 +340,7 @@ echo "Operações: {$stats['total_operations']}\n";
 
 ### 🔍 Enhanced Error Diagnostics
 
-PivotPHP v1.2.0 mantém **ContextualException** para diagnósticos avançados de erros:
+PivotPHP v2.0.0 mantém **ContextualException** para diagnósticos avançados de erros:
 
 #### ⚡ Sistema de Erro Inteligente
 
@@ -395,7 +395,7 @@ ContextualException::configure([
 ]);
 ```
 
-#### ✨ Recursos v1.2.0
+#### ✨ Recursos v2.0.0
 
 - ✅ **Erro IDs Únicos** - Rastreamento facilitado para debugging
 - ✅ **Sugestões Inteligentes** - Orientações específicas para resolver problemas
@@ -409,14 +409,14 @@ ContextualException::configure([
 - [JsonBufferPool Optimization Guide](docs/technical/json/BUFFER_POOL_OPTIMIZATION.md)
 - [Enhanced Error Diagnostics](docs/technical/error-handling/CONTEXTUAL_EXCEPTION_GUIDE.md)
 
-### 📖 Documentação OpenAPI/Swagger Automática (v1.2.0+)
+### 📖 Documentação OpenAPI/Swagger Automática (v2.0.0+)
 
-O PivotPHP v1.2.0+ inclui **middleware automático** para geração de documentação OpenAPI/Swagger:
+O PivotPHP v2.0.0+ inclui **middleware automático** para geração de documentação OpenAPI/Swagger:
 
 ```php
 use PivotPHP\Core\Middleware\Http\ApiDocumentationMiddleware;
 
-// ✅ NOVO v1.2.0+: Documentação automática em 3 linhas!
+// v2.0.0: Documentação automática em 3 linhas!
 $app = new Application();
 
 // Adicionar middleware de documentação automática
@@ -426,26 +426,12 @@ $app->use(new ApiDocumentationMiddleware([
     'base_url' => 'http://localhost:8080'
 ]));
 
-// Suas rotas com documentação PHPDoc
+// Registrar rotas normalmente
 $app->get('/users', function($req, $res) {
-    /**
-     * @summary List all users
-     * @description Returns a list of all users in the system
-     * @tags Users
-     * @response 200 array List of users
-     */
     return $res->json(['users' => User::all()]);
 });
 
 $app->get('/users/:id', function($req, $res) {
-    /**
-     * @summary Get user by ID
-     * @description Returns a single user by their ID
-     * @tags Users
-     * @param int id User ID
-     * @response 200 object User object
-     * @response 404 object User not found
-     */
     $userId = $req->param('id');
     return $res->json(['user' => User::find($userId)]);
 });
@@ -457,13 +443,14 @@ $app->get('/users/:id', function($req, $res) {
 
 #### 🎯 Recursos do Middleware de Documentação
 
-- ✅ **Geração automática** de OpenAPI 3.0.0 de todas as rotas
+- ✅ **Geração automática** de OpenAPI 3.0.0 de todas as rotas registradas
 - ✅ **Interface Swagger UI** integrada (zero configuração)
-- ✅ **Parsing de PHPDoc** para metadados das rotas
 - ✅ **Endpoints automáticos** `/docs` e `/swagger`
 - ✅ **Configuração flexível** de paths e URLs
 - ✅ **Zero dependências** externas
 - ✅ **Compatibilidade total** com todas as rotas
+
+> **Nota**: O middleware gera paths básicos (método HTTP + caminho) a partir das rotas registradas. Metadados adicionais (descrições, tags, parâmetros) devem ser configurados manualmente no objeto OpenAPI retornado, ou via extensão futura.
 
 #### 📝 Exemplo Completo
 
@@ -608,16 +595,16 @@ O PivotPHP oferece suporte duplo para PSR-7, permitindo uso com projetos moderno
 
 ### Verificar versão atual
 ```bash
-php scripts/switch-psr7-version.php --check
+php scripts/utils/switch-psr7-version.php --check
 ```
 
 ### Alternar entre versões
 ```bash
 # Mudar para PSR-7 v1.x (compatível com ReactPHP)
-php scripts/switch-psr7-version.php 1
+php scripts/utils/switch-psr7-version.php 1
 
 # Mudar para PSR-7 v2.x (padrão moderno)
-php scripts/switch-psr7-version.php 2
+php scripts/utils/switch-psr7-version.php 2
 ```
 
 ### Após alternar versões
@@ -633,28 +620,28 @@ Veja a [documentação completa sobre PSR-7](docs/technical/compatibility/psr7-d
 
 ---
 
-## 🏗️ Arquitetura v1.2.0 (Simplicity Edition)
+## 🏗️ Arquitetura v2.0.0 (Legacy Cleanup Edition)
 
-O PivotPHP v1.2.0 simplifica a arquitetura seguindo o princípio "Simplicidade sobre Otimização Prematura", **priorizando facilidade de uso para provas de conceito**:
+O PivotPHP v2.0.0 simplifica a arquitetura seguindo o princípio "Simplicidade sobre Otimização Prematura", **priorizando facilidade de uso para provas de conceito**:
 
-### 🎯 Recursos v1.2.0
+### 🎯 Recursos v2.0.0
 
 #### 🚀 Array Callables Nativos
 ```php
-// ✅ MANTIDO v1.2.0: Suporte nativo a array callables
+// Suporte nativo a array callables
 $app->get('/users', [UserController::class, 'index']);
 $app->post('/users', [$userController, 'store']);
 
-// ✅ Validação automática de métodos
+// Validação automática de métodos
 // Se método for privado/protegido, erro claro com sugestão
 
-// ✅ Integração total com IDE
+// Integração total com IDE
 // Autocomplete, refactoring, jump-to-definition
 ```
 
 #### 🧠 JsonBufferPool Inteligente
 ```php
-// ✅ Sistema com threshold de 256 bytes
+// Sistema com threshold de 256 bytes
 // Dados pequenos: json_encode() direto (performance máxima)
 // Dados grandes: pooling automático (otimização máxima)
 
@@ -663,7 +650,7 @@ $response = $res->json($anyData); // Sempre otimizado!
 
 #### 🔍 Enhanced Error Diagnostics
 ```php
-// ✅ ContextualException com sugestões inteligentes
+// ContextualException com sugestões inteligentes
 // Contexto rico, categorização automática, logging integrado
 
 try {
@@ -672,10 +659,6 @@ try {
     // Erro específico com sugestão clara de como resolver
 }
 ```
-
-## 🏗️ Arquitetura v1.2.0 (Simplified Foundation)
-
-O PivotPHP v1.2.0 simplifica a arquitetura v1.1.x, eliminando complexidade desnecessária:
 
 ### 🎯 Estrutura de Middlewares Organizada
 ```
@@ -693,25 +676,24 @@ src/Middleware/
     └── ErrorMiddleware.php
 ```
 
-### ✅ Melhorias da v1.2.0 (Foco em Simplicidade)
+### ✅ Melhorias da v2.0.0 (Legacy Cleanup)
+- **🧹 18% code reduction** - 11,871 linhas removidas, código limpo e direto
 - **🎯 Orientado a Protótipos** - Arquitetura simplificada para desenvolvimento rápido
-- **📚 Documentação Didática** - Exemplos práticos e guias de aprendizado
 - **🔧 Setup Mínimo** - Configuração zero para começar imediatamente
 - **💡 Conceitos Claros** - Estrutura lógica e intuitiva para estudos
-- **🛡️ Qualidade Educacional** - PHPStan Level 9, 100% testes passando para aprendizado
+- **🛡️ Qualidade** - PHPStan Level 9, PSR-12 100%, todos os testes passando
 
-### 🔄 Migração para v1.2.0
+### 🔄 Migração para v2.0.0
 ```php
-// Imports antigos (ainda funcionam via aliases)
-use PivotPHP\Core\Http\Psr15\Middleware\CorsMiddleware;
-use PivotPHP\Core\Support\Arr;
+// Imports v1.x (não funcionam mais — aliases removidos na v2.0.0)
+use PivotPHP\Core\Http\Psr15\Middleware\CorsMiddleware; // REMOVIDO
 
-// Imports recomendados (nova estrutura)
+// Imports corretos (namespace atual)
 use PivotPHP\Core\Middleware\Http\CorsMiddleware;
 use PivotPHP\Core\Utils\Arr;
 ```
 
-Veja o [Overview Estrutural](docs/releases/FRAMEWORK_OVERVIEW_v1.2.0.md) para detalhes completos.
+Veja o [Overview Estrutural v2.0.0](docs/releases/FRAMEWORK_OVERVIEW_v2.0.0.md) para detalhes completos.
 
 ---
 

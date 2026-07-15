@@ -101,7 +101,9 @@ class ExtensionManager
             }
         }
 
-        $this->register($name, $extension);
+        if (is_callable($extension)) {
+            $this->register($name, $extension);
+        }
     }
 
     /**

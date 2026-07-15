@@ -88,19 +88,23 @@ composer docker:test-quality    # All versions + extended quality metrics
 
 ### Running Examples
 ```bash
-composer examples:basic        # Basic framework usage
-composer examples:auth        # Authentication example
-composer examples:middleware  # Middleware example
+composer examples:hello-world      # Hello World (01-basics)
+composer examples:basic-routes     # Basic CRUD routes (01-basics)
+composer examples:jwt-auth         # JWT authentication (06-security)
+composer examples:array-callables  # Array callable syntax (07-advanced)
+composer examples:performance      # Performance mode (05-performance)
+composer examples:rest-api         # Complete REST API (04-api)
 ```
 
-### v1.2.0 Simplicity Edition Features
+### v2.0.0 Features
 ```php
 // Array callable support (PHP 8.4+ compatible)
 $app->get('/users', [UserController::class, 'index']);
 $app->post('/users', [$controller, 'store']);
 // Router methods now accept callable|array union types
 
-// NOVO v1.2.0: Documentação OpenAPI/Swagger Automática
+// v2.0.0: Documentação OpenAPI/Swagger Automática
+// Gera paths a partir das rotas registradas (sem parsing de PHPDoc)
 use PivotPHP\Core\Middleware\Http\ApiDocumentationMiddleware;
 
 $app->use(new ApiDocumentationMiddleware([
@@ -109,14 +113,7 @@ $app->use(new ApiDocumentationMiddleware([
     'base_url' => 'http://localhost:8080'
 ]));
 
-// Suas rotas com documentação PHPDoc
 $app->get('/users', function($req, $res) {
-    /**
-     * @summary List all users
-     * @description Returns a list of all users in the system
-     * @tags Users
-     * @response 200 array List of users
-     */
     return $res->json(['users' => User::all()]);
 });
 
@@ -128,28 +125,24 @@ $app->get('/users', function($req, $res) {
 // Response pool reuse: 0% → 99.9%
 // Framework throughput: 20,400 → 44,092 ops/sec
 
-// Organized middleware structure (v1.1.2)
+// Organized middleware structure
 use PivotPHP\Core\Middleware\Security\CsrfMiddleware;
 use PivotPHP\Core\Middleware\Performance\RateLimitMiddleware;
 use PivotPHP\Core\Middleware\Http\CorsMiddleware;
-
-// Backward compatibility maintained via aliases
-use PivotPHP\Core\Http\Psr15\Middleware\CsrfMiddleware; // Still works
-use PivotPHP\Core\Support\Arr; // Still works, now points to Utils\Arr
 
 // Consolidated utilities
 use PivotPHP\Core\Utils\Arr;
 $result = Arr::get($array, 'nested.key', 'default');
 $shuffled = Arr::shuffle($array); // Preserves keys
 
-// JSON optimization (v1.1.1 feature, maintained)
+// JSON optimization
 use PivotPHP\Core\Json\Pool\JsonBufferPool;
 $json = JsonBufferPool::encodeWithPool($data);
 $stats = JsonBufferPool::getStatistics();
 
-// High-performance mode (v1.1.0 feature, maintained)
-use PivotPHP\Core\Performance\HighPerformanceMode;
-HighPerformanceMode::enable(HighPerformanceMode::PROFILE_HIGH);
+// Performance mode (simplified class — v2.0.0 promotes PerformanceMode as default)
+use PivotPHP\Core\Performance\PerformanceMode;
+PerformanceMode::enable(PerformanceMode::PROFILE_PRODUCTION);
 ```
 
 ## Code Architecture
@@ -159,10 +152,12 @@ HighPerformanceMode::enable(HighPerformanceMode::PROFILE_HIGH);
 pivotphp-core/
 ├── src/                    # Framework source code
 │   ├── Core/              # Application core, container, services
-│   ├── Http/              # HTTP layer (Request, Response, PSR-7)
+│   ├── Events/            # Event system: EventDispatcher (PSR-14), ListenerProvider
+│   ├── Http/              # HTTP layer (Request, Response, PSR-7, CustomHeaderCollection)
+│   ├── Logging/           # PSR-3 logging: PsrLogger
 │   ├── Routing/           # Router and route management
 │   ├── Middleware/        # Middleware system (Security, Performance, HTTP, Core)
-│   ├── Providers/         # Service providers
+│   ├── Providers/         # Service providers (Container ativo; demais classes em depreciacao v2.1.0)
 │   ├── Performance/       # Performance optimization components
 │   ├── Json/              # JSON optimization and pooling
 │   ├── Utils/             # Utility classes
@@ -185,8 +180,8 @@ pivotphp-core/
 ### Core Framework Structure
 - **Service Provider Pattern**: All major components are registered via service providers in `src/Providers/`
 - **PSR Standards**: Strict PSR-7 (HTTP messages), PSR-15 (middleware), PSR-12 (coding style) compliance
-- **Container**: Dependency injection container at the heart of the framework (`src/Core/Container.php`)
-- **Event-Driven**: Event dispatcher with hooks system for extensibility
+- **Container**: Dependency injection container ativo e `src/Providers/Container.php` (PSR-11). `src/Core/Container.php` esta depreciado desde v2.1.0 e sera removido em v3.0.0.
+- **Event-Driven**: Event dispatcher PSR-14 em `src/Events/EventDispatcher.php` com hooks system para extensibilidade. `src/Providers/EventDispatcher.php` depreciado em v2.1.0.
 
 ### Key Components
 1. **Application Core** (`src/Core/Application.php`): Main application class that bootstraps the framework
@@ -199,26 +194,23 @@ pivotphp-core/
 
 3. **Middleware Pipeline** (`src/Middleware/`): PSR-15 compliant middleware system organized by responsibility
    - **Security**: `src/Middleware/Security/` - AuthMiddleware, CsrfMiddleware, XssMiddleware, SecurityHeadersMiddleware
-   - **Performance**: `src/Middleware/Performance/` - CacheMiddleware, RateLimitMiddleware
-   - **HTTP**: `src/Middleware/Http/` - CorsMiddleware, ErrorMiddleware
+   - **Performance**: `src/Middleware/Performance/` - CacheMiddleware, RateLimitMiddleware (depreciado v2.1.0; usar `RateLimiter`)
+   - **HTTP**: `src/Middleware/Http/` - CorsMiddleware, ErrorMiddleware, ApiDocumentationMiddleware
    - **Core**: `src/Middleware/Core/` - BaseMiddleware, MiddlewareInterface
-   - **Advanced**: LoadShedder, TrafficClassifier
+   - **Advanced**: LoadShedder (depreciado v2.1.0; usar `RateLimiter`), TrafficClassifier
 
 4. **HTTP Layer** (`src/Http/`): PSR-7 hybrid implementation
    - Express.js style API with PSR-7 compliance
    - Object pooling via `OptimizedHttpFactory` and `DynamicPoolManager`
 
 5. **Performance Components**:
-   - **JSON Optimization**: `JsonBufferPool`, `JsonBuffer` (v1.1.1)
-   - **Pool Management**: `DynamicPoolManager` (consolidated in v1.1.2)
-   - **Memory Management**: `MemoryManager`
-   - **Performance Monitoring**: `PerformanceMonitor` (unified in v1.1.2)
-   - **Distributed Coordination**: `DistributedPoolManager`
+   - **JSON Optimization**: `JsonBufferPool`, `JsonBuffer`
+   - **Pool Management**: `PoolManager` in `Http/Pool/`
+   - **Performance Monitoring**: `PerformanceMonitor` in `Performance/`
+   - **Performance Mode**: `PerformanceMode` (simplified default, in `Performance/`)
 
-### v1.1.4 Major Improvements & v1.1.2 Architectural Foundation
-v1.1.4 delivers major performance breakthroughs built on the v1.1.2 consolidated architecture:
+### v2.0.0 Middleware Organization
 
-#### Middleware Organization
 ```
 src/Middleware/
 ├── Security/              # Security-focused middlewares
@@ -228,30 +220,23 @@ src/Middleware/
 │   └── XssMiddleware.php
 ├── Performance/           # Performance-focused middlewares
 │   ├── CacheMiddleware.php
-│   └── RateLimitMiddleware.php
+│   └── RateLimitMiddleware.php   # @deprecated v2.1.0 — usar RateLimiter
 ├── Http/                 # HTTP protocol middlewares
+│   ├── ApiDocumentationMiddleware.php
 │   ├── CorsMiddleware.php
 │   └── ErrorMiddleware.php
 └── Core/                 # Base middleware infrastructure
     ├── BaseMiddleware.php
     └── MiddlewareInterface.php
+# LoadShedder.php (raiz Middleware/) — @deprecated v2.1.0 — usar RateLimiter
 ```
 
-#### v1.1.4 Performance Optimizations
-- **Object Pool Crisis Fixed**: Revolutionized pool reuse from 0% to 100% (Request) and 99.9% (Response)
+#### v2.0.0 Key Characteristics
+- **Object Pool**: Pool reuse 100% (Request) and 99.9% (Response)
 - **Array Callable Support**: Full PHP 8.4+ compatibility with `callable|array` union types in Router
-- **Framework Performance**: +116% improvement (20,400 → 44,092 ops/sec)
-- **Test Suite Stabilization**: 100% PSR-12 compliance, PHPUnit 10 compatibility, zero violations
-
-#### v1.1.2 Foundation (Eliminated Duplications)
-- **Support/Arr.php**: Removed, consolidated into `Utils/Arr.php`
-- **PerformanceMonitor**: Consolidated from multiple locations into `Performance/PerformanceMonitor.php`
-- **DynamicPool**: Unified as `DynamicPoolManager` in `Http/Pool/`
-
-#### Backward Compatibility
-- **12 automatic aliases** maintain 100% compatibility with existing code
-- Old namespace imports continue working transparently
-- Migration to new structure is optional but recommended
+- **Framework Performance**: +116% improvement (20,400 → 44,092 ops/sec) maintained from v1.1.4
+- **Legacy Cleanup**: 18% code reduction — eliminated deprecated classes and legacy namespaces
+- **PerformanceMode** replaces `HighPerformanceMode` as the default simplified class
 
 ### Request/Response Hybrid Design
 The framework uses a hybrid approach for PSR-7 compatibility:
@@ -261,12 +246,11 @@ The framework uses a hybrid approach for PSR-7 compatibility:
 
 ### Testing Approach
 - Tests organized by domain in `tests/` directory (see phpunit.xml for test suites)
-- Three main test suites: Core Tests, Security Tests, and full Express PHP Test Suite
+- Test suites: Core, Security, Performance, Integration, Stress, Unit
 - Each major component has its own test suite
 - Integration tests verify component interaction
-- **v1.1.2 Achievement**: 100% test success rate (430/430 tests passing)
+- **v2.0.0**: All 5,548 tests passing (100% success rate)
 - Enhanced test maintainability with constants instead of hardcoded values
-- Comprehensive stress testing in `tests/Stress/`
 - JSON optimization tests in `tests/Json/Pool/`
 
 ### Code Style Requirements
@@ -277,17 +261,17 @@ The framework uses a hybrid approach for PSR-7 compatibility:
 - All new code must include proper type declarations
 
 ### Performance Considerations
-- Framework optimized for high throughput (48,323 ops/sec average in v1.1.2)
-- v1.1.0 achieves 25x faster Request/Response creation with pooling
-- v1.1.1 provides automatic JSON optimization with 161K ops/sec (small), 17K ops/sec (medium), 1.7K ops/sec (large)
-- v1.1.2 maintains performance while reducing codebase size by 3.1%
+- Framework optimized for high throughput (44,092 ops/sec in v2.0.0)
+- Object pool reuse 100% (Request) and 99.9% (Response) with lazy loading
+- JSON optimization with automatic pooling threshold (256 bytes)
+- v2.0.0 reduced codebase by 18% compared to v1.2.0 while maintaining performance
 - Benchmark any performance-critical changes using `composer benchmark`
 - Avoid unnecessary object creation in hot paths
 - Use lazy loading for optional dependencies
 
 ## Route Handler Syntax
 
-PivotPHP Core supports the following route handler syntaxes (v1.1.4 adds full array callable support):
+PivotPHP Core supports the following route handler syntaxes:
 
 ### ✅ Supported Syntaxes
 ```php
@@ -296,7 +280,7 @@ $app->get('/users', function($req, $res) {
     return $res->json(['users' => []]);
 });
 
-// Array callable with class (NEW: Enhanced in v1.1.4)
+// Array callable with class
 $app->get('/users', [UserController::class, 'index']);     // Static/Instance method
 $app->post('/users', [$controller, 'store']);              // Instance method
 $app->put('/users/:id', [UserController::class, 'update']); // With parameters
@@ -314,11 +298,9 @@ $app->get('/users', 'getUsersHandler');
 $app->get('/users', 'UserController@index'); // TypeError!
 ```
 
-**v1.1.4 Improvements**: Router methods now use `callable|array` union types for PHP 8.4+ strict typing compatibility.
+**Important**: Router methods use `callable|array` union types for PHP 8.4+ strict typing compatibility. Strings in the format `Controller@method` are not considered callable by PHP and will result in a TypeError.
 
-**Important**: The framework validates that all handlers are `callable`. Strings in the format `Controller@method` are not considered callable by PHP and will result in a TypeError.
-
-**Migration**: Replace `'Controller@method'` with `[Controller::class, 'method']` in all documentation examples.
+**Migration**: Replace `'Controller@method'` with `[Controller::class, 'method']` in all code.
 
 ## Development Workflow
 
@@ -328,16 +310,16 @@ $app->get('/users', 'UserController@index'); // TypeError!
 4. Code style must comply with PSR-12
 5. For releases, use `./scripts/release/prepare_release.sh` followed by `./scripts/release/release.sh`
 
-### Array Callable Testing (v1.1.4)
+### Array Callable Testing
 When implementing array callable routes, verify compatibility:
 
 ```bash
 # Test array callable functionality
-vendor/bin/phpunit tests/Unit/Routing/RouterArrayCallableTest.php
+vendor/bin/phpunit tests/Unit/Routing/ArrayCallableTest.php
 vendor/bin/phpunit tests/Integration/Routing/ArrayCallableIntegrationTest.php
 
 # Test parameter routing with array callables
-vendor/bin/phpunit tests/Examples/ParameterRoutingExampleTest.php
+vendor/bin/phpunit tests/Unit/Routing/ParameterRoutingTest.php
 ```
 
 ### Debugging and Troubleshooting
@@ -354,9 +336,6 @@ vendor/bin/phpunit tests/Middleware/Security/ --testdox
 # Performance debugging
 composer benchmark:simple                    # Quick performance check
 vendor/bin/phpunit tests/Performance/ --group performance
-
-# Memory usage analysis
-vendor/bin/phpunit tests/Performance/MemoryManagerTest.php
 
 # JSON pool debugging
 vendor/bin/phpunit tests/Json/Pool/ --testdox
@@ -379,20 +358,14 @@ namespace PivotPHP\Core\Middleware\Http;
 use PivotPHP\Core\Middleware\Core\BaseMiddleware;
 ```
 
-### JSON Optimization System (v1.1.1)
+### JSON Optimization System
 
-The framework includes a sophisticated JSON pooling system that dramatically improves performance for JSON operations:
+The framework includes a JSON pooling system that improves performance for JSON operations:
 
 #### Automatic Optimization
-- **Smart Detection**: Automatically uses pooling for datasets that benefit (arrays 10+ elements, objects 5+ properties, strings >1KB)
+- **Smart Threshold**: Automatically uses pooling for data above 256 bytes
 - **Transparent Fallback**: Small data uses traditional `json_encode()` for optimal performance
 - **Zero Configuration**: Works out-of-the-box with existing code
-
-#### Performance Characteristics
-- **Throughput**: 161K ops/sec (small), 17K ops/sec (medium), 1.7K ops/sec (large) in Docker testing
-- **Reuse Rate**: 100% buffer reuse in high-frequency scenarios
-- **Memory Efficiency**: Significant reduction in garbage collection pressure
-- **Scalability**: Adaptive pool sizing based on usage patterns
 
 #### Manual Control
 ```php
@@ -401,14 +374,9 @@ $json = JsonBufferPool::encodeWithPool($data);
 
 // Configuration for production workloads
 JsonBufferPool::configure([
+    'threshold_bytes' => 256,  // Use pool only for data > 256 bytes
     'max_pool_size' => 200,
     'default_capacity' => 8192,
-    'size_categories' => [
-        'small' => 2048,   // 2KB
-        'medium' => 8192,  // 8KB
-        'large' => 32768,  // 32KB
-        'xlarge' => 131072 // 128KB
-    ]
 ]);
 
 // Real-time monitoring
@@ -418,13 +386,13 @@ $stats = JsonBufferPool::getStatistics();
 
 ## Current Version Status
 
-- **Current Version**: 1.2.0 (Simplicity Edition - Simplicidade sobre Otimização Prematura)
+- **Current Version**: 2.0.0 (Legacy Cleanup Edition - Simplicity through Elimination)
 - **Release Date**: 2025-07-21 (Quality & Maintainability Release)
 - **Previous Versions**: 1.1.4 (Developer Experience), 1.1.3 (Performance Breakthrough), 1.1.2 (Consolidation), 1.1.1 (JSON Optimization), 1.1.0 (High-Performance)
 - **Tests Status**: 684 CI tests + 131 integration tests (100% success rate), architectural simplification
 - **Performance**: +116% framework improvement (20,400 → 44,092 ops/sec), 100% object pool reuse
 - **Code Quality**: PHPStan Level 9, PSR-12 100% compliant, **zero IDE warnings**, enhanced readability
-- **Architecture**: Simple classes as core defaults, Legacy namespace for complex classes, automatic OpenAPI/Swagger documentation
+- **Architecture**: Simple classes as core defaults, deprecated complex classes removed, automatic OpenAPI/Swagger documentation
 - **Compatibility**: 100% backward compatible via automatic aliases
 - **Key Features**: ApiDocumentationMiddleware for automatic OpenAPI/Swagger generation, simplified core classes, enhanced developer experience
 
@@ -446,9 +414,9 @@ composer cs:fix                               # Auto-fix code style
 - The event system allows for deep customization without modifying core code
 - Documentation updates should be made in the `/docs` directory when adding features
 
-### v1.2.0 Key Changes
+### v2.0.0 Key Changes
 - **🎯 Simplicity Edition**: Simple classes promoted to core defaults (PerformanceMode, LoadShedder, MemoryManager, etc.)
-- **🏗️ Legacy Architecture**: Complex classes moved to `src/Legacy/` namespace for backward compatibility
+- **🏗️ Legacy Cleanup**: Deprecated complex classes and legacy aliases removed (breaking change vs v1.x)
 - **📖 Automatic OpenAPI/Swagger Documentation**: New `ApiDocumentationMiddleware` for automatic documentation generation
 - **🔄 100% Backward Compatibility**: All existing code continues to work via automatic aliases
 - **⚡ Performance Maintained**: All v1.1.4 performance improvements preserved
@@ -457,7 +425,7 @@ composer cs:fix                               # Auto-fix code style
 Following the "Simplicidade sobre Otimização Prematura" principle:
 
 - **✅ Simple Classes as Core**: `PerformanceMode`, `LoadShedder`, `MemoryManager`, `PoolManager`, etc. are now the default implementations
-- **✅ Legacy Namespace**: Complex classes moved to `src/Legacy/` for those who need advanced features
+- **✅ Clean Removal**: Deprecated and complex classes removed — codebase reduced by 18%
 - **✅ Automatic Documentation**: `ApiDocumentationMiddleware` provides automatic OpenAPI/Swagger generation
 - **✅ Zero Breaking Changes**: All existing code continues to work without modification through aliases
 - **✅ Clean Architecture**: Focused on essential functionality without unnecessary complexity
@@ -465,11 +433,11 @@ Following the "Simplicidade sobre Otimização Prematura" principle:
 **Key Principle**: "Simplicidade sobre Otimização Prematura" - Simple, correct code over complex "optimized" code.
 
 #### 📖 **Automatic OpenAPI/Swagger Documentation**
-The v1.2.0 introduces `ApiDocumentationMiddleware` that automatically:
-- Generates OpenAPI 3.0.0 specification from all routes
+The v2.0.0 introduces `ApiDocumentationMiddleware` that automatically:
+- Generates OpenAPI 3.0.0 specification from all registered routes
 - Provides `/docs` endpoint with JSON OpenAPI
 - Provides `/swagger` endpoint with Swagger UI interface
-- Parses PHPDoc comments for route metadata
+- Generates basic path entries from route method and path (no PHPDoc parsing)
 - Requires zero configuration to work
 
 ```php
@@ -480,7 +448,7 @@ $app->use(new ApiDocumentationMiddleware([
 ]));
 ```
 
-### Architectural Foundation (v1.1.2+)
-- Organized middleware structure while maintaining full backward compatibility
-- All performance optimizations from v1.1.1 and v1.1.0 are preserved and enhanced
-- Migration to new namespace structure is recommended but optional
+### Architectural Foundation (v2.0.0)
+- Organized middleware structure with Security, Performance, Http, and Core namespaces
+- 18% code reduction — legacy aliases and deprecated classes removed
+- All performance optimizations from v1.1.4 are preserved

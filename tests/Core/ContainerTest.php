@@ -35,6 +35,11 @@ class ContainerTest extends TestCase
 
     protected function setUp(): void
     {
+        // Suppress E_USER_DEPRECATED from the deprecated Core\Container class under test
+        set_error_handler(static function (int $errno): bool {
+            return $errno === E_USER_DEPRECATED;
+        }, E_ALL);
+
         // Reset singleton instance for isolated testing
         $this->resetContainerSingleton();
         $this->container = Container::getInstance();
@@ -42,6 +47,7 @@ class ContainerTest extends TestCase
 
     protected function tearDown(): void
     {
+        restore_error_handler();
         // Clean up singleton after each test
         $this->resetContainerSingleton();
     }

@@ -28,9 +28,10 @@ class HeaderPoolAdapter implements HeaderPoolInterface
     public function getHeaderValues(string $name, mixed $value): array
     {
         if (is_array($value)) {
+            /** @var array<string> $value */
             return HeaderPool::getHeaderValues($name, $value);
         }
-        return HeaderPool::getHeaderValues($name, (array)$value);
+        return HeaderPool::getHeaderValues($name, (string)$value);
     }
 
     /**
@@ -39,9 +40,10 @@ class HeaderPoolAdapter implements HeaderPoolInterface
     public function getValidatedHeaderValues(string $name, mixed $value): array
     {
         if (is_array($value)) {
+            /** @var array<string> $value */
             return HeaderPool::getValidatedHeaderValues($name, $value);
         }
-        return HeaderPool::getValidatedHeaderValues($name, (array)$value);
+        return HeaderPool::getValidatedHeaderValues($name, (string)$value);
     }
 
     /**

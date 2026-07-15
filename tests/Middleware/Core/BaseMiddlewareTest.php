@@ -27,7 +27,7 @@ class BaseMiddlewareTest extends TestCase
         parent::setUp();
         $this->middleware = new TestableBaseMiddleware();
         $this->request = new Request('GET', '/test', '/test');
-        $this->response = new Response();
+        $this->response = (new Response())->setTestMode(true);
     }
 
     /**

@@ -7,6 +7,19 @@ use PivotPHP\Core\Support\Str;
 
 class StrTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        // Suppress E_USER_DEPRECATED from deprecated Str methods under test
+        set_error_handler(static function (int $errno): bool {
+            return $errno === E_USER_DEPRECATED;
+        }, E_ALL);
+    }
+
+    protected function tearDown(): void
+    {
+        restore_error_handler();
+    }
+
     public function testCamel(): void
     {
         $this->assertEquals('expressPhp', Str::camel('express_php'));

@@ -242,11 +242,25 @@ class Psr7Pool
         string $version,
         array $serverParams
     ): ServerRequestInterface {
-        return $request
+        $request = $request
             ->withMethod($method)
             ->withUri($uri)
             ->withBody($body)
             ->withProtocolVersion($version);
+
+        // Remover headers existentes antes de aplicar os novos
+        // Captura os nomes em array separado para evitar mutação durante iteração
+        $existingHeaders = array_keys($request->getHeaders());
+        foreach ($existingHeaders as $name) {
+            $request = $request->withoutHeader($name);
+        }
+
+        // Aplicar headers do novo request
+        foreach ($headers as $name => $value) {
+            $request = $request->withHeader($name, $value);
+        }
+
+        return $request;
     }
 
     /**
@@ -315,7 +329,9 @@ class Psr7Pool
         }
 
         if ($stream->isWritable()) {
-            $stream->truncate(0);
+            if (method_exists($stream, 'truncate')) {
+                $stream->truncate(0);
+            }
             $stream->write($content);
             $stream->rewind();
             return $stream;

@@ -12,6 +12,19 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 class RateLimitMiddlewareTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        // Suppress E_USER_DEPRECATED from the deprecated RateLimitMiddleware class under test
+        set_error_handler(static function (int $errno): bool {
+            return $errno === E_USER_DEPRECATED;
+        }, E_ALL);
+    }
+
+    protected function tearDown(): void
+    {
+        restore_error_handler();
+    }
+
     public function testRateLimitMiddlewareBasicFunctionality(): void
     {
         $middleware = new RateLimitMiddleware();

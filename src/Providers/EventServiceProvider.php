@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Providers;
 
 use PivotPHP\Core\Core\Application;
+use PivotPHP\Core\Events\EventDispatcher as EventsEventDispatcher;
+use PivotPHP\Core\Events\ListenerProvider as EventsListenerProvider;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\EventDispatcher\ListenerProviderInterface;
 
@@ -22,7 +24,7 @@ class EventServiceProvider extends ServiceProvider
         $this->app->singleton(
             ListenerProviderInterface::class,
             function () {
-                return new ListenerProvider();
+                return new EventsListenerProvider();
             }
         );
 
@@ -30,9 +32,9 @@ class EventServiceProvider extends ServiceProvider
         $this->app->singleton(
             EventDispatcherInterface::class,
             function () {
-            /** @var ListenerProviderInterface $listenerProvider */
+                /** @var ListenerProviderInterface $listenerProvider */
                 $listenerProvider = $this->app->resolve(ListenerProviderInterface::class);
-                return new EventDispatcher($listenerProvider);
+                return new EventsEventDispatcher($listenerProvider);
             }
         );
 

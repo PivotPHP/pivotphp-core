@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware;
 
+use PivotPHP\Core\Http\Psr7\Factory\StreamFactory;
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
 
@@ -14,6 +15,8 @@ use PivotPHP\Core\Http\Response;
  * Simple and effective protection against overload.
  *
  * Following 'Simplicidade sobre Otimização Prematura' principle.
+ *
+ * @deprecated v2.1.0 Use \PivotPHP\Core\Middleware\RateLimiter instead.
  */
 class LoadShedder
 {
@@ -38,6 +41,7 @@ class LoadShedder
      */
     public function __construct(int $maxRequests = 100, int $windowSeconds = 60)
     {
+        trigger_error('LoadShedder is deprecated. Use RateLimiter instead.', E_USER_DEPRECATED);
         $this->maxRequests = $maxRequests;
         $this->windowSeconds = $windowSeconds;
     }
@@ -109,19 +113,19 @@ class LoadShedder
      */
     public function handle(Request $request, Response $response, callable $next): Response
     {
+        trigger_error('LoadShedder is deprecated. Use RateLimiter instead.', E_USER_DEPRECATED);
         if ($this->shouldShed($request)) {
+            $json = json_encode(
+                [
+                    'error' => 'Too Many Requests',
+                    'message' => 'Rate limit exceeded. Please try again later.',
+                    'retry_after' => $this->windowSeconds,
+                ]
+            ) ?: '{"error":"Too Many Requests"}';
             return $response
                 ->withStatus(429, 'Too Many Requests')
                 ->withHeader('Content-Type', 'application/json')
-                ->withBody(
-                    json_encode(
-                        [
-                            'error' => 'Too Many Requests',
-                            'message' => 'Rate limit exceeded. Please try again later.',
-                            'retry_after' => $this->windowSeconds,
-                        ]
-                    )
-                );
+                ->withBody((new StreamFactory())->createStream($json));
         }
 
         return $next($request, $response);

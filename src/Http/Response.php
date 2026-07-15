@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Http;
 
 use PivotPHP\Core\Http\Facades\HttpPoolFacade;
@@ -68,11 +70,6 @@ class Response implements ResponseInterface
     private bool $sent = false;
 
     /**
-     * Indicates if automatic emission control is disabled.
-     */
-    private bool $disableAutoEmit = false;
-
-    /**
      * JSON Optimizer para otimização de encoding
      */
     private ?JsonOptimizerInterface $jsonOptimizer = null;
@@ -87,17 +84,8 @@ class Response implements ResponseInterface
      */
     public function __construct()
     {
-        // Detectar automaticamente modo teste
-        if (
-            defined('PHPUNIT_TESTSUITE') ||
-            (defined('PHPUNIT_COMPOSER_INSTALL') || class_exists('PHPUnit\Framework\TestCase')) ||
-            (isset($_ENV['PHPUNIT_RUNNING']) || getenv('PHPUNIT_RUNNING')) ||
-            strpos($_SERVER['SCRIPT_NAME'] ?? '', 'phpunit') !== false
-        ) {
-            $this->testMode = true;
-        }
-
         // PSR-7 response será inicializado apenas quando necessário (lazy loading)
+        // Use setTestMode(true) in tests that need to suppress output
     }
 
     /**
@@ -214,6 +202,12 @@ class Response implements ResponseInterface
 
     /**
      * Define o modo teste (não faz echo direto).
+     *
+     * Em modo teste, os métodos json(), text(), html() e emit() não emitem saída.
+     * Deve ser ativado explicitamente em testes unitários: $response->setTestMode(true).
+     * A auto-detecção de ambiente de teste foi removida na v2.0.0.
+     *
+     * @param bool $testMode true para ativar modo teste, false para desativar
      */
     public function setTestMode(bool $testMode): self
     {
@@ -287,11 +281,6 @@ class Response implements ResponseInterface
             $this->psr7Response = $this->psr7Response->withBody($pool->getStream($encoded));
         }
 
-        // Só faz echo se não estiver em modo teste e emissão automática estiver habilitada
-        if (!$this->testMode && !$this->disableAutoEmit) {
-            $this->emit();
-        }
-
         return $this;
     }
 
@@ -312,11 +301,6 @@ class Response implements ResponseInterface
             $this->psr7Response = $this->psr7Response->withBody($pool->getStream($textString));
         }
 
-        // Só faz echo se não estiver em modo teste e emissão automática estiver habilitada
-        if (!$this->testMode && !$this->disableAutoEmit) {
-            $this->emit();
-        }
-
         return $this;
     }
 
@@ -335,11 +319,6 @@ class Response implements ResponseInterface
         if ($this->psr7Response !== null) {
             $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
             $this->psr7Response = $this->psr7Response->withBody($pool->getStream($htmlString));
-        }
-
-        // Só faz echo se não estiver em modo teste e emissão automática estiver habilitada
-        if (!$this->testMode && !$this->disableAutoEmit) {
-            $this->emit();
         }
 
         return $this;
@@ -833,11 +812,13 @@ class Response implements ResponseInterface
     }
 
     /**
-     * Define se a emissão automática está desabilitada.
+     * @deprecated Desde a remoção do auto-emit, json()/text()/html() nunca emitem
+     * sozinhos — a emissão é sempre responsabilidade de Application::run() (ou de
+     * uma chamada explícita a emit()). Método mantido como no-op para compatibilidade
+     * com código que ainda o chama.
      */
     public function disableAutoEmit(bool $disable = true): self
     {
-        $this->disableAutoEmit = $disable;
         return $this;
     }
 

@@ -2,14 +2,12 @@
 
 declare(strict_types=1);
 
-namespace PivotPHP\Core\Providers;
+namespace PivotPHP\Core\Events;
 
 use Psr\EventDispatcher\ListenerProviderInterface;
 
 /**
  * Simple listener provider implementation
- *
- * @deprecated v2.1.0 Use \PivotPHP\Core\Events\ListenerProvider instead.
  */
 class ListenerProvider implements ListenerProviderInterface
 {
@@ -17,14 +15,6 @@ class ListenerProvider implements ListenerProviderInterface
      * @var array<string, array<callable>>
      */
     private array $listeners = [];
-
-    public function __construct()
-    {
-        trigger_error(
-            'PivotPHP\\Core\\Providers\\ListenerProvider is deprecated. Use PivotPHP\\Core\\Events\\ListenerProvider instead.',
-            E_USER_DEPRECATED
-        );
-    }
 
     /**
      * {@inheritdoc}

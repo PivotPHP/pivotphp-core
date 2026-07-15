@@ -1,6 +1,6 @@
-# PivotPHP Core v1.2.0 - Complete Examples Collection 🚀
+# PivotPHP Core v2.0.0 - Complete Examples Collection 🚀
 
-This directory contains production-ready examples that demonstrate the full potential of PivotPHP Core v1.2.0, including simplified performance mode and clean architecture.
+This directory contains production-ready examples that demonstrate the full potential of PivotPHP Core v2.0.0, including simplified performance mode and clean architecture.
 
 ## 🎯 What's New in v2.0.0
 
@@ -36,14 +36,13 @@ This directory contains production-ready examples that demonstrate the full pote
 - **rest-api.php** - Complete RESTful API with pagination, filters and validation
 
 ### 05-performance - Performance & Optimization
-- **high-performance.php** - v1.2.0 simplified performance mode, JSON optimization, metrics
+- **high-performance.php** - v2.0.0 simplified performance mode, JSON optimization, metrics
 
 ### 06-security - Security
 - **jwt-auth.php** - Complete JWT system with refresh tokens and authorization
 
-### 07-advanced - v1.2.0 Advanced Features ✨
+### 07-advanced - v2.0.0 Advanced Features
 - **array-callables.php** - Array callable syntax demonstration
-- **performance-v1.1.3.php** - Performance simplificada showcase (updated to v1.2.0)
 
 ## 🚀 Quick Start
 
@@ -56,14 +55,14 @@ composer install
 
 ### Running Examples
 
-#### 🆕 v1.2.0 Features
+#### v2.0.0 Features
 ```bash
-# Simplified performance mode (NEW!)
+# Simplified performance mode
 php -S localhost:8000 examples/05-performance/high-performance.php
 curl http://localhost:8000/enable-high-performance  # Enable simplified performance mode
 curl http://localhost:8000/metrics                  # Real-time performance data
 
-# Array callable syntax (MAINTAINED!)
+# Array callable syntax
 php -S localhost:8000 examples/07-advanced/array-callables.php
 curl http://localhost:8000/users                    # Instance method callable
 curl http://localhost:8000/admin/dashboard          # Static method callable
@@ -100,16 +99,16 @@ Each example file contains:
 - 📝 **Detailed explanatory comments** - Inline documentation
 - 🧪 **Test instructions** - Ready-to-use curl commands
 - 🎯 **Real-world use cases** - Practical implementation examples
-- ⚡ **v1.2.0 features** - Latest framework capabilities
+- ⚡ **v2.0.0 features** - Latest framework capabilities
 - 🔒 **Best practices** - Security and performance guidelines
 
 ## 🎯 Featured Examples
 
-### 🆕 Simplified Performance Mode (v1.2.0)
+### Simplified Performance Mode (v2.0.0)
 ```php
 use PivotPHP\Core\Performance\PerformanceMode;
 
-// NEW: Simplified performance mode
+// Simplified performance mode
 PerformanceMode::enable(PerformanceMode::PROFILE_PRODUCTION);
 
 $app->get('/api/data', function($req, $res) {
@@ -118,7 +117,7 @@ $app->get('/api/data', function($req, $res) {
 });
 ```
 
-### ✅ Array Callables (Maintained v1.2.0)
+### ✅ Array Callables (v2.0.0)
 ```php
 class UserController {
     public function index($req, $res) {
@@ -152,12 +151,12 @@ $app->get('/users/:id<\\d+>', function($req, $res) {
 
 ## 📊 Performance Showcase
 
-### v1.2.0 Improvements
-- **Framework Throughput**: 20,400 → 44,092 ops/sec (+116% maintained)
-- **Object Pool Reuse**: 0% → 100% (Request), 0% → 99.9% (Response) - maintained
-- **JSON Operations**: 505K ops/sec (small), 214K ops/sec (large) - Internal benchmarks
+### v2.0.0 Performance
+- **Framework Throughput**: 44,092 ops/sec (+116% vs previous architecture)
+- **Object Pool Reuse**: 100% (Request), 99.9% (Response)
+- **JSON Operations**: Automatic threshold at 256 bytes — small data via `json_encode()`, large data via pooling
 - **Docker Validated**: 6,227 req/sec in standardized containers (3rd place competitive)
-- **Architecture**: Simplified following "Simplicidade sobre Otimização Prematura"
+- **Architecture**: Simplified following "Simplicidade sobre Otimização Prematura", 18% code reduction
 
 ### Docker Framework Comparison
 | Framework | Performance | Position |
@@ -176,12 +175,11 @@ $app->get('/users/:id<\\d+>', function($req, $res) {
 - Zero configuration to get started
 - PSR-7/PSR-15 compliance
 
-### v1.2.0 Performance Features
-- Simplified PerformanceMode (not HighPerformanceMode)
-- Automatic JSON buffer pooling (maintained)
-- Object pooling for Request/Response (maintained)
-- Integrated memory optimizations (maintained)
-- Smart garbage collection (maintained)
+### v2.0.0 Performance Features
+- Simplified `PerformanceMode` (replaces `HighPerformanceMode`)
+- Automatic JSON buffer pooling with 256-byte threshold
+- Object pooling for Request/Response (100%/99.9% reuse)
+- Smart garbage collection
 
 ### Robust Security
 - JWT with refresh tokens
@@ -215,45 +213,46 @@ $app->get('/users/:id<\\d+>', function($req, $res) {
 
 ## 📋 Examples Summary
 
-| Category | Files | Key Features Demonstrated |
-|----------|-------|---------------------------|
-| **01-basics** | 4 files | Hello World, CRUD, Request/Response, JSON API |
-| **02-routing** | 5 files | Regex, Parameters, Groups, Constraints, Static Files |
-| **03-middleware** | 4 files | Custom, Stack, Complete Auth, CORS |
-| **04-api** | 1 file | Complete REST with pagination and filters |
-| **05-performance** | 1 file | Simplified Performance Mode v1.2.0 |
-| **06-security** | 1 file | Complete JWT with refresh tokens |
-| **07-advanced** | 2 files | Array callables, Performance v1.2.0 |
-| **Total** | **17 examples** | **Complete framework coverage** |
+| Category | Key Features Demonstrated |
+|----------|---------------------------|
+| **01-basics** | Hello World, CRUD, Request/Response, JSON API |
+| **02-routing** | Regex, Parameters, Groups, Constraints, Static Files |
+| **03-middleware** | Custom, Stack, Complete Auth, CORS |
+| **04-api** | Complete REST with pagination and filters |
+| **05-performance** | Simplified Performance Mode v2.0.0 |
+| **06-security** | Complete JWT with refresh tokens |
+| **07-advanced** | Array callables |
+| **08-json-optimization** | JSON buffer pooling optimization |
+| **09-error-handling** | Enhanced error diagnostics |
 
 ## 🔄 Migration from Previous Versions
 
-### From v1.1.x to v1.2.0
+### From v1.x to v2.0.0
 ```php
-// OLD: HighPerformanceMode complex
+// OLD: HighPerformanceMode (removed in v2.0.0)
 use PivotPHP\Core\Performance\HighPerformanceMode;
-HighPerformanceMode::enable(HighPerformanceMode::PROFILE_EXTREME);
+HighPerformanceMode::enable(HighPerformanceMode::PROFILE_EXTREME); // Class removed
 
 // NEW: Simplified PerformanceMode
 use PivotPHP\Core\Performance\PerformanceMode;
 PerformanceMode::enable(PerformanceMode::PROFILE_PRODUCTION);
 ```
 
-### Architectural Improvements (Automatic)
-- Simplified architecture following "Simplicidade sobre Otimização Prematura"
-- All performance optimizations maintained
-- 100% backward compatibility via automatic aliases
-- No code changes required for existing applications
+### Breaking Changes (v2.0.0)
+- Legacy namespace aliases removed — update `use` statements to current namespaces
+- `HighPerformanceMode` replaced by `PerformanceMode`
+- Deprecated and complex classes removed from the codebase (18% reduction)
+- See [Migration Guide](../docs/MIGRATION_GUIDE.md) for complete list
 
 ## 🎯 Best Practices Demonstrated
 
 1. **Security First**: All examples include proper input validation and security headers
-2. **Performance Optimized**: Leverages v1.2.0 simplified optimizations
+2. **Performance Optimized**: Leverages v2.0.0 simplified optimizations
 3. **Type Safety**: PHP 8.1+ features with strict typing
 4. **PSR Compliance**: PSR-7, PSR-15, PSR-12 standards followed
 5. **Real-World Ready**: Production-grade error handling and logging
 
 ---
 
-**PivotPHP Core v1.2.0** - Express.js for PHP with simplified architecture! 🐘⚡
-**Examples updated:** July 2025
+**PivotPHP Core v2.0.0** - Express.js for PHP with simplified architecture! 🐘⚡
+**Examples updated:** 2025

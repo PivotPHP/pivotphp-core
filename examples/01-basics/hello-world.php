@@ -1,12 +1,12 @@
 <?php
 
 /**
- * 🌍 PivotPHP v1.2.0 - Hello World
- * 
+ * 🌍 PivotPHP v2.0.0 - Hello World
+ *
  * O exemplo mais simples possível do PivotPHP Core.
- * Demonstra a simplicidade Express.js para PHP com arquitetura v1.2.0.
- * 
- * ✨ Novidades v1.2.0:
+ * Demonstra a simplicidade Express.js para PHP com arquitetura v2.0.0.
+ *
+ * ✨ Novidades v2.0.0:
  * • Arquitetura simplificada seguindo "Simplicidade sobre Otimização Prematura"
  * • PerformanceMode simplificado ao invés de HighPerformanceMode complexo
  * • Mantém array callables nativos e JSON optimization
@@ -25,7 +25,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Json\Pool\JsonBufferPool;
 
-// Controller para demonstrar array callables v1.1.4+
+// Controller para demonstrar array callables v2.0.0+
 class HelloController
 {
     public function index($req, $res)
@@ -36,7 +36,7 @@ class HelloController
             'framework' => 'PivotPHP Core',
             'version' => Application::VERSION,
             'style' => 'Express.js for PHP',
-            'features_v120' => [
+            'features_v200' => [
                 'simplified_architecture' => 'Simplicidade sobre Otimização Prematura ✅',
                 'array_callables' => 'Native support maintained ✅',
                 'json_optimization' => 'Intelligent threshold maintained ✅',
@@ -69,7 +69,7 @@ class HelloController
         ]);
         
         return $res->json([
-            'framework' => 'PivotPHP Core v1.2.0',
+            'framework' => 'PivotPHP Core v2.0.0',
             'optimization_note' => 'Large data - automatic pooling activated',
             'features' => $features,
             'pool_stats' => JsonBufferPool::getStatistics()
@@ -80,7 +80,7 @@ class HelloController
 // Criar aplicação
 $app = new Application();
 
-// ✅ MANTIDO v1.2.0: Array callables nativos
+// ✅ MANTIDO v2.0.0: Array callables nativos
 $controller = new HelloController();
 
 $app->get('/', [$controller, 'index']);
@@ -89,7 +89,7 @@ $app->get('/features', [$controller, 'features']);
 
 // Rota com closure (ainda suportada)
 $app->get('/text', function ($req, $res) {
-    return $res->send('Hello from PivotPHP v1.2.0! 🚀');
+    return $res->send('Hello from PivotPHP v2.0.0! 🚀');
 });
 
 // Health check com demonstração de threshold
