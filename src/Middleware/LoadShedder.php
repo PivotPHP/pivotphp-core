@@ -113,7 +113,6 @@ class LoadShedder
      */
     public function handle(Request $request, Response $response, callable $next): Response
     {
-        trigger_error('LoadShedder is deprecated. Use RateLimiter instead.', E_USER_DEPRECATED);
         if ($this->shouldShed($request)) {
             $json = json_encode(
                 [
