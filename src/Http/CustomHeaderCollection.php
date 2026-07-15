@@ -35,22 +35,51 @@ class CustomHeaderCollection extends HeaderRequest
 
         // Fall back to environment headers not already overridden
         $existingHeaders = function_exists('getallheaders') ? getallheaders() : [];
-        if (empty($existingHeaders)) {
-            foreach ($_SERVER as $name => $value) {
-                if (substr($name, 0, 5) == 'HTTP_') {
-                    $headerName = str_replace(
-                        ' ',
-                        '-',
-                        ucwords(strtolower(str_replace('_', ' ', substr($name, 5))))
-                    );
-                    $key = self::headerToCamel($headerName);
+        $this->mergeMissingHeaders(
+            !empty($existingHeaders) ? $existingHeaders : self::parseServerHeaders()
+        );
+    }
 
-                    if (!isset($this->headers[$key])) {
-                        $this->headers[$key] = $value;
-                    }
-                }
+    /**
+     * Merges header names/values into $this->headers, skipping any key
+     * already set (custom headers passed to the constructor always win).
+     *
+     * @param array<string, string> $source
+     */
+    private function mergeMissingHeaders(array $source): void
+    {
+        foreach ($source as $headerName => $value) {
+            $key = self::headerToCamel($headerName);
+
+            if (!isset($this->headers[$key])) {
+                $this->headers[$key] = $value;
             }
         }
+    }
+
+    /**
+     * Parses HTTP_* entries out of $_SERVER into a plain header-name => value
+     * array. Used as the fallback when getallheaders() isn't available
+     * (e.g. CLI SAPI).
+     *
+     * @return array<string, string>
+     */
+    private static function parseServerHeaders(): array
+    {
+        $headers = [];
+
+        foreach ($_SERVER as $name => $value) {
+            if (substr($name, 0, 5) == 'HTTP_') {
+                $headerName = str_replace(
+                    ' ',
+                    '-',
+                    ucwords(strtolower(str_replace('_', ' ', substr($name, 5))))
+                );
+                $headers[$headerName] = $value;
+            }
+        }
+
+        return $headers;
     }
 
     /**
@@ -79,5 +108,4 @@ class CustomHeaderCollection extends HeaderRequest
         $key = self::headerToCamel(trim($name, ':'));
         return isset($this->headers[$key]);
     }
-
 }
