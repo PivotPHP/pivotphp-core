@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Base test case for HTTP tests.
- * Safely saves and restores superglobals between tests.
+ * Saves and restores $_SERVER, and resets other superglobals between tests.
  */
 abstract class HttpTestCase extends TestCase
 {
