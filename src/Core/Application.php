@@ -39,7 +39,7 @@ use Throwable;
  * - Tratamento de erros
  * - Resposta HTTP
  */
-class Application
+class Application implements ApplicationInterface
 {
     /**
      * Versão do framework.

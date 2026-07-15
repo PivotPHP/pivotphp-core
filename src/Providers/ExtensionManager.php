@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Providers;
 
-use PivotPHP\Core\Core\Application;
+use PivotPHP\Core\Core\ApplicationInterface;
 
 /**
  * Extension Manager
@@ -43,12 +43,12 @@ class ExtensionManager
     /**
      * Application instance
      */
-    private Application $app;
+    private ApplicationInterface $app;
 
     /**
      * Constructor
      */
-    public function __construct(Application $app)
+    public function __construct(ApplicationInterface $app)
     {
         $this->app = $app;
     }
@@ -276,7 +276,7 @@ class ExtensionManager
     /**
      * Get application instance
      */
-    public function getApp(): Application
+    public function getApp(): ApplicationInterface
     {
         return $this->app;
     }

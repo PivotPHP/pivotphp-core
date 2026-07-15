@@ -690,7 +690,7 @@ Ultima atualizacao: 2026-05-29
 | M-04 | `Application::use()` sem type hint              | Medio      | Corrigido (decomposto em `resolveClassMiddleware()` e `wrapObjectMiddleware()`) |
 | M-05 | `LoadShedder::$requestCounts` cresce sem limite | Medio      | Depreciado (classe depreciada; remocao v3.0.0) |
 | M-06 | Namespace `Providers/` contem implementacoes    | Medio      | Parcialmente Corrigido (`EventDispatcher` e `ListenerProvider` movidos para `Events/`; `Providers/` depreciados; `Container` pendente Sprint 4) |
-| M-07 | `ExtensionManager` acoplado a `Application`     | Medio      | Pendente Sprint 4 |
+| M-07 | `ExtensionManager` acoplado a `Application`     | Medio      | Corrigido (2026-07-15: `Core\ApplicationInterface` criada — marker interface, ja que `ExtensionManager` nunca chama metodos especificos de `Application`, so repassa a referencia adiante; `Application implements ApplicationInterface`; `ExtensionManager` tipado contra a interface) |
 | M-08 | `createUploadedFile()` sem verificacao de erro  | Medio      | Corrigido (verificacao de `file_exists` adicionada) |
 | M-09 | Dois `Logger.php` em namespaces distintos       | Medio      | Corrigido (`Logging/PsrLogger.php` criado; `Providers/Logger.php` depreciado; `Logging/Logger.php` morto removido) |
 | M-10 | Classe anonima de 90 linhas sem testabilidade   | Medio      | Corrigido (extraida para `CustomHeaderCollection` em `src/Http/`) |
