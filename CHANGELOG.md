@@ -5,19 +5,76 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] - 2026-07-15 - Response Emission, Pool Safety & Deprecation Cycle
 
-### ⚠️ Clarified Breaking Change (introduced in 2.0.0, documented here)
+### Fixed
+
+- **`Response` double-emit / spurious "body already sent" warning on every request.**
+  `json()`/`text()`/`html()` no longer auto-emit — `Application::run()` is now the single,
+  guaranteed emission point (guarded by `isSent()`), which also means post-handler middleware
+  can finally act on the response before it's sent. `set_exception_handler` callbacks now emit
+  explicitly, since they no longer get that behavior for free from auto-emit.
+- **Data leaks between pooled objects (concurrent/async environments — Swoole, ReactPHP,
+  FrankenPHP):**
+  - `Psr7Pool::resetServerRequest()` received `$serverParams` but never applied it — a reused
+    `ServerRequest` could carry `REMOTE_ADDR`/`HTTPS`/auth data from the *previous* request.
+    Added `ServerRequest::withServerParams()` and wired it in.
+  - `Psr7Pool::resetStream()` reused streams without `truncate()` by writing over them anyway —
+    if the new content was shorter than the stream's previous content, trailing bytes from a
+    prior request/response body could leak into the next. Streams without `truncate()` are no
+    longer reused.
+  - `CustomHeaderCollection` fetched `getallheaders()` only to check if it was empty, then
+    discarded the result — under Apache/PHP-FPM (where `getallheaders()` normally *does* return
+    data) every real header except explicit overrides was silently dropped, including
+    `Authorization`/`Cookie`.
+- `handleException()` hardcoded `'Not Found'` vs `'Internal Server Error'` for the production
+  error message — any other status (401, 403, 405, 503...) always showed "Internal Server
+  Error" regardless of the actual exception. Extracted `Response::defaultErrorMessage()`,
+  reused by both `error()` and `handleException()`.
+- `Router::group()` (in `pivotphp/core-routing` `^1.1`, see that package's changelog) had a
+  regression where nested-group routes lost their `group_prefix`, breaking
+  `identifyByGroup()`.
+- `pivotphp/core-routing`'s `StaticFileManager`/`SimpleStaticFileManager` were unreachable in
+  practice — decoupled from `pivotphp/core`, now usable standalone (see that package's
+  changelog for detail).
+
+### Deprecated (removal planned for v3.0.0)
+
+- `Core\Container` — use `Providers\Container`.
+- `Middleware\LoadShedder` and `Middleware\Performance\RateLimitMiddleware` — use
+  `Middleware\RateLimiter`.
+- `Request::getIp()` — use `Request::ip()` (validates against private/reserved ranges;
+  `getIp()` didn't, and was spoofable via `X-Forwarded-For`).
+- `Support\Str::startsWith()/endsWith()/contains()` — use the native `str_starts_with()`/
+  `str_ends_with()`/`str_contains()` (PHP 8.0+).
+- `Providers\Logger` — use `Logging\PsrLogger` (PSR-3). Dead `Logging\Logger`/`FileHandler`/
+  `LogHandlerInterface` removed outright (never referenced).
+- `Providers\EventDispatcher`/`Providers\ListenerProvider` — use `Events\EventDispatcher`
+  (now PSR-14 compliant) / `Events\ListenerProvider`.
+
+### Changed
 
 - `Events\EventDispatcher::dispatch()` is PSR-14 only (`dispatch(object $event): object`).
-  The pre-2.0 string-based dispatch (`dispatch(string $event, array $data)`) was renamed to
-  `fire(string $event, array $data): bool` and was never given a backward-compatible alias —
-  code still calling `dispatch()` with a string now gets a `TypeError`, not a deprecation
-  notice. `fire()`/`listen()` are a separate, lightweight event mechanism, unconnected to the
-  PSR-14 `dispatch()`/`ListenerProviderInterface` path and to `HookManager` (which manages its
-  own listeners against a `ListenerProvider` directly). If you need PSR-14 interoperable
-  events, use `dispatch()`/`addEventListener()`; for simple internal string-named hooks with
-  no cross-package interop, use `fire()`/`listen()`.
+  **Breaking, introduced in 2.0.0, documented here for the first time:** the pre-2.0
+  string-based dispatch (`dispatch(string $event, array $data)`) was renamed to
+  `fire(string $event, array $data): bool` with no backward-compatible alias — code still
+  calling `dispatch()` with a string gets a `TypeError`. `fire()`/`listen()` is a separate,
+  lightweight mechanism unrelated to the PSR-14 path and to `HookManager` (which manages its
+  own listeners against a `ListenerProvider` directly).
+- `ExtensionManager` now type-hints against the new `Core\ApplicationInterface` marker
+  interface instead of the concrete `Application` class — it never called an
+  `Application`-specific method, only held and forwarded the reference.
+- `Application::handleUncaughtException()` extracted from an anonymous closure duplicated
+  identically in `configureBasicErrorHandling()` and `configureErrorHandling()` — now a public,
+  independently testable method.
+
+### Documentation
+
+Full architectural review at `docs/technical/INCONSISTENCIES_REPORT.md` (25 items across
+Critical/High/Medium/Low) and `tasks/*.md` — every item verified against current code and
+resolved, deprecated, or explicitly documented as an intentional trade-off, with one exception
+left open: decomposing `Application` (1200+ lines) into smaller services is tracked but not
+attempted in this release (highest risk/scope item, no functional bug behind it).
 
 ## [2.0.0] - 2025-11-15 - Modular Routing & Legacy Cleanup Edition
 
