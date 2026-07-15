@@ -117,7 +117,7 @@ class PsrLogger extends AbstractLogger
             file_put_contents($this->logPath, $logEntry, FILE_APPEND | LOCK_EX);
         } catch (\Throwable $e) {
             // Fallback to error_log if file writing fails
-            error_log("Express Logger Error: " . $e->getMessage());
+            error_log("PivotPHP Logger Error: " . $e->getMessage());
             error_log($logEntry);
         }
     }
