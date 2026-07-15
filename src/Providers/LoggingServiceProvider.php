@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Providers;
 
 use PivotPHP\Core\Core\Application;
+use PivotPHP\Core\Logging\PsrLogger;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -21,7 +22,7 @@ class LoggingServiceProvider extends ServiceProvider
             LoggerInterface::class,
             function () {
                 $logPath = $this->getLogPath();
-                return new \PivotPHP\Core\Providers\Logger($logPath);
+                return new PsrLogger($logPath);
             }
         );
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Validation;
 
 /**
@@ -101,7 +103,7 @@ class Validator
 
         switch ($ruleName) {
             case 'required':
-                if (empty($value) && $value !== '0' && $value !== 0) {
+                if (empty($value) && $value !== '0' && $value !== 0 && $value !== 0.0 && $value !== false) {
                     $this->addError($field, 'required');
                     return false;
                 }
@@ -122,7 +124,7 @@ class Validator
                 break;
 
             case 'integer':
-                if (!filter_var($value, FILTER_VALIDATE_INT)) {
+                if (filter_var($value, FILTER_VALIDATE_INT) === false) {
                     $this->addError($field, 'integer');
                     return false;
                 }
@@ -202,7 +204,7 @@ class Validator
         $messageKey = "{$field}.{$rule}";
 
         if (isset($this->messages[$messageKey])) {
-            return $this->replaceParams($this->messages[$messageKey], $params);
+            return $this->replaceParams((string)$this->messages[$messageKey], $params);
         }
 
         // Mensagens padrão

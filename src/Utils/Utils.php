@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Utils;
+
+use PivotPHP\Core\Support\Str;
 
 /**
  * Classe Utils com utilitários gerais para o framework.
@@ -249,7 +253,7 @@ class Utils
      */
     public static function camelCase(string $string): string
     {
-        return lcfirst(str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $string))));
+        return Str::camel($string);
     }
 
     /**
@@ -260,8 +264,7 @@ class Utils
      */
     public static function snakeCase(string $string): string
     {
-        $result = preg_replace('/(?<!^)[A-Z]/', '_$0', $string);
-        return strtolower($result ?? $string);
+        return Str::snake($string);
     }
 
     /**
@@ -272,8 +275,7 @@ class Utils
      */
     public static function kebabCase(string $string): string
     {
-        $result = preg_replace('/(?<!^)[A-Z]/', '-$0', $string);
-        return strtolower($result ?? $string);
+        return Str::kebab($string);
     }
 
     /**

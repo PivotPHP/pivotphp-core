@@ -242,11 +242,32 @@ class Psr7Pool
         string $version,
         array $serverParams
     ): ServerRequestInterface {
-        return $request
+        $request = $request
             ->withMethod($method)
             ->withUri($uri)
             ->withBody($body)
             ->withProtocolVersion($version);
+
+        // Remover headers existentes antes de aplicar os novos
+        // Captura os nomes em array separado para evitar mutação durante iteração
+        $existingHeaders = array_keys($request->getHeaders());
+        foreach ($existingHeaders as $name) {
+            $request = $request->withoutHeader($name);
+        }
+
+        // Aplicar headers do novo request
+        foreach ($headers as $name => $value) {
+            $request = $request->withHeader($name, $value);
+        }
+
+        // Aplicar serverParams do novo request — sem isso, serverParams do request
+        // anterior (ex.: REMOTE_ADDR, HTTPS, dados de auth via SAPI) permaneceriam
+        // no objeto reaproveitado do pool
+        if ($request instanceof ServerRequest) {
+            $request = $request->withServerParams($serverParams);
+        }
+
+        return $request;
     }
 
     /**
@@ -310,18 +331,22 @@ class Psr7Pool
      */
     private static function resetStream(StreamInterface $stream, string $content): StreamInterface
     {
-        if ($stream->isSeekable()) {
-            $stream->rewind();
-        }
-
-        if ($stream->isWritable()) {
+        // truncate() não faz parte de StreamInterface (PSR-7) — sem ele, write()
+        // após rewind() só sobrescreve os bytes correspondentes ao novo conteúdo;
+        // se o conteúdo novo for menor que o residual do uso anterior no pool,
+        // os bytes finais antigos permaneceriam no stream (vazamento de dados
+        // entre requisições). Sem truncate() disponível, não reaproveitar.
+        if ($stream->isWritable() && method_exists($stream, 'truncate')) {
+            if ($stream->isSeekable()) {
+                $stream->rewind();
+            }
             $stream->truncate(0);
             $stream->write($content);
             $stream->rewind();
             return $stream;
         }
 
-        // Se não conseguir resetar, criar novo
+        // Se não conseguir resetar com segurança, criar novo
         return Stream::createFromString($content);
     }
 

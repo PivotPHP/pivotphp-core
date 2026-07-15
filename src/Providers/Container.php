@@ -12,6 +12,18 @@ use PivotPHP\Core\Exceptions\Container\ContainerException;
 
 /**
  * Simple PSR-11 compliant container implementation
+ *
+ * Nota arquitetural: esta classe é a implementação canônica ativa do
+ * container (Application usa exclusivamente esta, não Core\Container —
+ * ver docs/technical/DEPRECATION_AND_REMOVAL_PLAN.md ITEM-001). O
+ * namespace Providers/ historicamente deveria conter apenas providers que
+ * *registram* serviços, não os serviços em si (ver
+ * docs/technical/INCONSISTENCIES_REPORT.md M-06) — Logger e
+ * EventDispatcher já foram movidos para namespaces mais corretos
+ * (Logging\PsrLogger, Events\EventDispatcher). Container permanece aqui
+ * deliberadamente: movê-lo agora seria uma terceira mudança de identidade
+ * em pouco tempo (Core\Container → Providers\Container → outro
+ * namespace), sem benefício real para quem consome a classe.
  */
 class Container implements ContainerInterface
 {

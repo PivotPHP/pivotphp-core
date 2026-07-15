@@ -30,7 +30,7 @@ class Psr7PoolAdapter implements Psr7PoolInterface
         string $protocol = '1.1',
         ?array $cookies = null
     ): ServerRequestInterface {
-        return Psr7Pool::getServerRequest($method, $uri, $body, $headers, $protocol, $cookies);
+        return Psr7Pool::getServerRequest($method, $uri, $body, $headers, $protocol, $cookies ?? []);
     }
 
     /**

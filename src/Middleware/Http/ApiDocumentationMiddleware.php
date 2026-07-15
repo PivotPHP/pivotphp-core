@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware\Http;
 
-use PivotPHP\Core\Core\Application;
+use PivotPHP\Core\Http\Psr7\Response as Psr7Response;
+use PivotPHP\Core\Http\Psr7\Stream;
 use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Routing\Router;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,7 +17,13 @@ use Psr\Http\Server\RequestHandlerInterface;
  * API Documentation Middleware
  *
  * Simple and effective automatic API documentation generation for the microframework.
- * Provides automatic OpenAPI/Swagger documentation at /docs endpoint.
+ * Generates an OpenAPI 3.0.0 specification from all routes registered in the Router.
+ * Each route produces a basic path entry with its HTTP method and path.
+ * No PHPDoc comment parsing is performed — metadata is derived from registered routes only.
+ *
+ * Provides two endpoints:
+ * - /docs    JSON OpenAPI 3.0.0 specification
+ * - /swagger Swagger UI interface (loads Swagger UI from unpkg CDN)
  *
  * Following 'Simplicidade sobre Otimização Prematura' principle.
  */
@@ -68,26 +74,13 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
     private function handleApiDocs(ServerRequestInterface $request): ResponseInterface
     {
         try {
-            // Get the application instance from the request
-            $app = $request->getAttribute('app');
+            $docs = $this->generateOpenApiDocs();
 
-            if (!$app instanceof Application) {
-                return $this->createErrorResponse('Application not found in request', 500);
-            }
-
-            // Generate OpenAPI documentation from routes
-            $docs = $this->generateOpenApiDocs($app);
-
-            // Create response
-            $response = new Response();
-            $body = $response->getBody();
-            if (is_object($body)) {
-                $body->write(json_encode($docs, JSON_PRETTY_PRINT));
-            }
-
-            return $response
+            $json = json_encode($docs, JSON_THROW_ON_ERROR);
+            return (new Psr7Response(200))
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Access-Control-Allow-Origin', '*');
+                ->withHeader('Access-Control-Allow-Origin', '*')
+                ->withBody(Stream::createFromString($json));
         } catch (\Exception $e) {
             return $this->createErrorResponse('Error generating documentation: ' . $e->getMessage(), 500);
         }
@@ -96,10 +89,9 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
     /**
      * Generate OpenAPI documentation from application routes
      *
-     * @param Application $app
      * @return array<string, mixed>
      */
-    private function generateOpenApiDocs(Application $app): array
+    private function generateOpenApiDocs(): array
     {
         $baseUrl = $this->baseUrl ?? 'http://localhost:8080';
 
@@ -144,15 +136,9 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
      */
     private function handleSwaggerUi(ServerRequestInterface $request): ResponseInterface
     {
-        $swaggerHtml = $this->getSwaggerUiHtml();
-
-        $response = new Response();
-        $body = $response->getBody();
-        if (is_object($body)) {
-            $body->write($swaggerHtml);
-        }
-
-        return $response->withHeader('Content-Type', 'text/html');
+        return (new Psr7Response(200))
+            ->withHeader('Content-Type', 'text/html; charset=utf-8')
+            ->withBody(Stream::createFromString($this->getSwaggerUiHtml()));
     }
 
     /**
@@ -205,21 +191,16 @@ HTML;
      */
     private function createErrorResponse(string $message, int $statusCode = 500): ResponseInterface
     {
-        $response = new Response();
-        $body = $response->getBody();
-        if (is_object($body)) {
-            $body->write(json_encode(['error' => $message]));
-        }
-
-        return $response
-            ->withStatus($statusCode)
-            ->withHeader('Content-Type', 'application/json');
+        $json = json_encode(['error' => $message], JSON_THROW_ON_ERROR);
+        return (new Psr7Response($statusCode))
+            ->withHeader('Content-Type', 'application/json')
+            ->withBody(Stream::createFromString($json));
     }
 
     /**
      * Magic method for direct invocation
      */
-    public function __invoke(Request $request, Response $response, callable $next): ResponseInterface
+    public function __invoke(Request $request, ResponseInterface $response, callable $next): ResponseInterface
     {
         return $this->process($request, $this->createHandler($next));
     }

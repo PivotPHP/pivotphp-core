@@ -10,6 +10,8 @@ use Psr\EventDispatcher\StoppableEventInterface;
 
 /**
  * Simple PSR-14 compliant event dispatcher implementation
+ *
+ * @deprecated v2.1.0 Use \PivotPHP\Core\Events\EventDispatcher instead.
  */
 class EventDispatcher implements EventDispatcherInterface
 {
@@ -17,6 +19,10 @@ class EventDispatcher implements EventDispatcherInterface
 
     public function __construct(ListenerProviderInterface $listenerProvider)
     {
+        trigger_error(
+            'PivotPHP\\Core\\Providers\\EventDispatcher is deprecated. Use PivotPHP\\Core\\Events\\EventDispatcher instead.',
+            E_USER_DEPRECATED
+        );
         $this->listenerProvider = $listenerProvider;
     }
 

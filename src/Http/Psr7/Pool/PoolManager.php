@@ -13,7 +13,14 @@ use PivotPHP\Core\Http\Psr7\Adapters\ResponsePoolAdapter;
 use PivotPHP\Core\Http\Psr7\Adapters\HeaderPoolAdapter;
 
 /**
- * Pool Manager for coordinating all object pools and caches
+ * Pool Manager for coordinating all object pools and caches (static, PSR-7 specific)
+ *
+ * NÃO CONFUNDIR com \PivotPHP\Core\Http\Pool\PoolManager — são classes
+ * diferentes, com propósitos diferentes, apesar do nome igual. Ver o
+ * docblock daquela classe para a distinção completa. Esta classe é 100%
+ * estática por design (coordena os pools PSR-7 globais do processo) e
+ * não é usada no caminho quente do framework hoje — o pooling real de
+ * request/response é feito via HttpPoolFacade/Psr7Pool.
  *
  * @package PivotPHP\Core\Http\Psr7\Pool
  * @since 2.1.1

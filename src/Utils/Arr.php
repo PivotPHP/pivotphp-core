@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Utils;
 
 /**
@@ -157,7 +159,7 @@ class Arr
      * @param  array<string>|string $keys  Chaves a serem mantidas
      * @return array<mixed>
      */
-    public static function only(array $array, $keys): array
+    public static function only(array $array, array|string $keys): array
     {
         $keys = is_array($keys) ? $keys : func_get_args()[1];
 
@@ -183,7 +185,7 @@ class Arr
      * @param  array<string>|string $keys  Chaves a serem removidas
      * @return array<mixed>
      */
-    public static function except(array $array, $keys): array
+    public static function except(array $array, array|string $keys): array
     {
         $keys = is_array($keys) ? $keys : func_get_args()[1];
 

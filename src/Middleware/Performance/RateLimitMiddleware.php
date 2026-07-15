@@ -11,6 +11,8 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * PSR-15 Rate Limiting Middleware
+ *
+ * @deprecated v2.1.0 Use \PivotPHP\Core\Middleware\RateLimiter instead. This class uses $_SESSION which violates HTTP statelessness.
  */
 class RateLimitMiddleware implements MiddlewareInterface
 {
@@ -18,6 +20,7 @@ class RateLimitMiddleware implements MiddlewareInterface
 
     public function __construct(array $options = [])
     {
+        trigger_error('RateLimitMiddleware is deprecated and uses $_SESSION. Use RateLimiter instead.', E_USER_DEPRECATED);
         $this->options = array_merge(
             [
                 'windowMs' => 900000, // 15 minutos
@@ -68,14 +71,13 @@ class RateLimitMiddleware implements MiddlewareInterface
         if ($currentCount >= $this->options['max']) {
             $factory = new \PivotPHP\Core\Http\Psr7\Factory\ResponseFactory();
             $response = $factory->createResponse($this->options['statusCode']);
-            $response->getBody()->write(
-                json_encode(
-                    [
-                        'error' => true,
-                        'message' => $this->options['message']
-                    ]
-                )
-            );
+            $body = json_encode(
+                [
+                    'error' => true,
+                    'message' => $this->options['message']
+                ]
+            ) ?: '{"error":true}';
+            $response->getBody()->write($body);
             return $response->withHeader('Content-Type', 'application/json');
         }
         // Registra esta requisição

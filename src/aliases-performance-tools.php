@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * Compatibility Aliases for PivotPHP\Core\PerformanceTools
  *
@@ -12,6 +10,8 @@ declare(strict_types=1);
  *
  * @deprecated 2.2.0 Use PivotPHP\PerformanceTools directly
  */
+
+declare(strict_types=1);
 
 // Aliases para manter compatibilidade até v3.0.0
 if (class_exists('PivotPHP\\PerformanceTools\\Http\\Psr7\\Pool\\Psr7Pool')) {

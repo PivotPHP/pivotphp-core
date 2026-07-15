@@ -18,49 +18,65 @@ declare(strict_types=1);
 // modular routing system from pivotphp/core-routing package
 
 // Router - Main routing class
-class_alias(
-    'PivotPHP\Routing\Router\Router',
-    'PivotPHP\Core\Routing\Router'
-);
+if (class_exists('PivotPHP\Routing\Router\Router')) {
+    class_alias(
+        'PivotPHP\Routing\Router\Router',
+        'PivotPHP\Core\Routing\Router'
+    );
+}
 
 // Route Collection
-class_alias(
-    'PivotPHP\Routing\Router\RouteCollection',
-    'PivotPHP\Core\Routing\RouteCollection'
-);
+if (class_exists('PivotPHP\Routing\Router\RouteCollection')) {
+    class_alias(
+        'PivotPHP\Routing\Router\RouteCollection',
+        'PivotPHP\Core\Routing\RouteCollection'
+    );
+}
 
 // Route
-class_alias(
-    'PivotPHP\Routing\Router\Route',
-    'PivotPHP\Core\Routing\Route'
-);
+if (class_exists('PivotPHP\Routing\Router\Route')) {
+    class_alias(
+        'PivotPHP\Routing\Router\Route',
+        'PivotPHP\Core\Routing\Route'
+    );
+}
 
 // Cache Strategy (File-based)
-class_alias(
-    'PivotPHP\Routing\Cache\FileCacheStrategy',
-    'PivotPHP\Core\Routing\RouteCache'
-);
+if (class_exists('PivotPHP\Routing\Cache\FileCacheStrategy')) {
+    class_alias(
+        'PivotPHP\Routing\Cache\FileCacheStrategy',
+        'PivotPHP\Core\Routing\RouteCache'
+    );
+}
 
 // Memory Manager (Memory-based caching)
-class_alias(
-    'PivotPHP\Routing\Cache\MemoryCacheStrategy',
-    'PivotPHP\Core\Routing\RouteMemoryManager'
-);
+if (class_exists('PivotPHP\Routing\Cache\MemoryCacheStrategy')) {
+    class_alias(
+        'PivotPHP\Routing\Cache\MemoryCacheStrategy',
+        'PivotPHP\Core\Routing\RouteMemoryManager'
+    );
+}
 
 // Static File Manager
-class_alias(
-    'PivotPHP\Routing\Router\StaticFileManager',
-    'PivotPHP\Core\Routing\StaticFileManager'
-);
+if (class_exists('PivotPHP\Routing\Router\StaticFileManager')) {
+    class_alias(
+        'PivotPHP\Routing\Router\StaticFileManager',
+        'PivotPHP\Core\Routing\StaticFileManager'
+    );
+}
 
 // Simple Static File Manager
-class_alias(
-    'PivotPHP\Routing\Router\SimpleStaticFileManager',
-    'PivotPHP\Core\Routing\SimpleStaticFileManager'
-);
+if (class_exists('PivotPHP\Routing\Router\SimpleStaticFileManager')) {
+    class_alias(
+        'PivotPHP\Routing\Router\SimpleStaticFileManager',
+        'PivotPHP\Core\Routing\SimpleStaticFileManager'
+    );
+}
 
 // Router Instance (Singleton pattern)
-class_alias(
-    'PivotPHP\Routing\Router\RouterInstance',
-    'PivotPHP\Core\Routing\RouterInstance'
-);
+if (class_exists('PivotPHP\Routing\Router\RouterInstance')) {
+    class_alias(
+        'PivotPHP\Routing\Router\RouterInstance',
+        'PivotPHP\Core\Routing\RouterInstance'
+    );
+}

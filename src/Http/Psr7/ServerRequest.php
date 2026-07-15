@@ -79,6 +79,22 @@ class ServerRequest extends Request implements ServerRequestInterface
     }
 
     /**
+     * Return an instance with the specified server parameters.
+     *
+     * Not part of the PSR-7 ServerRequestInterface (server params are read-only there),
+     * but required to safely reset a pooled ServerRequest between requests — without it,
+     * server params from a previous request would leak into the reused instance.
+     *
+     * @param array<string, mixed> $serverParams
+     */
+    public function withServerParams(array $serverParams): static
+    {
+        $clone = clone $this;
+        $clone->serverParams = $serverParams;
+        return $clone;
+    }
+
+    /**
      * Retrieve cookies.
      */
     public function getCookieParams()
@@ -218,7 +234,7 @@ class ServerRequest extends Request implements ServerRequestInterface
         $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'localhost';
         $port = isset($_SERVER['SERVER_PORT']) ? (int) $_SERVER['SERVER_PORT'] : null;
-        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         $query = $_SERVER['QUERY_STRING'] ?? '';
 
         $uri = new Uri();

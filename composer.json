@@ -49,7 +49,6 @@
         "psr/log": "^3.0",
         "psr/cache": "^2.0|^3.0",
         "psr/simple-cache": "^2.0|^3.0",
-        "react/http": "^1.9",
         "pivotphp/core-routing": "^1.0"
     },
     "require-dev": {
@@ -68,6 +67,7 @@
         "ext-apcu": "For caching middleware and performance optimization",
         "pivotphp/performance-tools": "Separate package with advanced pooling, caching, and middleware compilation (v2.2.0+)",
         "pivotphp/cycle-orm": "Database ORM integration for PivotPHP",
+        "react/http": "Required for async/ReactPHP integration (pivotphp/reactphp extension)",
         "pivotphp/reactphp": "Async runtime extension for continuous execution"
     },
     "autoload": {

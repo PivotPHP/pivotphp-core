@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Core;
 
 use Closure;
@@ -13,6 +15,8 @@ use ReflectionParameter;
  *
  * Permite registro, resolução automática e gerenciamento do ciclo de vida
  * de objetos e dependências no PivotPHP.
+ *
+ * @deprecated v2.1.0 Use \PivotPHP\Core\Providers\Container instead.
  */
 class Container
 {
@@ -75,6 +79,7 @@ class Container
      */
     public static function getInstance(): Container
     {
+        trigger_error('PivotPHP\\Core\\Core\\Container is deprecated. Use PivotPHP\\Core\\Providers\\Container instead.', E_USER_DEPRECATED);
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -321,7 +326,7 @@ class Container
             // Tentar resolver tipo
             $type = $parameter->getType();
 
-            if ($type && !$type->isBuiltin()) {
+            if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
                 $className = $type->getName();
                 $dependencies[] = $this->make($className);
                 continue;

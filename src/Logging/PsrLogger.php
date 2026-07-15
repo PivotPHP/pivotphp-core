@@ -2,17 +2,15 @@
 
 declare(strict_types=1);
 
-namespace PivotPHP\Core\Providers;
+namespace PivotPHP\Core\Logging;
 
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
 /**
  * Simple PSR-3 compliant logger implementation
- *
- * @deprecated v2.1.0 Use \PivotPHP\Core\Logging\PsrLogger instead.
  */
-class Logger extends AbstractLogger
+class PsrLogger extends AbstractLogger
 {
     private string $logPath;
     private string $dateFormat;
@@ -25,8 +23,7 @@ class Logger extends AbstractLogger
         string $logPath = '',
         string $dateFormat = 'Y-m-d H:i:s'
     ) {
-        trigger_error('PivotPHP\\Core\\Providers\\Logger is deprecated. Use PivotPHP\\Core\\Logging\\PsrLogger instead.', E_USER_DEPRECATED);
-        $this->logPath = $logPath ?: ($_ENV['LOG_PATH'] ?? sys_get_temp_dir() . '/express-php.log');
+        $this->logPath = $logPath ?: ($_ENV['LOG_PATH'] ?? sys_get_temp_dir() . '/pivotphp.log');
         $this->dateFormat = $dateFormat;
         $this->logLevels = [
             LogLevel::EMERGENCY => 0,
@@ -120,7 +117,7 @@ class Logger extends AbstractLogger
             file_put_contents($this->logPath, $logEntry, FILE_APPEND | LOCK_EX);
         } catch (\Throwable $e) {
             // Fallback to error_log if file writing fails
-            error_log("Express Logger Error: " . $e->getMessage());
+            error_log("PivotPHP Logger Error: " . $e->getMessage());
             error_log($logEntry);
         }
     }

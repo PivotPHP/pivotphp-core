@@ -25,7 +25,7 @@ class RateLimiterTest extends TestCase
     {
         parent::setUp();
         $this->request = new Request('GET', '/test', '/test');
-        $this->response = new Response();
+        $this->response = (new Response())->setTestMode(true);
     }
 
     /**

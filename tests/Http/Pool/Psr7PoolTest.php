@@ -294,6 +294,23 @@ class Psr7PoolTest extends TestCase
     }
 
     /**
+     * Regression test: a pooled stream without truncate() must never be
+     * reused with leftover bytes from its previous content. If the new
+     * content is shorter than what the stream held before, and truncate()
+     * isn't available, resetStream() must fall back to a brand new stream
+     * instead of writing over a subset of the old bytes.
+     */
+    public function testStreamWithoutTruncateIsNotReusedWithResidualBytes(): void
+    {
+        $stream = new WritableSeekableStreamWithoutTruncate('Original long content here');
+        Psr7Pool::returnStream($stream);
+
+        $reused = Psr7Pool::getStream('Hi');
+
+        $this->assertEquals('Hi', (string) $reused);
+    }
+
+    /**
      * Test response header reset
      */
     public function testResponseHeaderReset(): void
@@ -508,6 +525,46 @@ class Psr7PoolTest extends TestCase
         $this->assertEquals(404, $modifiedResponse->getStatusCode());
         $this->assertNotSame($response, $modifiedResponse);
     }
+
+    /**
+     * A reused pooled ServerRequest must not leak headers or server params from
+     * the previous request it served — sensitive data (Authorization, Cookie,
+     * REMOTE_ADDR, etc.) from request N must never surface in request N+1.
+     */
+    public function testResetServerRequestDoesNotLeakHeadersOrServerParamsBetweenReuses(): void
+    {
+        $uri = new Uri('/first');
+        $firstHeaders = ['Authorization' => 'Bearer secret-token', 'X-User-Id' => '42'];
+        $firstServerParams = ['REMOTE_ADDR' => '10.0.0.1', 'HTTPS' => 'on'];
+
+        $first = Psr7Pool::getServerRequest(
+            'GET',
+            $uri,
+            Stream::createFromString(''),
+            $firstHeaders,
+            '1.1',
+            $firstServerParams
+        );
+        $this->assertEquals('Bearer secret-token', $first->getHeaderLine('Authorization'));
+        $this->assertEquals('10.0.0.1', $first->getServerParams()['REMOTE_ADDR']);
+
+        Psr7Pool::returnServerRequest($first);
+
+        // Reused instance, different request, no Authorization/X-User-Id this time
+        $second = Psr7Pool::getServerRequest(
+            'GET',
+            new Uri('/second'),
+            Stream::createFromString(''),
+            ['Content-Type' => 'application/json'],
+            '1.1',
+            ['REMOTE_ADDR' => '10.0.0.2']
+        );
+
+        $this->assertFalse($second->hasHeader('Authorization'));
+        $this->assertFalse($second->hasHeader('X-User-Id'));
+        $this->assertEquals('application/json', $second->getHeaderLine('Content-Type'));
+        $this->assertEquals(['REMOTE_ADDR' => '10.0.0.2'], $second->getServerParams());
+    }
 }
 
 /**
@@ -600,4 +657,104 @@ class NonSeekableStream implements StreamInterface
     {
         throw new \RuntimeException('Stream is not writable');
     }
+}
+
+/**
+ * A writable, seekable StreamInterface implementation that does NOT expose
+ * truncate() — simulates a third-party PSR-7 stream implementation the pool
+ * might have to reuse, where StreamInterface (PSR-7) doesn't guarantee
+ * truncate() exists at all.
+ */
+class WritableSeekableStreamWithoutTruncate implements StreamInterface
+{
+    private string $content;
+    private int $position = 0;
+
+    public function __construct(string $content)
+    {
+        $this->content = $content;
+    }
+
+    public function __toString(): string
+    {
+        return $this->content;
+    }
+
+    public function close(): void
+    {
+    }
+
+    public function detach()
+    {
+        return null;
+    }
+
+    public function getSize(): ?int
+    {
+        return strlen($this->content);
+    }
+
+    public function tell(): int
+    {
+        return $this->position;
+    }
+
+    public function eof(): bool
+    {
+        return $this->position >= strlen($this->content);
+    }
+
+    public function isSeekable(): bool
+    {
+        return true;
+    }
+
+    public function seek(int $offset, int $whence = SEEK_SET): void
+    {
+        $this->position = $offset;
+    }
+
+    public function rewind(): void
+    {
+        $this->position = 0;
+    }
+
+    public function isWritable(): bool
+    {
+        return true;
+    }
+
+    public function write(string $string): int
+    {
+        // Mimics a real stream write: overwrites from the current position
+        // without clearing whatever came after it — exactly why skipping
+        // truncate() is unsafe.
+        $this->content = substr_replace($this->content, $string, $this->position, strlen($string));
+        $this->position += strlen($string);
+        return strlen($string);
+    }
+
+    public function isReadable(): bool
+    {
+        return true;
+    }
+
+    public function read(int $length): string
+    {
+        $chunk = substr($this->content, $this->position, $length);
+        $this->position += strlen($chunk);
+        return $chunk;
+    }
+
+    public function getContents(): string
+    {
+        return substr($this->content, $this->position);
+    }
+
+    public function getMetadata(?string $key = null)
+    {
+        return null;
+    }
+
+    // Intentionally no truncate() method — that's the point of this class.
 }

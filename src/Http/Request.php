@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Http;
 
 use PivotPHP\Core\Http\HeaderRequest;
+use PivotPHP\Core\Http\CustomHeaderCollection;
 use PivotPHP\Core\Http\Contracts\AttributeInterface;
 use PivotPHP\Core\Http\Psr7\Stream;
 use PivotPHP\Core\Http\Facades\HttpPoolFacade;
@@ -85,25 +88,29 @@ class Request implements ServerRequestInterface, AttributeInterface
     private array $attributes = [];
 
     /**
-     * Cache para php://input (evita múltiplas leituras)
+     * Cache por instância para php://input (evita múltiplas leituras na mesma requisição).
+     *
+     * Intencionalmentente não-estático: cada instância de Request é isolada,
+     * evitando poluição entre requisições em servidores async (Swoole, RoadRunner)
+     * e entre testes unitários que criam múltiplas instâncias.
      */
-    private static ?string $cachedInput = null;
+    private ?string $cachedInput = null;
 
     /**
      * Obtém o input cached para evitar múltiplas leituras de php://input
      */
     private function getCachedInput(): string
     {
-        if (self::$cachedInput === null) {
+        if ($this->cachedInput === null) {
             $input = @file_get_contents('php://input');
             if ($input === false) {
                 error_log('Failed to read from php://input stream');
-                self::$cachedInput = '';
+                $this->cachedInput = '';
             } else {
-                self::$cachedInput = $input;
+                $this->cachedInput = $input;
             }
         }
-        return self::$cachedInput;
+        return $this->cachedInput;
     }
 
     /**
@@ -202,7 +209,10 @@ class Request implements ServerRequestInterface, AttributeInterface
                     error_log('JSON decode error in request body: ' . json_last_error_msg());
                     $this->psr7Request = $this->psr7Request->withParsedBody($_POST);
                 } else {
-                    $this->psr7Request = $this->psr7Request->withParsedBody($decoded ?: $_POST);
+                    $parsed = $decoded ?: $_POST;
+                    $this->psr7Request = $this->psr7Request->withParsedBody(
+                        is_array($parsed) || is_object($parsed) ? $parsed : null
+                    );
                 }
             }
         }
@@ -503,97 +513,7 @@ class Request implements ServerRequestInterface, AttributeInterface
      */
     public function setHeaders(array $headers): self
     {
-        // Criar um novo HeaderRequest com headers customizados
-        $this->headers = new class ($headers) extends HeaderRequest {
-            /** @var array<string, string> */
-            private array $customHeaders;
-
-            /** @var array<string, mixed> */
-            protected array $headers;
-
-            /**
-             * @param array<string, string> $customHeaders
-             */
-            public function __construct(array $customHeaders = [])
-            {
-                $this->customHeaders = $customHeaders;
-                $this->headers = [];
-
-                // Primeiro processar headers customizados
-                foreach ($customHeaders as $key => $value) {
-                    $key = trim($key, ':'); // Remove leading colon
-                    $camelCaseKey = explode('-', $key);
-                    $camelCaseKey = array_map('ucfirst', $camelCaseKey);
-                    $camelCaseKey = implode('', $camelCaseKey);
-                    $key = lcfirst($camelCaseKey); // Convert to camelCase
-                    $this->headers[$key] = $value;
-                }
-
-                // Depois processar headers padrão se não foram sobrescritos
-                $existingHeaders = function_exists('getallheaders') ? getallheaders() : [];
-                if (empty($existingHeaders)) {
-                    foreach ($_SERVER as $name => $value) {
-                        if (substr($name, 0, 5) == 'HTTP_') {
-                            $headerName = str_replace(
-                                ' ',
-                                '-',
-                                ucwords(strtolower(str_replace('_', ' ', substr($name, 5))))
-                            );
-                            $camelCaseKey = explode('-', $headerName);
-                            $camelCaseKey = array_map('ucfirst', $camelCaseKey);
-                            $camelCaseKey = implode('', $camelCaseKey);
-                            $key = lcfirst($camelCaseKey);
-
-                            // Only add if not already set by custom headers
-                            if (!isset($this->headers[$key])) {
-                                $this->headers[$key] = $value;
-                            }
-                        }
-                    }
-                }
-            }
-
-            /**
-             * Override getHeader to handle test headers properly
-             */
-            public function getHeader($name): ?string
-            {
-                // First check if it's in our custom headers (exact match)
-                if (isset($this->customHeaders[$name])) {
-                    return (string) $this->customHeaders[$name];
-                }
-
-                // Then check camelCase version
-                $key = trim($name, ':');
-                $camelCaseKey = explode('-', $key);
-                $camelCaseKey = array_map('ucfirst', $camelCaseKey);
-                $camelCaseKey = implode('', $camelCaseKey);
-                $key = lcfirst($camelCaseKey);
-
-                $value = $this->headers[$key] ?? null;
-                return $value !== null && (is_string($value) || is_numeric($value)) ? (string) $value : null;
-            }
-
-            /**
-             * Override hasHeader to check both formats
-             */
-            public function hasHeader($name): bool
-            {
-                // Check exact match first
-                if (isset($this->customHeaders[$name])) {
-                    return true;
-                }
-
-                // Check camelCase version
-                $key = trim($name, ':');
-                $camelCaseKey = explode('-', $key);
-                $camelCaseKey = array_map('ucfirst', $camelCaseKey);
-                $camelCaseKey = implode('', $camelCaseKey);
-                $key = lcfirst($camelCaseKey);
-
-                return isset($this->headers[$key]);
-            }
-        };
+        $this->headers = new CustomHeaderCollection($headers);
 
         return $this;
     }
@@ -980,20 +900,14 @@ class Request implements ServerRequestInterface, AttributeInterface
             return;
         }
 
-        $input = file_get_contents('php://input');
-        if ($input !== false) {
+        $input = $this->getCachedInput();
+        if ($input !== '') {
             $decoded = json_decode($input);
-            if ($decoded instanceof stdClass) {
-                $this->body = $decoded;
-            } else {
-                $this->body = new stdClass();
+            if (json_last_error() === JSON_ERROR_NONE) {
+                // Valid JSON — use decoded value; cast arrays/scalars to object for type safety
+                $this->body = $decoded instanceof stdClass ? $decoded : (object)($decoded ?? []);
+                return;
             }
-        } else {
-            $this->body = new stdClass();
-        }
-
-        if (json_last_error() == JSON_ERROR_NONE) {
-            return;
         }
 
         if (!empty($_POST)) {
@@ -1076,24 +990,12 @@ class Request implements ServerRequestInterface, AttributeInterface
      * Get the client IP address
      *
      * @return string
+     * @deprecated Use ip() instead. getIp() does not validate against private/reserved ranges.
      */
     public function getIp(): string
     {
-        // Check for IP behind proxy
-        if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-            $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            return trim($ips[0]);
-        }
-
-        if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-            return $_SERVER['HTTP_X_REAL_IP'];
-        }
-
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        }
-
-        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        trigger_error('Request::getIp() is deprecated. Use Request::ip() instead.', E_USER_DEPRECATED);
+        return $this->ip();
     }
 
     /**
@@ -1123,7 +1025,12 @@ class Request implements ServerRequestInterface, AttributeInterface
     }
 
     /**
-     * Get bodyAsStdClass
+     * Retorna o corpo da requisição como stdClass (API Express.js).
+     *
+     * Método preferido para acesso ao body em handlers de rota.
+     * Retorna um stdClass vazio para métodos sem body (GET, HEAD, OPTIONS, DELETE).
+     *
+     * @return stdClass
      */
     public function getBodyAsStdClass(): stdClass
     {

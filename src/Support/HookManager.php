@@ -188,7 +188,7 @@ class HookManager
      */
     protected function registerWithEventSystem(string $hook): void
     {
-        /** @var \PivotPHP\Core\Providers\ListenerProvider $listenerProvider */
+        /** @var \PivotPHP\Core\Events\ListenerProvider $listenerProvider */
         $listenerProvider = $this->app->make('listeners');
 
         // Remove listener antigo, se existir

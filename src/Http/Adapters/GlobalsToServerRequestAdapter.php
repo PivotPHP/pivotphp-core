@@ -63,7 +63,7 @@ class GlobalsToServerRequestAdapter
         $scheme = (!empty($server['HTTPS']) && $server['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $server['HTTP_HOST'] ?? $server['SERVER_NAME'] ?? 'localhost';
         $port = isset($server['SERVER_PORT']) ? (int) $server['SERVER_PORT'] : null;
-        $path = parse_url($server['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $path = parse_url($server['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         $query = $server['QUERY_STRING'] ?? '';
 
         $uri = new Uri();
@@ -153,7 +153,13 @@ class GlobalsToServerRequestAdapter
      */
     private static function createUploadedFile(array $file): UploadedFile
     {
-        $stream = Stream::createFromFile($file['tmp_name']);
+        $tmpName = $file['tmp_name'] ?? '';
+
+        if (!file_exists($tmpName) || !is_readable($tmpName)) {
+            $stream = Stream::createFromString('');
+        } else {
+            $stream = Stream::createFromFile($tmpName);
+        }
 
         return new UploadedFile(
             $stream,
