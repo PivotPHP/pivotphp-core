@@ -24,9 +24,12 @@ class EventDispatcherTest extends TestCase
         $dispatcher = new EventDispatcher($provider);
 
         $received = null;
-        $provider->addListener(\stdClass::class, function ($event) use (&$received) {
-            $received = $event;
-        });
+        $provider->addListener(
+            \stdClass::class,
+            function ($event) use (&$received) {
+                $received = $event;
+            }
+        );
 
         $event = new \stdClass();
         $result = $dispatcher->dispatch($event);
@@ -50,9 +53,12 @@ class EventDispatcherTest extends TestCase
         $dispatcher = new EventDispatcher();
 
         $received = null;
-        $dispatcher->listen('user.created', function ($data) use (&$received) {
-            $received = $data;
-        });
+        $dispatcher->listen(
+            'user.created',
+            function ($data) use (&$received) {
+                $received = $data;
+            }
+        );
 
         $result = $dispatcher->fire('user.created', ['id' => 1]);
 
@@ -72,13 +78,19 @@ class EventDispatcherTest extends TestCase
         $dispatcher = new EventDispatcher();
 
         $calls = [];
-        $dispatcher->listen('pipeline', function () use (&$calls) {
-            $calls[] = 'first';
-            return false;
-        });
-        $dispatcher->listen('pipeline', function () use (&$calls) {
-            $calls[] = 'second';
-        });
+        $dispatcher->listen(
+            'pipeline',
+            function () use (&$calls) {
+                $calls[] = 'first';
+                return false;
+            }
+        );
+        $dispatcher->listen(
+            'pipeline',
+            function () use (&$calls) {
+                $calls[] = 'second';
+            }
+        );
 
         $result = $dispatcher->fire('pipeline');
 
@@ -94,9 +106,12 @@ class EventDispatcherTest extends TestCase
         $dispatcher = new EventDispatcher($provider);
 
         $psr14Called = false;
-        $provider->addListener(\stdClass::class, function () use (&$psr14Called) {
-            $psr14Called = true;
-        });
+        $provider->addListener(
+            \stdClass::class,
+            function () use (&$psr14Called) {
+                $psr14Called = true;
+            }
+        );
 
         $dispatcher->fire('stdClass');
 
