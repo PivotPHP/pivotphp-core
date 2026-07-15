@@ -276,6 +276,7 @@ TODO.md
 NOTES.md
 scratch/
 benchmarks/**/*.json
-# CLAUDE.md  # Comentado para manter CLAUDE.md no repo
+CLAUDE.md
+.claude/
 proposals/
 *.txt
