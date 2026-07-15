@@ -370,19 +370,31 @@ class Response implements ResponseInterface
         $this->status($code);
 
         if (empty($message)) {
-            $messages = [
-                400 => 'Bad Request',
-                401 => 'Unauthorized',
-                403 => 'Forbidden',
-                404 => 'Not Found',
-                405 => 'Method Not Allowed',
-                500 => 'Internal Server Error',
-                503 => 'Service Unavailable'
-            ];
-            $message = $messages[$code] ?? 'Error';
+            $message = self::defaultErrorMessage($code);
         }
 
         return $this->json(['error' => $message, 'code' => $code]);
+    }
+
+    /**
+     * Mensagem padrão para um status HTTP de erro.
+     *
+     * Fonte única de verdade reutilizada por error() e por
+     * Application::handleException(), evitando magic strings duplicadas.
+     */
+    public static function defaultErrorMessage(int $code): string
+    {
+        $messages = [
+            400 => 'Bad Request',
+            401 => 'Unauthorized',
+            403 => 'Forbidden',
+            404 => 'Not Found',
+            405 => 'Method Not Allowed',
+            500 => 'Internal Server Error',
+            503 => 'Service Unavailable'
+        ];
+
+        return $messages[$code] ?? 'Error';
     }
 
     /**

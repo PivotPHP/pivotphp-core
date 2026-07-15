@@ -320,14 +320,7 @@ class Application
         ini_set('display_errors', '0');
 
         set_error_handler([$this, 'handleError']);
-        set_exception_handler(
-            function (Throwable $e): void {
-                $response = $this->handleException($e);
-                if (!$response->isSent()) {
-                    $response->emit();
-                }
-            }
-        );
+        set_exception_handler([$this, 'handleUncaughtException']);
     }
 
     /**
@@ -350,14 +343,23 @@ class Application
         }
 
         set_error_handler([$this, 'handleError']);
-        set_exception_handler(
-            function (Throwable $e): void {
-                $response = $this->handleException($e);
-                if (!$response->isSent()) {
-                    $response->emit();
-                }
-            }
-        );
+        set_exception_handler([$this, 'handleUncaughtException']);
+    }
+
+    /**
+     * Handler registrado via set_exception_handler() para exceções que escapam
+     * completamente do fluxo handle()/run() (ex.: erros durante o bootstrap).
+     * Único ponto responsável por converter e emitir a resposta de erro nesse
+     * cenário — handleException() apenas monta a Response, sem emiti-la.
+     *
+     * @return void
+     */
+    public function handleUncaughtException(Throwable $e): void
+    {
+        $response = $this->handleException($e);
+        if (!$response->isSent()) {
+            $response->emit();
+        }
     }
 
     /**
@@ -833,7 +835,7 @@ class Application
                 ->json(
                     [
                         'error' => true,
-                        'message' => $statusCode === 404 ? 'Not Found' : 'Internal Server Error',
+                        'message' => Response::defaultErrorMessage($statusCode),
                         'error_id' => $errorId
                     ]
                 );

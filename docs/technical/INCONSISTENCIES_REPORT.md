@@ -682,8 +682,8 @@ Ultima atualizacao: 2026-05-29
 | A-03 | Dois metodos de IP com logicas distintas        | Alto       | Depreciado (`getIp()` delega para `ip()`; `@deprecated` + `trigger_error`; remocao v3.0.0) |
 | A-04 | `ApiDocumentationMiddleware` viola PSR-15       | Alto       | Corrigido (usa `Psr7Response` + `Stream` puros; sem instanciar `Response` Express.js) |
 | A-05 | Bug Validator: inteiro zero falha validacao     | Alto       | Corrigido (comparacao estrita `=== false`) |
-| A-06 | Estado estatico em `MiddlewareStack`            | Alto       | Pendente Sprint 4 |
-| A-07 | `Response.json()` com auto-emit oculto          | Alto       | Parcialmente Corrigido (`setTestMode()` sincroniza `$disableAutoEmit`; condicoes simplificadas; extracao de `ResponseEmitter` pendente Sprint 4) |
+| A-06 | Estado estatico em `MiddlewareStack`            | Alto       | Corrigido (2026-07-15: incompatibilidade documentada explicitamente no docblock da classe) |
+| A-07 | `Response.json()` com auto-emit oculto          | Alto       | Corrigido (2026-07-15: auto-emit removido de `json()`/`text()`/`html()`; `Application::run()` e o unico ponto de emissao, guardado por `isSent()`; `disableAutoEmit()` mantido como no-op para BC) |
 | M-01 | Dois `PoolManager` com designs opostos          | Medio      | Pendente Sprint 4 |
 | M-02 | Conversao camelCase duplicada em 6 locais       | Medio      | Corrigido (`HeaderRequest::headerToCamel()` centralizado; `CustomHeaderCollection` herda) |
 | M-03 | `Utils` e `Str` duplicam case conversion        | Medio      | Corrigido (`Utils::camelCase/snake/kebab` delegam para `Str`) |
@@ -698,8 +698,8 @@ Ultima atualizacao: 2026-05-29
 | B-01 | `Application` God Class (1229 linhas)           | Baixo      | Pendente Sprint 4 |
 | B-02 | `Str` reimplementa funcoes nativas PHP 8.0+     | Baixo      | Depreciado (`@deprecated` + `trigger_error` nos 3 metodos; remocao v3.0.0) |
 | B-03 | `Arr::only/except` sem type hint em `$keys`     | Baixo      | Corrigido (type hint `array|string` adicionado) |
-| B-04 | Error handling duplicado em `Application`       | Baixo      | Pendente Sprint 4 |
-| B-05 | Magic strings HTTP em `handleException()`       | Baixo      | Pendente Sprint 4 |
+| B-04 | Error handling duplicado em `Application`       | Baixo      | Corrigido (2026-07-15: a logica de status via `instanceof HttpException` ja era unica, dentro de `handleException()`; a duplicacao real era a closure identica de `set_exception_handler()` em `configureBasicErrorHandling()`/`configureErrorHandling()`, extraida para o metodo publico `handleUncaughtException()`, agora testavel isoladamente) |
+| B-05 | Magic strings HTTP em `handleException()`       | Baixo      | Corrigido (2026-07-15: `Response::defaultErrorMessage()` extraido e reutilizado por `error()` e `handleException()`; cobre todos os status do mapa, nao so 404) |
 
 ---
 

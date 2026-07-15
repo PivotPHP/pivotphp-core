@@ -390,6 +390,34 @@ class ApplicationTest extends TestCase
     }
 
     /**
+     * Production mode must use the status-appropriate default message for any
+     * HTTP status, not just 404 — handleException() previously hardcoded
+     * 'Not Found' vs 'Internal Server Error' as the only two options.
+     */
+    public function testExceptionHandlingProductionModeUsesStatusSpecificMessage(): void
+    {
+        $this->app->configure(['app.debug' => false]);
+
+        $this->app->get(
+            '/forbidden',
+            function ($_, $res) {
+                throw new HttpException(403, 'Access denied');
+            }
+        );
+
+        $this->app->boot();
+
+        $request = new Request('GET', '/forbidden', '/forbidden');
+        $response = $this->app->handle($request);
+
+        $this->assertEquals(403, $response->getStatusCode());
+
+        $responseBody = $response->getBody();
+        $body = json_decode(is_string($responseBody) ? $responseBody : (string) $responseBody, true);
+        $this->assertEquals('Forbidden', $body['message']);
+    }
+
+    /**
      * Test configuration loading
      */
     public function testConfigurationLoading(): void
@@ -616,5 +644,23 @@ class ApplicationTest extends TestCase
         $this->assertEquals('Test App', $appConfig->get('app.name'));
         $this->assertEquals('1.0.0', $appConfig->get('app.version'));
         $this->assertEquals('localhost', $appConfig->get('database.host'));
+    }
+
+    /**
+     * handleUncaughtException() is the set_exception_handler() callback for
+     * exceptions that escape the handle()/run() flow entirely (e.g. bootstrap
+     * errors). It must emit the error response itself — nothing else will.
+     */
+    public function testHandleUncaughtExceptionEmitsErrorResponse(): void
+    {
+        $this->app->boot();
+
+        ob_start();
+        $this->app->handleUncaughtException(new \RuntimeException('boom'));
+        $output = ob_get_clean();
+
+        $body = json_decode((string) $output, true);
+        $this->assertTrue($body['error']);
+        $this->assertArrayHasKey('error_id', $body);
     }
 }
