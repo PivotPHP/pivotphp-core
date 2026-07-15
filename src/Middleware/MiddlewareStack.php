@@ -15,6 +15,20 @@ use PivotPHP\Core\Middleware\Adapters\SimpleMiddlewarePipelineCompiler;
 /**
  * Classe para gerenciar e executar uma stack de middlewares com otimizações.
  * Incorpora cache de pipelines, otimizações de execução e estatísticas.
+ *
+ * ATENÇÃO — Incompatível com servidores assíncronos de longa duração (Swoole,
+ * ReactPHP, FrankenPHP em modo worker): $compiledPipelines, $stats,
+ * $groupMiddlewares, $compiler e $serializationCache são propriedades
+ * estáticas e persistem entre requisições dentro do mesmo worker/processo.
+ * Um pipeline compilado para uma rota pode ser reaproveitado incorretamente
+ * por outra, e não há isolamento de contexto entre requisições concorrentes
+ * sem reset manual — clearCache() limpa $compiledPipelines, $stats,
+ * $groupMiddlewares e o cache de serialização, mas precisa ser chamado
+ * explicitamente entre requisições. Em ambientes PHP tradicionais (PHP-FPM,
+ * Apache mod_php, um processo por requisição) isso é seguro por padrão.
+ * Para rodar sob um servidor assíncrono, chame clearCache() no fim de cada
+ * requisição ou migre para propriedades de instância por contexto de
+ * corrotina/worker.
  */
 class MiddlewareStack
 {

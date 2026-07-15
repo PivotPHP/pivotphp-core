@@ -190,6 +190,11 @@ O projeto contem tres mecanismos de controle de taxa de requisicoes com designs 
 **Recomendacao:**
 Consolidar em uma unica interface com implementacoes intercambiaveis (storage em memoria, Redis, sessao). Extrair a logica de estado para um `RateLimitStorage` injetavel.
 
+**Status: Resolvido.** `RateLimitMiddleware` e `LoadShedder` marcados `@deprecated v2.1.0`
+(`trigger_error(E_USER_DEPRECATED)` em ambos), apontando para `RateLimiter` como implementacao
+canonica. Nao ha mais ambiguidade sobre qual usar; as duas deprecated serao removidas em v3.0.0
+(ver `DEPRECATION_AND_REMOVAL_PLAN.md` ITEM-003/ITEM-004).
+
 ---
 
 ### A-02 — `MiddlewareStack::warmupCommonPipelines()` chama metodo inexistente
@@ -220,6 +225,9 @@ O metodo correto em `src/Http/Response.php` e `header(string $name, string $valu
 
 **Recomendacao:**
 Substituir todas as ocorrencias de `setHeader(` por `header(` no metodo `warmupCommonPipelines()` e adicionar testes cobrindo o warmup.
+
+**Status: Resolvido.** `warmupCommonPipelines()` nao existe mais em `MiddlewareStack.php` (metodo
+removido, nao apenas corrigido) — confirmado via busca no projeto inteiro.
 
 ---
 
@@ -262,6 +270,11 @@ public function getIp(): string
 **Recomendacao:**
 Deprecar `getIp()` e unificar no metodo `ip()`. Documentar explicitamente o comportamento de validacao.
 
+**Status: Resolvido.** `getIp()` marcado `@deprecated`, emite `trigger_error(E_USER_DEPRECATED)` e
+delega para `ip()` internamente — o problema de seguranca (spoofing via `X-Forwarded-For` sem
+validacao) desaparece porque `getIp()` agora executa a mesma validacao de `ip()`
+(`DEPRECATION_AND_REMOVAL_PLAN.md` ITEM-002).
+
 ---
 
 ### A-04 — `ApiDocumentationMiddleware` viola PSR-15 instanciando `Response` Express.js
@@ -288,6 +301,12 @@ A assinatura do metodo `process()` retorna `ResponseInterface`, mas o objeto cri
 
 **Recomendacao:**
 Injetar um `ResponseFactoryInterface` via construtor e substituir `new Response()` por `$this->responseFactory->createResponse()`.
+
+**Status: Resolvido.** `ApiDocumentationMiddleware` nao instancia mais `Response` (Express.js) —
+usa `Psr7Response` (implementacao PSR-7 propria do framework, em `src/Http/Psr7/`) diretamente
+via `withHeader()`/`withBody()` imutaveis. Nao e exatamente a factory injetada sugerida na
+recomendacao, mas resolve o problema real: o middleware nao depende mais da classe Express.js
+especifica do framework, apenas de tipos PSR-7.
 
 ---
 
@@ -320,6 +339,11 @@ Substituir por comparacao estrita:
 if (filter_var($value, FILTER_VALIDATE_INT) === false) {
 ```
 
+**Status: Resolvido.** `Validator.php` ja usa `filter_var($value, FILTER_VALIDATE_INT) === false`
+(comparacao estrita) exatamente como recomendado. Ver tambem a correcao relacionada da regra
+`required` (`0`/`'0'`/`0.0`/`false` tratados como valores presentes) em
+`tasks/2026-05-29-validator-required-false-negative-integer-zero.md`.
+
 ---
 
 ### A-06 — Estado estatico em `MiddlewareStack` incompativel com servidores asincronos
@@ -349,6 +373,13 @@ private static ?SerializationCacheInterface $serializationCache = null;
 
 **Recomendacao:**
 Documentar explicitamente a incompatibilidade com servidores asincronos. Para suporte asincrono, converter propriedades estaticas para instancia ou usar contexto por corrotina.
+
+**Status: Resolvido (2026-07-15).** Documentado explicitamente no docblock da classe
+`MiddlewareStack` (a recomendacao pedia documentacao, nao refatoracao — converter as 5
+propriedades estaticas para instancia/corrotina e uma mudanca arquitetural maior, fora de
+escopo desta rodada). O docblock explica quais propriedades sao afetadas, o impacto pratico
+em Swoole/ReactPHP/FrankenPHP, e que `clearCache()` deve ser chamado explicitamente entre
+requisicoes nesses ambientes.
 
 ---
 
