@@ -260,6 +260,13 @@ class Psr7Pool
             $request = $request->withHeader($name, $value);
         }
 
+        // Aplicar serverParams do novo request — sem isso, serverParams do request
+        // anterior (ex.: REMOTE_ADDR, HTTPS, dados de auth via SAPI) permaneceriam
+        // no objeto reaproveitado do pool
+        if ($request instanceof ServerRequest) {
+            $request = $request->withServerParams($serverParams);
+        }
+
         return $request;
     }
 

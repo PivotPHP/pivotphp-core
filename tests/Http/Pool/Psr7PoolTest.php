@@ -508,6 +508,46 @@ class Psr7PoolTest extends TestCase
         $this->assertEquals(404, $modifiedResponse->getStatusCode());
         $this->assertNotSame($response, $modifiedResponse);
     }
+
+    /**
+     * A reused pooled ServerRequest must not leak headers or server params from
+     * the previous request it served — sensitive data (Authorization, Cookie,
+     * REMOTE_ADDR, etc.) from request N must never surface in request N+1.
+     */
+    public function testResetServerRequestDoesNotLeakHeadersOrServerParamsBetweenReuses(): void
+    {
+        $uri = new Uri('/first');
+        $firstHeaders = ['Authorization' => 'Bearer secret-token', 'X-User-Id' => '42'];
+        $firstServerParams = ['REMOTE_ADDR' => '10.0.0.1', 'HTTPS' => 'on'];
+
+        $first = Psr7Pool::getServerRequest(
+            'GET',
+            $uri,
+            Stream::createFromString(''),
+            $firstHeaders,
+            '1.1',
+            $firstServerParams
+        );
+        $this->assertEquals('Bearer secret-token', $first->getHeaderLine('Authorization'));
+        $this->assertEquals('10.0.0.1', $first->getServerParams()['REMOTE_ADDR']);
+
+        Psr7Pool::returnServerRequest($first);
+
+        // Reused instance, different request, no Authorization/X-User-Id this time
+        $second = Psr7Pool::getServerRequest(
+            'GET',
+            new Uri('/second'),
+            Stream::createFromString(''),
+            ['Content-Type' => 'application/json'],
+            '1.1',
+            ['REMOTE_ADDR' => '10.0.0.2']
+        );
+
+        $this->assertFalse($second->hasHeader('Authorization'));
+        $this->assertFalse($second->hasHeader('X-User-Id'));
+        $this->assertEquals('application/json', $second->getHeaderLine('Content-Type'));
+        $this->assertEquals(['REMOTE_ADDR' => '10.0.0.2'], $second->getServerParams());
+    }
 }
 
 /**

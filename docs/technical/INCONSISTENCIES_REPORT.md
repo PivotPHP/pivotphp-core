@@ -60,6 +60,12 @@ Os testes em `tests/Core/ContainerTest.php` cobrem exclusivamente `Core\Containe
 2. Mover os testes para cobrir `Providers\Container`.
 3. Definir um unico container como padrao em toda a documentacao.
 
+**Status: Parcialmente resolvido (2026-07-15).** `Core\Container` foi marcado `@deprecated v2.1.0`
+(ver `docs/technical/DEPRECATION_AND_REMOVAL_PLAN.md` ITEM-001), com remocao planejada para v3.0.0.
+`Application` ja usa exclusivamente `Providers\Container`. `tests/Core/ContainerTest.php` continua
+cobrindo o container deprecated (intencional durante o ciclo de deprecation) — nao foi movido para
+cobrir `Providers\Container` porque ja existe cobertura propria deste ultimo em outros testes.
+
 ---
 
 ### C-02 — Leitura dupla de `php://input` ignora cache e pode esvaziar o body PSR-7
@@ -98,6 +104,10 @@ O body PSR-7 e populado via `getCachedInput()` (linha 181), enquanto o body Expr
 
 **Recomendacao:**
 Substituir `file_get_contents('php://input')` na linha 988 por `$this->getCachedInput()`.
+
+**Status: Resolvido.** `parseBody()` ja usa `$this->getCachedInput()` (nao ha mais leitura
+direta de `php://input` nesse metodo). Ver tambem `tasks/2026-05-29-parsebody-logic-bug-json-array-fallback.md`,
+que documenta uma correcao relacionada (fallback de array/escalar JSON) no mesmo metodo.
 
 ---
 
@@ -139,6 +149,13 @@ private static function resetServerRequest(
 
 **Recomendacao:**
 Aplicar `withoutHeader()` para limpar todos os headers existentes antes de aplicar os novos, e aplicar `$serverParams` via metodo `withServerParams()`.
+
+**Status: Resolvido (2026-07-15).** Headers ja eram limpos via `withoutHeader()` antes desta
+correcao. `$serverParams` continuava sendo recebido e completamente ignorado — `ServerRequestInterface`
+(PSR-7) nao define um metodo `with*` para isso, entao `ServerRequest::withServerParams()` foi
+adicionado (extensao pratica, fora da interface formal, no mesmo padrao de `withCookieParams()`)
+e passou a ser usado em `resetServerRequest()`. Coberto por
+`Psr7PoolTest::testResetServerRequestDoesNotLeakHeadersOrServerParamsBetweenReuses()`.
 
 ---
 
