@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get up and running with PivotPHP Core v1.2.0 in under 5 minutes! This guide will walk you through installation, basic setup, and creating your first API endpoints.
+Get up and running with PivotPHP Core v2.1.1 in under 5 minutes! This guide will walk you through installation, basic setup, and creating your first API endpoints.
 
 ## 🚀 Installation
 
@@ -65,7 +65,7 @@ curl -X POST -H "Content-Type: application/json" \
      http://localhost:8080/users               # {"message":"User created","data":{"name":"Alice"}}
 ```
 
-## 🎯 v1.2.0 New Features
+## 🎯 Array Callables & Performance (since v1.2.0)
 
 ### Array Callable Routes (NEW!)
 
@@ -114,15 +114,19 @@ use PivotPHP\Core\Middleware\Http\CorsMiddleware;
 // Security middleware
 $app->use(new SecurityHeadersMiddleware());
 $app->use(new CorsMiddleware([
-    'allowed_origins' => ['https://yourfrontend.com'],
-    'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE'],
-    'allowed_headers' => ['Content-Type', 'Authorization']
+    'origin' => 'https://yourfrontend.com',      // string or array of allowed origins
+    'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
+    'headers' => ['Content-Type', 'Authorization'],
 ]));
+// Config keys are: origin, methods, headers, credentials, max_age, expose_headers.
+// (Keys like 'allowed_origins'/'allowed_methods' from older examples are silently
+// ignored — array_merge() doesn't validate unknown keys — so double-check spelling.)
 
 // CSRF protection for forms
-$app->use(new CsrfMiddleware([
-    'exclude_paths' => ['/api/*'] // Exclude API routes
-]));
+// CsrfMiddleware takes a single string $fieldName (default '_csrf_token'), not an
+// options array — there is no built-in 'exclude_paths' exclusion; checks apply to
+// every POST request. Scope it yourself (e.g. only add it inside a non-API route group).
+$app->use(new CsrfMiddleware());
 ```
 
 ## 🔍 Route Patterns
@@ -170,10 +174,13 @@ return [
 Load configuration in your application:
 
 ```php
-use PivotPHP\Core\Core\Config;
+// Application::__construct() only accepts an optional string $basePath — it does not
+// take a Config object. Configure via $app->getConfig() after construction instead.
+$app = new Application(__DIR__);
+$app->getConfig()->setConfigPath(__DIR__ . '/config')->loadAll();
 
-$config = new Config(__DIR__ . '/config');
-$app = new Application($config);
+// Read a value
+$debug = $app->getConfig()->get('app.debug');
 ```
 
 ## 📊 Performance Monitoring
@@ -228,9 +235,9 @@ class BasicTest extends TestCase
 Agora que você tem uma API básica funcionando, explore recursos para enriquecer seus protótipos:
 
 1. **[API Reference](API_REFERENCE.md)** - Referência completa dos métodos
-2. **[Middleware Guide](reference/middleware.md)** - Segurança e performance para demos
+2. **[Middleware Guide](technical/middleware/README.md)** - Segurança e performance para demos
 3. **[Authentication](technical/authentication/README.md)** - JWT e API key para protótipos seguros
-4. **[Documentação Automática](examples/api_documentation_example.php)** - Swagger para apresentações
+4. **[Documentação Automática](../examples/api_documentation_example.php)** - Swagger para apresentações
 5. **[Examples](reference/examples.md)** - Exemplos práticos e casos de uso
 
 ## 🧪 Expandindo Protótipos
@@ -259,7 +266,7 @@ $app->use(new CorsMiddleware(['allowed_origins' => ['*']]));
 
 - **[Documentação](README.md)** - Documentação completa
 - **[GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)** - Relatar problemas e sugerir melhorias
-- **[Examples Repository](examples/)** - Exemplos práticos para aprendizado
+- **[Examples Repository](../examples/)** - Exemplos práticos para aprendizado
 
 ## ⚠️ Importante: Sobre o Projeto
 
@@ -267,4 +274,4 @@ $app->use(new CorsMiddleware(['allowed_origins' => ['*']]));
 
 ---
 
-**Parabéns!** Agora você tem uma base sólida para criar provas de conceito e protótipos com PivotPHP Core v1.2.0. 🎉
+**Parabéns!** Agora você tem uma base sólida para criar provas de conceito e protótipos com PivotPHP Core v2.1.1. 🎉

@@ -1,4 +1,15 @@
-# PivotPHP Core v1.1.3 Architecture Guide
+# PivotPHP Core v1.1.3 Architecture Guide (Historical)
+
+> ⚠️ **Documento histórico:** este guia descreve a arquitetura da v1.1.3 (2025). A estrutura
+> de middleware (Security/Performance/Http/Core) ainda é válida na v2.1.1 atual, mas o guia
+> **não reflete** mudanças arquiteturais posteriores — em especial a externalização do
+> roteador para o pacote `pivotphp/core-routing` na v2.0.0 (o "Router Architecture" abaixo
+> descreve um roteador que hoje vive fora deste repositório, ver `CLAUDE.md`), o Legacy
+> Cleanup da v2.0.0, e o ciclo de depreciação iniciado na v2.1.0
+> (`Core\Container`, `LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`,
+> `Providers\Logger`/`EventDispatcher`). Para o estado atual da arquitetura, veja
+> [`CLAUDE.md`](../../CLAUDE.md), [`README.md`](../../README.md) e
+> [`docs/API_REFERENCE.md`](../API_REFERENCE.md).
 
 This guide provides a comprehensive overview of PivotPHP Core v1.1.3 architecture, highlighting the significant improvements made in this release following our **ARCHITECTURAL_GUIDELINES** principle of "Simplicidade sobre Otimização Prematura" (Simplicity over Premature Optimization).
 
@@ -380,9 +391,13 @@ class CustomServiceProvider extends ServiceProvider
 - **Memory efficiency**: Optimized garbage collection
 - **Multi-version compatibility**: PHP 8.1-8.4
 
-## 🔬 Experimental Features
+## 🔬 Experimental Features (Historical, v1.1.3)
 
-Features moved to `experimental/` directory (not production-ready):
+> ⚠️ The `experimental/` directory described below no longer exists in the current
+> repository (verified: `experimental/` is absent as of v2.1.1). This section is kept for
+> historical context only.
+
+Features moved to `experimental/` directory (not production-ready, as of v1.1.3):
 
 ```php
 experimental/
@@ -402,12 +417,10 @@ experimental/
 
 ## 🚀 Future Architecture
 
-### Planned Improvements
-1. **WebSocket support** (via ReactPHP extension)
-2. **GraphQL integration** 
-3. **Advanced caching layers**
-4. **Microservice orchestration**
-5. **Enhanced monitoring**
+> ⚠️ Per this project's documentation policy, planned/roadmap items don't belong in
+> user-facing docs. The "Planned Improvements" list that was here (WebSocket, GraphQL, etc.)
+> was speculative content from the v1.1.3-era guide and has been removed — none of those
+> items are implemented as of v2.1.1. For actual planned work, see GitHub Issues/Discussions.
 
 ### Architectural Principles (v1.1.3+)
 - ✅ **Simplicity over premature optimization**

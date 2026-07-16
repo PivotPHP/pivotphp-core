@@ -4,7 +4,7 @@
 
 **For detailed migration instructions, please refer to the official release documentation:**
 
-### 🔄 Latest Version: v2.0.0 ⚠️ BREAKING RELEASE
+### 🔄 Latest Breaking Release: v2.0.0 ⚠️
 **[Complete Migration Guide →](releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md)**
 
 **Migration highlights:**
@@ -12,7 +12,27 @@
 - **📦 Namespace Modernization**: 110 legacy aliases removed
 - **🚀 Performance**: 59% fewer aliases to autoload
 - **⚠️ Breaking Changes**: Required namespace updates for middleware
-- **✅ Zero Regressions**: All 5,548 tests passing (100%)
+- **✅ Zero Regressions**: 5,548 tests passing at the time of the v2.0.0 release (100%) — the
+  suite has changed size since; see `CHANGELOG.md` for the current count.
+
+### ⚠️ Current version is v2.1.1, not v2.0.0
+
+This guide (and the version-specific guides linked below) only covers up to v2.0.0. Two more
+releases shipped after it, **without further breaking changes** to public APIs — they don't
+have dedicated migration guides because there's nothing to migrate, but you should still be
+aware of them:
+
+- **v2.1.0** — fixed response double-emission, pooled-object data leaks in async runtimes
+  (Swoole/ReactPHP/FrankenPHP), and started a deprecation cycle (`Core\Container`,
+  `Middleware\LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`,
+  `Providers\Logger`/`EventDispatcher` — all still work via deprecation aliases, removal
+  planned for v3.0.0).
+- **v2.1.1** — fixed a real incompatibility with `psr/http-message` `^2.0` that could cause a
+  fatal error on every request if Composer resolved to that version (despite
+  `composer.json` already declaring support for it since 2.1.0).
+
+See [`CHANGELOG.md`](../CHANGELOG.md) for the full, authoritative list of changes in both
+releases.
 
 ### 📚 Version-Specific Migration Guides
 

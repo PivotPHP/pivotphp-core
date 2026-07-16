@@ -21,10 +21,10 @@ Bem-vindo ao guia completo do PivotPHP! Esta documentação foi criada para ser 
 
 ### 🛡️ Segurança e Middlewares
 - [**Visão Geral**](technical/middleware/README.md) - Todos os middlewares disponíveis
-- [**SecurityMiddleware**](technical/middleware/SecurityMiddleware.md) - Proteção XSS, CSRF, Headers
+- [**SecurityHeadersMiddleware**](technical/middleware/SecurityMiddleware.md) - Headers de segurança (XSS/CSRF são middlewares separados: `CsrfMiddleware`, `XssMiddleware`)
 - [**CorsMiddleware**](technical/middleware/CorsMiddleware.md) - Cross-Origin Resource Sharing
 - [**AuthMiddleware**](technical/middleware/AuthMiddleware.md) - JWT, Basic, Bearer, API Key
-- [**RateLimitMiddleware**](technical/middleware/RateLimitMiddleware.md) - Controle de taxa
+- [**RateLimitMiddleware**](technical/middleware/RateLimitMiddleware.md) - Controle de taxa (depreciado desde v2.1.0 — veja `RateLimiter`)
 - [**ValidationMiddleware**](technical/middleware/ValidationMiddleware.md) - Validação de dados
 - [**Middleware Customizado**](technical/middleware/CustomMiddleware.md) - Crie o seu próprio
 
@@ -52,7 +52,16 @@ Bem-vindo ao guia completo do PivotPHP! Esta documentação foi criada para ser 
 
 ### 🚀 Histórico de Versões
 - [**Documentação de Releases**](releases/README.md) - Índice completo de versões
-- [**v1.2.0 (Atual)**](releases/FRAMEWORK_OVERVIEW_v1.2.0.md) - Simplicity Edition: Arquitetura simplificada
+
+Todas as entradas abaixo linkam para o registro oficial da versão — um documento
+`FRAMEWORK_OVERVIEW` dedicado quando existe um, ou a entrada correspondente no
+[CHANGELOG](../CHANGELOG.md) quando não existe (ainda não foi escrito um overview
+técnico para v2.1.1/v2.1.0, releases pequenas/patch):
+
+- [**v2.1.1 (Atual)**](../CHANGELOG.md) - PSR-7 2.0 Compatibility Fix
+- [**v2.1.0**](../CHANGELOG.md) - Response Emission, Pool Safety & Deprecation Cycle
+- [**v2.0.0**](releases/FRAMEWORK_OVERVIEW_v2.0.0.md) - Modular Routing & Legacy Cleanup Edition
+- [**v1.2.0**](releases/FRAMEWORK_OVERVIEW_v1.2.0.md) - Simplicity Edition: Arquitetura simplificada
 - [**v1.1.4**](releases/FRAMEWORK_OVERVIEW_v1.1.4.md) - Developer Experience & Examples Modernization
 - [**v1.1.3**](releases/FRAMEWORK_OVERVIEW_v1.1.3.md) - Architectural Excellence Edition
 - [**v1.0.1**](releases/FRAMEWORK_OVERVIEW_v1.0.1.md) - Regex route validation support
@@ -100,4 +109,4 @@ Bem-vindo ao guia completo do PivotPHP! Esta documentação foi criada para ser 
 
 ---
 
-*📖 Documentação atualizada em: 16 de julho de 2025 - v1.2.0*
+*📖 Documentação atualizada em: 15 de julho de 2026 - v2.1.1*

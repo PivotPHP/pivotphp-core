@@ -219,23 +219,31 @@ $app->get('/api/users/:userId/posts/:postId', [$apiController, 'getUserPosts']);
 
 Combinando handlers com middleware:
 
+> **Nota de revisão:** `Application::get()`/`post()`/etc. têm a assinatura
+> `(string $path, callable|array $handler)` e retornam `Application`. `Application::middleware()`
+> é um alias de `use()` — registra middleware **global**, não escopado à rota/grupo em que foi
+> encadeado. Não existe `$app->group()`. Middleware por rota/grupo é um recurso do Router
+> subjacente (`pivotphp/core-routing`), acessível via `PivotPHP\Core\Routing\Router` (alias
+> estático), não via `Application`. `ValidationMiddleware`/`ApiAuthMiddleware` abaixo eram
+> exemplos fictícios — substitua por classes reais do seu projeto ou por
+> `PivotPHP\Core\Validation\Validator` (ver
+> [ValidationMiddleware.md](../middleware/ValidationMiddleware.md)).
+
 ```php
 <?php
 
-// Middleware em rota específica
-$app->get('/admin/users', [AdminController::class, 'getUsers'])
-    ->middleware(AuthMiddleware::class);
+use PivotPHP\Core\Routing\Router;
 
-// Múltiplos middlewares
-$app->post('/api/users', [UserController::class, 'store'])
-    ->middleware(AuthMiddleware::class)
-    ->middleware(ValidationMiddleware::class);
+// Middleware global (aplica-se a todas as rotas registradas depois)
+$app->use(new AuthMiddleware());
 
-// Grupos com middleware
-$app->group('/api/v1', function($group) {
-    $group->get('/users', [UserController::class, 'index']);
-    $group->post('/users', [UserController::class, 'store']);
-})->middleware(ApiAuthMiddleware::class);
+$app->get('/admin/users', [AdminController::class, 'getUsers']);
+
+// Middleware escopado a um grupo de rotas: via Router::group(), não Application
+Router::group('/api/v1', function () {
+    Router::get('/users', [UserController::class, 'index']);
+    Router::post('/users', [UserController::class, 'store']);
+}, [$apiAuthMiddleware]); // 3º argumento: array de middlewares aplicados só a este grupo
 ```
 
 ## ❌ Sintaxes NÃO Suportadas

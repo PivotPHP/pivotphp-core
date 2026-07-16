@@ -28,6 +28,7 @@ tests/
 <?php
 // tests/TestCase.php
 use PivotPHP\Core\Core\Application;
+use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -44,7 +45,7 @@ class TestCase extends BaseTestCase
     protected function configureApp(): void
     {
         // Configuração padrão para testes
-        $this->app->use(new SecurityMiddleware());
+        $this->app->use(new SecurityHeadersMiddleware());
         $this->app->use(new CorsMiddleware());
     }
 

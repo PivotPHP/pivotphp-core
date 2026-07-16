@@ -1,6 +1,6 @@
-# PivotPHP Core v1.1.4 Documentation
+# PivotPHP Core v2.1.1 Documentation
 
-Welcome to the complete documentation for **PivotPHP Core v1.1.4** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
+Welcome to the complete documentation for **PivotPHP Core v2.1.1** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
 
 ## 🚀 Quick Navigation
 
@@ -10,15 +10,15 @@ Welcome to the complete documentation for **PivotPHP Core v1.1.4** - a high-perf
 - **[Migration Guide](MIGRATION_GUIDE.md)** - Upgrading from previous versions
 
 ### Core Guides
-- **[Architecture Guide](guides/architecture.md)** - v1.1.3 architecture overview
-- **[Performance Guide](guides/performance.md)** - Optimization and benchmarks
-- **[Testing Guide](guides/testing.md)** - Testing strategies and examples
+- **[Architecture Guide](guides/architecture.md)** - v1.1.3 architecture overview (historical, see banner in the doc)
+- **[Performance Guide](performance/README.md)** - Optimization and benchmarks
+- **[Testing Guides](testing/)** - Testing strategies and examples (`api_testing.md`, `integration_testing.md`, `middleware_testing.md`, `mocks_and_stubs.md`)
 
 ### Reference Materials
 - **[Examples Catalog](reference/examples.md)** - Complete examples collection
-- **[Middleware Reference](reference/middleware.md)** - All available middleware
-- **[Routing Reference](reference/routing.md)** - Routing patterns and constraints
-- **[Configuration Reference](reference/configuration.md)** - Framework configuration
+- **[Middleware Reference](technical/middleware/README.md)** - All available middleware
+- **[Routing Reference](technical/routing/router.md)** - Routing patterns and constraints
+- **[Application & Configuration](technical/application.md)** - Framework configuration
 
 ## 📚 Learning Paths
 
@@ -31,8 +31,8 @@ Welcome to the complete documentation for **PivotPHP Core v1.1.4** - a high-perf
 ### 🏃 **Intermediate Path** (Building Production APIs)
 1. [Middleware Usage](implementations/usage_with_middleware.md) - Security and performance middleware
 2. [Authentication](technical/authentication/README.md) - JWT and API key auth
-3. [Testing](guides/testing.md) - Unit and integration testing
-4. [Performance Optimization](guides/performance.md) - Object pooling and optimization
+3. [Testing](testing/) - Unit and integration testing
+4. [Performance Optimization](performance/README.md) - Object pooling and optimization
 
 ### 🚀 **Advanced Path** (Framework Extension)
 1. [Architecture Guide](guides/architecture.md) - Framework internals
@@ -40,37 +40,58 @@ Welcome to the complete documentation for **PivotPHP Core v1.1.4** - a high-perf
 3. [Service Providers](technical/providers/README.md) - Dependency injection
 4. [Extensions](technical/extensions/README.md) - Framework extensions
 
-## ✨ v1.1.4 Highlights
+## ✨ What's Current (v2.1.x)
 
-### 🔧 **Infrastructure Consolidation**
-Complete infrastructure optimization and automation:
+### 🩹 **v2.1.1 — PSR-7 2.0 Compatibility Fix**
+- Fixed a real incompatibility with `psr/http-message` 2.0 that could fatal-error every
+  request when Composer resolved to that version — retyped ~46 method signatures across
+  the PSR-7 implementation to match the real PSR-7 2.0 interfaces.
+- No public-API or observable behavior change for documented usage.
+
+### 🔁 **v2.1.0 — Response Emission, Pool Safety & Deprecation Cycle**
+- `Application::run()` is now the single, guaranteed response-emission point — fixes a
+  double-emit / spurious "body already sent" warning on every request.
+- Fixed pooled-object data leaks between requests in concurrent/async runtimes (Swoole,
+  ReactPHP, FrankenPHP).
+- Started a deprecation cycle (removal planned for v3.0.0) for `Core\Container`,
+  `Middleware\LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`, and
+  `Providers\Logger`/`EventDispatcher` — see [CHANGELOG.md](../CHANGELOG.md) for the full
+  list and replacements.
+
+See the [CHANGELOG](../CHANGELOG.md) for complete release notes.
+
+## 📜 Previous Versions (Historical)
+
+The v2.1.x line above is current. Earlier releases, most recent first:
+**v2.0.0** (Legacy Cleanup Edition) → **v1.2.0** (Simplicity Edition) → **v1.1.4**
+(Developer Experience) → **v1.1.3** (Performance Breakthrough) and earlier — see the
+[CHANGELOG](../CHANGELOG.md) for the complete history.
+
+### v1.1.4 Highlights (historical, not current)
+
+<details>
+<summary>Infrastructure consolidation, automatic version management, GitHub Actions optimization</summary>
+
+**Infrastructure Consolidation** — scripts reduced from 25 to 15 (40% reduction):
 ```bash
-# Scripts reduced from 25 to 15 (40% reduction)
 scripts/quality/quality-check.sh    # Consolidated validation
 scripts/release/version-bump.sh     # Automatic version management
 ```
 
-### 📦 **Automatic Version Management**
-- **VERSION file requirement** - Single source of truth
-- **Automatic version detection** - No more hardcoded versions
-- **Strict validation** - X.Y.Z semantic versioning enforced
-- **Portuguese error messages** - Clear developer feedback
+**Automatic Version Management** — VERSION file as single source of truth, automatic
+version detection, strict X.Y.Z validation.
 
-### 🚀 **GitHub Actions Optimization**
-- **25% workflow reduction** (4 → 3 workflows)
-- **Consolidated scripts** - No more duplicate functionality
-- **Fixed repository URLs** - Corrected from express-php to pivotphp-core
-- **Enhanced validation** - Consistent across all workflows
+**GitHub Actions Optimization** — 25% workflow reduction (4 → 3), consolidated scripts,
+corrected repository URLs (from the pre-rename express-php project to pivotphp-core).
 
-### 📚 **Comprehensive Documentation**
-- **315-line versioning guide** - Complete semantic versioning guidance
-- **Static file managers documentation** - Two managers with clear use cases
-- **Release documentation** - Complete v1.1.4 documentation suite
-- **Zero breaking changes** - 100% backward compatibility maintained
+**Documentation** — a 315-line versioning guide, static file managers documentation,
+complete v1.1.4 release documentation suite.
+
+</details>
 
 ## 🔧 Framework Status
 
-- **Current Version**: v1.1.4 (Infrastructure Consolidation & Automation Edition)
+- **Current Version**: v2.1.1 (PSR-7 2.0 Compatibility Fix)
 - **PHP Requirements**: 8.1+ with strict typing
 - **Production Ready**: Enterprise-grade quality with type safety
 - **Community**: [GitHub](https://github.com/PivotPHP)
@@ -83,7 +104,7 @@ scripts/release/version-bump.sh     # Automatic version management
 
 ### Community Resources
 - **[Benchmarks Repository](https://github.com/PivotPHP/pivotphp-benchmarks)** - Performance testing
-- **[Examples Collection](examples/)** - Practical usage examples
+- **[Examples Collection](../examples/)** - Practical usage examples
 
 ## 📖 Technical Documentation
 

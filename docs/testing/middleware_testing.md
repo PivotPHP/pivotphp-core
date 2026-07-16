@@ -8,17 +8,17 @@ Guia prático para testar middlewares no PivotPHP.
 ```php
 <?php
 // tests/Unit/MiddlewareTest.php
-use PivotPHP\Core\Http\Psr15\Middleware\SecurityMiddleware;
+use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
 use PHPUnit\Framework\TestCase;
 
-class SecurityMiddlewareTest extends TestCase
+class SecurityHeadersMiddlewareTest extends TestCase
 {
-    private SecurityMiddleware $middleware;
+    private SecurityHeadersMiddleware $middleware;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->middleware = new SecurityMiddleware();
+        $this->middleware = new SecurityHeadersMiddleware();
     }
 
     public function test_adiciona_headers_de_seguranca(): void
@@ -138,15 +138,22 @@ class AuthMiddlewareTest extends TestCase
 
 ## 🚦 Testando RateLimitMiddleware
 
+> ⚠️ `RateLimitMiddleware` está depreciado desde v2.1.0 (usa `$_SESSION`) — prefira testar
+> `PivotPHP\Core\Middleware\RateLimiter` em código novo. As chaves de configuração reais de
+> `RateLimitMiddleware` são `windowMs` (milissegundos) e `max` — não `limit`/`window` como em
+> versões anteriores deste exemplo.
+
 ```php
 <?php
+use PivotPHP\Core\Middleware\Performance\RateLimitMiddleware;
+
 class RateLimitMiddlewareTest extends TestCase
 {
     public function test_permite_requisicoes_dentro_do_limite(): void
     {
         $middleware = new RateLimitMiddleware([
-            'limit' => 5,
-            'window' => 60
+            'max' => 5,
+            'windowMs' => 60000,
         ]);
 
         $request = $this->createMockRequest();
@@ -162,8 +169,8 @@ class RateLimitMiddlewareTest extends TestCase
     public function test_bloqueia_requisicoes_acima_do_limite(): void
     {
         $middleware = new RateLimitMiddleware([
-            'limit' => 3,
-            'window' => 60
+            'max' => 3,
+            'windowMs' => 60000,
         ]);
 
         $request = $this->createMockRequest();
@@ -180,79 +187,57 @@ class RateLimitMiddlewareTest extends TestCase
         $this->assertEquals(429, $response->getStatusCode());
 
         $body = json_decode($response->getBody()->getContents(), true);
-        $this->assertStringContains('Rate limit exceeded', $body['error']);
-    }
-
-    public function test_headers_de_rate_limit(): void
-    {
-        $middleware = new RateLimitMiddleware([
-            'limit' => 10,
-            'window' => 60
-        ]);
-
-        $request = $this->createMockRequest();
-        $handler = $this->createMockHandler();
-
-        $response = $middleware->process($request, $handler);
-
-        // Verificar headers informativos
-        $this->assertTrue($response->hasHeader('X-RateLimit-Limit'));
-        $this->assertEquals('10', $response->getHeaderLine('X-RateLimit-Limit'));
-
-        $this->assertTrue($response->hasHeader('X-RateLimit-Remaining'));
-        $this->assertTrue($response->hasHeader('X-RateLimit-Reset'));
+        $this->assertStringContainsString('Too many requests', $body['error']);
     }
 }
 ```
 
-## ✅ Testando ValidationMiddleware
+> O exemplo de headers `X-RateLimit-*` foi removido — confirme em
+> `src/Middleware/Performance/RateLimitMiddleware.php` quais headers a versão instalada
+> realmente emite antes de testar contra eles.
+
+## ✅ Testando validação de dados (`Validator`)
+
+> Não existe uma classe `ValidationMiddleware`. O framework fornece
+> `PivotPHP\Core\Validation\Validator`, que não é um middleware PSR-15 — teste-a diretamente.
 
 ```php
 <?php
-class ValidationMiddlewareTest extends TestCase
+use PivotPHP\Core\Validation\Validator;
+
+class ValidatorTest extends TestCase
 {
     public function test_valida_dados_obrigatorios(): void
     {
-        $middleware = new ValidationMiddleware([
-            'rules' => [
-                'name' => 'required',
-                'email' => 'required|email'
-            ]
+        $validator = new Validator([
+            'name' => 'required',
+            'email' => 'required|email',
         ]);
 
-        $request = $this->createMockRequest('POST', '/test', [
+        $result = $validator->validate([
             'name' => 'João',
-            'email' => 'joao@email.com'
+            'email' => 'joao@email.com',
         ]);
 
-        $handler = $this->createMockHandler();
-
-        $response = $middleware->process($request, $handler);
-        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertTrue($result);
+        $this->assertEmpty($validator->getErrors());
     }
 
     public function test_rejeita_dados_invalidos(): void
     {
-        $middleware = new ValidationMiddleware([
-            'rules' => [
-                'name' => 'required',
-                'email' => 'required|email'
-            ]
+        $validator = new Validator([
+            'name' => 'required',
+            'email' => 'required|email',
         ]);
 
-        $request = $this->createMockRequest('POST', '/test', [
-            'email' => 'email-invalido' // Name ausente, email inválido
+        $result = $validator->validate([
+            'email' => 'email-invalido', // name ausente, email inválido
         ]);
 
-        $handler = $this->createMockHandler();
-
-        $response = $middleware->process($request, $handler);
-        $this->assertEquals(400, $response->getStatusCode());
-
-        $body = json_decode($response->getBody()->getContents(), true);
-        $this->assertArrayHasKey('errors', $body);
-        $this->assertArrayHasKey('name', $body['errors']);
-        $this->assertArrayHasKey('email', $body['errors']);
+        $this->assertFalse($result);
+        $errors = $validator->getErrors();
+        $this->assertArrayHasKey('name', $errors);
+        $this->assertArrayHasKey('email', $errors);
     }
 }
 ```

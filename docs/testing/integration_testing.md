@@ -142,7 +142,9 @@ abstract class IntegrationTestCase extends TestCase
         });
 
         // Configurar middlewares
-        $this->app->use(new SecurityMiddleware());
+        // (PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware,
+        //  PivotPHP\Core\Middleware\Http\CorsMiddleware)
+        $this->app->use(new SecurityHeadersMiddleware());
         $this->app->use(new CorsMiddleware());
 
         // Configurar rotas

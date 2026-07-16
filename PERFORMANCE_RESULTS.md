@@ -1,5 +1,12 @@
 # 🚀 PivotPHP Performance Results - v1.1.4
 
+> 📦 **Resultado histórico — v1.1.4, não revalidado para a série 2.x.** Os números abaixo
+> foram medidos em 15/07/2025 contra a v1.1.4 e são citados em outros documentos (README,
+> CLAUDE.md) como "mantidos" em versões posteriores, mas não foram re-executados desde então
+> — em particular, não refletem as mudanças de emissão de resposta (v2.1.0) e de retipagem
+> PSR-7 (v2.1.1). Trate como referência histórica, não como benchmark da versão atual
+> (2.1.1). Para números atuais, rode `composer benchmark` neste repositório.
+
 **PivotPHP v1.1.4 (Architectural Excellence & Performance Optimization Edition)**  
 **Release Date**: July 15, 2025  
 **Performance Analysis**: Phase 3 Cross-Framework + ReactPHP Complete

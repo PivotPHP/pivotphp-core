@@ -70,9 +70,9 @@ release para não repetir o padrão.
 - `docs/README.md`
 
 ## Critérios de Aceite
-- [ ] `Application::VERSION`, `VERSION` (raiz), `CHANGELOG.md` (entrada mais recente) e
+- [x] `Application::VERSION`, `VERSION` (raiz), `CHANGELOG.md` (entrada mais recente) e
       `composer.json` (se aplicável) apontam para o mesmo número de versão
-- [ ] `CLAUDE.md`, `docs/index.md` e `docs/README.md` não mencionam mais números de versão
+- [x] `CLAUDE.md`, `docs/index.md` e `docs/README.md` não mencionam mais números de versão
       anteriores como "atual"
 - [ ] Processo de release (`scripts/release/*`) documenta ou automatiza a sincronização
       dessas menções para releases futuros

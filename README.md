@@ -20,7 +20,7 @@
 - **📚 Documentação Automática**: Geração automática de OpenAPI/Swagger - essencial para apresentar provas de conceito.
 - **🛡️ Segurança Integrada**: Middlewares prontos para CSRF, XSS, JWT - protótipos seguros desde o início.
 - **🔧 Extensibilidade Simples**: Sistema de plugins e providers para expandir funcionalidades conforme necessário.
-- **📊 Performance Adequada**: Throughput de 44,092 ops/sec, footprint de 1.61MB - suficiente para demonstrações.
+- **📊 Performance Adequada**: footprint de ~1.61MB - suficiente para demonstrações. (Número histórico de microbenchmark interno da v1.1.3 — 44,092 ops/sec — reportado desde então como "mantido"; não revalidado para a série 2.x. Veja [`PERFORMANCE_RESULTS.md`](PERFORMANCE_RESULTS.md).)
 - **🎨 v2.0.0**: Legacy Cleanup Edition - 18% code reduction, modern namespaces, routing externalized, zero deprecated code.
 
 ---
@@ -44,7 +44,7 @@
 - 🧪 **Qualidade e Testes**
 - 🎯 **Simplicidade sobre Otimização**
 - 🧹 **v2.0.0 Legacy Cleanup** (18% code reduction)
-- 🔌 **Modular Routing** (External package, pluggable in v2.1.0)
+- 🔌 **Modular Routing** (External package `pivotphp/core-routing`, extraído na v2.0.0)
 
 ---
 
@@ -78,12 +78,13 @@ composer require pivotphp/core
 require_once 'vendor/autoload.php';
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Psr15\Middleware\{SecurityMiddleware, CorsMiddleware, AuthMiddleware};
+use PivotPHP\Core\Middleware\Security\{SecurityHeadersMiddleware, AuthMiddleware};
+use PivotPHP\Core\Middleware\Http\CorsMiddleware;
 
 $app = new Application();
 
 // Middlewares de segurança (PSR-15)
-$app->use(new SecurityMiddleware());
+$app->use(new SecurityHeadersMiddleware());
 $app->use(new CorsMiddleware());
 $app->use(new AuthMiddleware([
     'authMethods' => ['jwt'],
@@ -197,9 +198,11 @@ $app->get('/users', [UserController::class, 'index']);
 $app->get('/users/:id<\d+>', [UserController::class, 'show']);    // Apenas números
 $app->post('/users', [UserController::class, 'store']);
 
-// ✅ Com middleware
-$app->put('/users/:id', [UserController::class, 'update'])
-    ->middleware($authMiddleware);
+// ⚠️ Middleware: $app->middleware() é um alias de $app->use() — registra middleware
+// GLOBAL, não escopado à rota encadeada. Para middleware por rota/grupo, use o Router
+// subjacente diretamente (PivotPHP\Core\Routing\Router::group($prefix, $callback, $middlewares)).
+$app->put('/users/:id', [UserController::class, 'update']);
+$app->middleware($authMiddleware); // aplica-se a todas as rotas, não só a essa
 ```
 
 #### ⚡ Validação Automática
@@ -223,7 +226,7 @@ $app->get('/private', [PrivateController::class, 'handle']); // ❌ Erro claro
 // Erro: "Route handler validation failed: Method 'handle' is not accessible"
 ```
 
-📖 **Documentação completa:** [Array Callable Guide](docs/technical/routing/ARRAY_CALLABLE_GUIDE.md)
+📖 **Documentação completa:** [Guia de Sintaxe de Rotas](docs/technical/routing/SYNTAX_GUIDE.md)
 
 ### 🔄 Suporte PSR-7 Híbrido
 
@@ -269,7 +272,13 @@ $response = OptimizedHttpFactory::createResponse();
 
 ### 🚀 JSON Optimization (Intelligent System)
 
-O PivotPHP mantém o **threshold inteligente de 256 bytes** no sistema de otimização JSON, eliminando overhead para dados pequenos:
+O PivotPHP usa thresholds automáticos por tipo de dado no sistema de otimização JSON, eliminando overhead para payloads pequenos (`JsonBufferPool::shouldUsePooling()`, ver `src/Json/Pool/JsonBufferPool.php`):
+
+- Arrays com **10+ elementos** (`POOLING_ARRAY_THRESHOLD`) — ou qualquer array com estrutura aninhada (array/objeto dentro)
+- Objetos com **5+ propriedades públicas** (`POOLING_OBJECT_THRESHOLD`)
+- Strings com **1024+ bytes** (`POOLING_STRING_THRESHOLD`)
+
+Abaixo desses limites, o sistema usa `json_encode()` direto.
 
 #### ⚡ Sistema Inteligente Automático
 
@@ -278,30 +287,10 @@ O PivotPHP mantém o **threshold inteligente de 256 bytes** no sistema de otimiz
 $app->get('/api/users', function($req, $res) {
     $users = User::all();
 
-    // Sistema decide automaticamente:
-    // • Poucos usuários (<256 bytes): json_encode() direto
-    // • Muitos usuários (≥256 bytes): pooling automático
+    // Sistema decide automaticamente com base no tipo/tamanho dos dados
+    // (array com 10+ itens, objeto com 5+ propriedades, string com 1KB+)
     return $res->json($users); // Sempre otimizado!
 });
-```
-
-#### 🎯 Performance por Tamanho de Dados
-
-```php
-// Dados pequenos (<256 bytes) - json_encode() direto
-$smallData = ['status' => 'ok', 'count' => 42];
-$json = JsonBufferPool::encodeWithPool($smallData);
-// Performance: 500K+ ops/sec (sem overhead)
-
-// Dados médios (256 bytes - 10KB) - pooling automático
-$mediumData = User::paginate(20);
-$json = JsonBufferPool::encodeWithPool($mediumData);
-// Performance: 119K+ ops/sec (15-30% ganho)
-
-// Dados grandes (>10KB) - pooling otimizado
-$largeData = Report::getAllWithRelations();
-$json = JsonBufferPool::encodeWithPool($largeData);
-// Performance: 214K+ ops/sec (98%+ ganho)
 ```
 
 #### 🔧 Configuração Avançada (Opcional)
@@ -309,33 +298,32 @@ $json = JsonBufferPool::encodeWithPool($largeData);
 ```php
 use PivotPHP\Core\Json\Pool\JsonBufferPool;
 
-// Personalizar threshold (padrão: 256 bytes)
+// Chaves aceitas por configure(): max_pool_size, default_capacity, size_categories
+// (não existe opção para customizar os thresholds de pooling em si)
 JsonBufferPool::configure([
-    'threshold_bytes' => 512,      // Usar pool apenas para dados >512 bytes
     'max_pool_size' => 200,        // Máximo 200 buffers
     'default_capacity' => 8192,    // Buffers de 8KB
 ]);
 
-// Verificar se threshold será aplicado
+// Verificar se o pooling será aplicado para um dado específico
 if (JsonBufferPool::shouldUsePooling($data)) {
-    echo "Pool será usado (dados grandes)\n";
+    echo "Pool será usado\n";
 } else {
-    echo "json_encode() direto (dados pequenos)\n";
+    echo "json_encode() direto\n";
 }
 
 // Monitoramento em tempo real
 $stats = JsonBufferPool::getStatistics();
-echo "Eficiência: {$stats['efficiency']}%\n";
+echo "Taxa de reuso: {$stats['reuse_rate']}%\n";
 echo "Operações: {$stats['total_operations']}\n";
 ```
 
-#### ✨ Mantido v2.0.0
+#### ✨ Características
 
-- ✅ **Threshold Inteligente** - Elimina overhead para dados <256 bytes
+- ✅ **Thresholds automáticos por tipo** - array/objeto/string, sem overhead para dados pequenos
 - ✅ **Detecção Automática** - Sistema decide quando usar pooling
 - ✅ **Zero Configuração** - Funciona perfeitamente out-of-the-box
-- ✅ **Performance Garantida** - Nunca mais lento que json_encode()
-- ✅ **Monitoramento Integrado** - Estatísticas em tempo real
+- ✅ **Monitoramento Integrado** - Estatísticas em tempo real via `getStatistics()`
 - ✅ **Compatibilidade Total** - Drop-in replacement transparente
 
 ### 🔍 Enhanced Error Diagnostics
@@ -345,7 +333,7 @@ PivotPHP v2.0.0 mantém **ContextualException** para diagnósticos avançados de
 #### ⚡ Sistema de Erro Inteligente
 
 ```php
-use PivotPHP\Core\Exceptions\ContextualException;
+use PivotPHP\Core\Exceptions\Enhanced\ContextualException;
 
 // Captura automática de contexto e sugestões
 try {
@@ -405,9 +393,9 @@ ContextualException::configure([
 - ✅ **Logging Integrado** - Registro automático para análise posterior
 
 📖 **Documentação completa:**
-- [Array Callable Guide](docs/technical/routing/ARRAY_CALLABLE_GUIDE.md)
+- [Guia de Sintaxe de Rotas](docs/technical/routing/SYNTAX_GUIDE.md)
 - [JsonBufferPool Optimization Guide](docs/technical/json/BUFFER_POOL_OPTIMIZATION.md)
-- [Enhanced Error Diagnostics](docs/technical/error-handling/CONTEXTUAL_EXCEPTION_GUIDE.md)
+- [Custom Exceptions (inclui ContextualException)](docs/technical/exceptions/CustomExceptions.md)
 
 ### 📖 Documentação OpenAPI/Swagger Automática (v2.0.0+)
 
@@ -537,8 +525,10 @@ $app->register(new ReactServiceProvider([
     ]
 ]));
 
-// Executar servidor assíncrono
-$app->runAsync(); // Em vez de $app->run()
+// O provider assume o ciclo de vida do servidor; a forma de iniciá-lo
+// (comando, script de bootstrap, etc.) é definida pelo pacote pivotphp/reactphp —
+// consulte a documentação desse pacote. `Application::run()` continua sendo o
+// ponto de entrada padrão para o runtime tradicional (não-ReactPHP).
 ```
 
 ### 🌐 Extensões da Comunidade
@@ -630,6 +620,14 @@ Veja a [documentação completa sobre PSR-7](docs/technical/compatibility/psr7-d
 ## 🏗️ Arquitetura v2.0.0 (Legacy Cleanup Edition)
 
 O PivotPHP v2.0.0 simplifica a arquitetura seguindo o princípio "Simplicidade sobre Otimização Prematura", **priorizando facilidade de uso para provas de conceito**:
+
+> **Nota:** a estrutura descrita abaixo (namespaces de middleware, array callables, JsonBufferPool,
+> ContextualException) segue válida na v2.1.1. As versões 2.1.0 e 2.1.1 não mudaram essa
+> arquitetura — trouxeram correções pontuais (emissão única de resposta em `Application::run()`,
+> vazamento de dados em objetos pooled, compatibilidade real com `psr/http-message` `^2.0`) e um
+> ciclo de depreciação (`Core\Container`, `LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`,
+> `Providers\Logger`/`EventDispatcher` — remoção prevista para v3.0.0). Veja o
+> [CHANGELOG](CHANGELOG.md) para o histórico completo.
 
 ### 🎯 Recursos v2.0.0
 

@@ -1,107 +1,82 @@
-# JsonBufferPool Optimization - Guia Completo v1.1.4+
+# JsonBufferPool Optimization - Guia Completo
+
+> **Nota de revisão:** a versão anterior deste documento (rotulada "v1.1.4+") descrevia um
+> modelo de threshold único de "256 bytes" e uma chave de configuração `threshold_bytes` que
+> nunca existiram em `src/Json/Pool/JsonBufferPool.php`. Este documento foi reescrito para
+> refletir a implementação real. Para a referência formal das constantes, veja
+> [CONSTANTS_REFERENCE.md](CONSTANTS_REFERENCE.md).
 
 ## 🎯 Visão Geral
 
-O JsonBufferPool otimizado em PivotPHP v1.1.4+ introduz um sistema inteligente de threshold que automaticamente decide quando usar pooling para maximizar performance.
+O `JsonBufferPool` (`PivotPHP\Core\Json\Pool\JsonBufferPool`) decide automaticamente entre
+`json_encode()` direto e um pool de buffers reutilizáveis, com base no **tipo e tamanho do
+dado**, não em um threshold único de bytes.
 
 ## 🧠 Sistema de Threshold Inteligente
 
 ### Como Funciona
+
+`JsonBufferPool::shouldUsePooling($data)` decide usar pooling quando:
+
+- `$data` é um **array com 10+ elementos** (`POOLING_ARRAY_THRESHOLD = 10`) — ou qualquer
+  array que contenha um array/objeto aninhado, independentemente do tamanho;
+- `$data` é um **objeto com 5+ propriedades públicas** (`POOLING_OBJECT_THRESHOLD = 5`);
+- `$data` é uma **string com 1024+ bytes** (`POOLING_STRING_THRESHOLD = 1024`).
+
+Qualquer outro caso (valores pequenos, escalares, booleanos, null) usa `json_encode()` direto.
+
 ```php
-// Dados pequenos (<256 bytes) - usa json_encode() direto
+// Array pequeno, sem aninhamento — usa json_encode() direto
 $smallData = ['id' => 1, 'name' => 'John'];
-$json = JsonBufferPool::encodeWithPool($smallData); // Usa json_encode()
+$json = JsonBufferPool::encodeWithPool($smallData);
 
-// Dados grandes (≥256 bytes) - usa pooling automático
+// Array com 10+ elementos — usa pooling
 $largeData = array_fill(0, 100, ['id' => 1, 'name' => 'User', 'email' => 'user@example.com']);
-$json = JsonBufferPool::encodeWithPool($largeData); // Usa pooling
-```
-
-### Lógica de Decisão
-```php
-private static function shouldUsePooling(mixed $data): bool
-{
-    // Threshold: 256 bytes
-    $estimatedSize = self::estimateDataSize($data);
-    
-    return $estimatedSize >= 256;
-}
-```
-
-## ⚡ Performance Comparativa
-
-### Dados Pequenos (<256 bytes)
-```php
-// ✅ OTIMIZADO: Usa json_encode() direto (sem overhead)
-$smallData = ['status' => 'ok', 'count' => 42];
-
-// Performance: 500K+ ops/sec
-// Overhead: ~0ms (zero)
-// Uso: Responses simples, status, small payloads
-```
-
-### Dados Médios (256 bytes - 10KB)  
-```php
-// ✅ OTIMIZADO: Usa pooling automático
-$mediumData = array_fill(0, 20, [
-    'id' => $i, 
-    'name' => "User {$i}", 
-    'email' => "user{$i}@example.com"
-]);
-
-// Performance: 119K+ ops/sec
-// Ganho: 15-30% vs json_encode()
-// Uso: Lists, user data, API responses
-```
-
-### Dados Grandes (>10KB)
-```php
-// ✅ OTIMIZADO: Pooling com buffers grandes
-$largeData = array_fill(0, 1000, [
-    'id' => $i,
-    'profile' => [...], // Objeto complexo
-    'metadata' => [...]
-]);
-
-// Performance: 214K+ ops/sec 
-// Ganho: 98%+ vs json_encode()
-// Uso: Complex objects, large datasets, reports
+$json = JsonBufferPool::encodeWithPool($largeData);
 ```
 
 ## 🔧 Configuração e Uso
 
 ### Uso Automático (Recomendado)
+
 ```php
 // Zero configuração - funciona automaticamente
 $app->get('/api/users', function($req, $res) {
     $users = User::all();
-    
-    // JsonBufferPool decide automaticamente:
-    // - Poucos users: json_encode() direto
-    // - Muitos users: pooling automático
+
+    // JsonBufferPool decide automaticamente com base no tipo/tamanho dos dados
     return $res->json($users);
 });
 ```
 
-### Configuração Manual (Avançado)
+### Configuração Manual
+
+`JsonBufferPool::configure(array $config)` aceita **apenas** estas chaves — qualquer outra
+chave lança `\InvalidArgumentException`:
+
 ```php
 use PivotPHP\Core\Json\Pool\JsonBufferPool;
 
-// Configurar thresholds personalizados
 JsonBufferPool::configure([
-    'threshold_bytes' => 512,      // Limite personalizado: 512 bytes
-    'max_pool_size' => 200,        // Máximo de buffers no pool
-    'default_capacity' => 8192,    // Tamanho padrão dos buffers
-    'size_categories' => [
-        'small' => 2048,   // 2KB
-        'medium' => 8192,  // 8KB  
-        'large' => 32768,  // 32KB
-        'xlarge' => 131072 // 128KB
-    ]
+    'max_pool_size' => 200,        // Máximo de buffers por pool (limite interno: 1000)
+    'default_capacity' => 8192,    // Capacidade padrão dos buffers, em bytes (limite: 1MB)
+    'size_categories' => [         // Faixas usadas para escolher a capacidade do buffer
+        'small' => 1024,
+        'medium' => 4096,
+        'large' => 16384,
+        'xlarge' => 65536,
+    ],
 ]);
+
+// Restaura a configuração padrão
+JsonBufferPool::resetConfiguration();
 ```
 
+Não existe uma chave `threshold_bytes` (ou equivalente) para customizar os limites de
+pooling em si — os thresholds de array/objeto/string acima são constantes de classe fixas.
+
 ### Controle Manual
+
 ```php
 // Forçar uso de pooling
 $json = JsonBufferPool::encodeWithPool($data);
@@ -109,254 +84,55 @@ $json = JsonBufferPool::encodeWithPool($data);
 // Usar json_encode() tradicional
 $json = json_encode($data);
 
-// Verificar se usou pooling
-$stats = JsonBufferPool::getStatistics();
-if ($stats['reuses'] > 0) {
-    echo "Pooling ativo!";
+// Verificar se um dado específico usaria pooling
+if (JsonBufferPool::shouldUsePooling($data)) {
+    echo "Pool seria usado";
 }
+
+// Limpar todos os pools (libera memória)
+JsonBufferPool::clearPools();
 ```
 
 ## 📊 Monitoramento e Métricas
 
-### Estatísticas em Tempo Real
 ```php
 $stats = JsonBufferPool::getStatistics();
 
-echo "Reuses: {$stats['reuses']}\n";           // Buffers reutilizados
-echo "Allocations: {$stats['allocations']}\n"; // Novos buffers criados
-echo "Efficiency: " . ($stats['reuses'] / ($stats['reuses'] + $stats['allocations']) * 100) . "%\n";
+// Chaves retornadas por getStatistics():
+// - reuse_rate          (float)  percentual de reuso de buffers
+// - total_operations    (int)
+// - current_usage       (int)    buffers atualmente em uso
+// - peak_usage          (int)
+// - total_buffers_pooled (int)
+// - active_pool_count   (int)
+// - pool_sizes          (array)  buffers disponíveis por capacidade formatada
+// - pools_by_capacity   (array)  detalhamento por capacidade
+// - detailed_stats      (array)  ['allocations' => int, 'reuses' => int]
+
+echo "Taxa de reuso: {$stats['reuse_rate']}%\n";
+echo "Operações totais: {$stats['total_operations']}\n";
 ```
 
-### Métricas de Performance
-```php
-$app->get('/metrics/json-pool', function($req, $res) {
-    $stats = JsonBufferPool::getStatistics();
-    
-    return $res->json([
-        'pool_efficiency' => round($stats['reuse_rate'], 2),
-        'total_operations' => $stats['total_operations'],
-        'memory_saved_mb' => round($stats['memory_saved'] / 1024 / 1024, 2),
-        'performance_gain' => $stats['performance_multiplier'] . 'x faster',
-        'recommendations' => $stats['efficiency'] > 80 
-            ? 'Pool working optimally' 
-            : 'Consider adjusting threshold'
-    ]);
-});
-```
+## 🎯 Quando o Pool é Usado
 
-## 🎯 Casos de Uso Otimizados
+✅ **Aciona pooling:**
+- Arrays com 10+ elementos, ou qualquer array com estrutura aninhada
+- Objetos com 5+ propriedades públicas
+- Strings com 1024+ bytes
 
-### 1. API REST com Lists
-```php
-$app->get('/api/users', function($req, $res) {
-    $users = User::paginate(50); // ~50 users
-    
-    // AUTOMÁTICO: Pool usado se >5-10 users
-    return $res->json([
-        'users' => $users,
-        'pagination' => [...],
-        'meta' => [...]
-    ]);
-});
+❌ **Usa `json_encode()` direto:**
+- Arrays pequenos e "planos" (sem aninhamento) com menos de 10 elementos
+- Objetos com menos de 5 propriedades
+- Strings curtas, escalares, booleanos, `null`
 
-// Performance: 119K ops/sec típico (vs 67K sem pool)
-```
+## 🔗 Integração com o Framework
 
-### 2. Complex Object Serialization
-```php
-$app->get('/api/reports/:id', function($req, $res) {
-    $report = Report::findWithRelations($req->param('id'));
-    
-    // AUTOMÁTICO: Pool usado para objetos complexos
-    return $res->json([
-        'report' => $report->toArray(),      // Dados principais  
-        'analytics' => $report->analytics,   // Métricas complexas
-        'attachments' => $report->files,     // Arquivos relacionados
-        'history' => $report->history        // Histórico de mudanças
-    ]);
-});
+`Response::json()` delega a serialização ao `JsonBufferPool::encodeWithPool()` internamente,
+então o comportamento acima se aplica automaticamente a `$res->json($data)` sem configuração
+adicional.
 
-// Performance: 214K ops/sec típico (vs 19K sem pool)
-```
+## Ver também
 
-### 3. Streaming de Dados
-```php
-$app->get('/api/stream/events', function($req, $res) {
-    $res->header('Content-Type', 'application/x-ndjson');
-    
-    foreach (EventStream::read() as $event) {
-        // AUTOMÁTICO: Pool reutilizado para cada event
-        $json = JsonBufferPool::encodeWithPool($event);
-        $res->write($json . "\n");
-    }
-    
-    return $res->end();
-});
-
-// Performance: Pool reusa buffers, zero alocações extras
-```
-
-## 🔍 Troubleshooting
-
-### Problema: Pool não está sendo usado
-```php
-// Verificar tamanho dos dados
-$data = ['small' => 'data'];
-$size = JsonBufferPool::estimateDataSize($data);
-echo "Size: {$size} bytes\n";
-
-if ($size < 256) {
-    echo "Dados muito pequenos - pool não necessário\n";
-}
-```
-
-### Problema: Performance pior com pool
-```php
-// Isso pode acontecer com dados muito pequenos
-$stats = JsonBufferPool::getStatistics();
-
-if ($stats['efficiency'] < 20) {
-    echo "Pool ineficiente - considere aumentar threshold\n";
-    
-    // Ajustar threshold
-    JsonBufferPool::configure(['threshold_bytes' => 512]);
-}
-```
-
-### Problema: Memory usage alto
-```php
-// Verificar tamanho do pool
-$stats = JsonBufferPool::getStatistics();
-
-if ($stats['current_usage'] > 50 * 1024 * 1024) { // 50MB
-    echo "Pool usando muita memória\n";
-    
-    // Reduzir tamanho máximo
-    JsonBufferPool::configure(['max_pool_size' => 50]);
-    
-    // Ou limpar pool
-    JsonBufferPool::clearPool();
-}
-```
-
-## 🧪 Testing e Benchmarks
-
-### Benchmark Simples
-```php
-function benchmarkJsonPool() {
-    $data = array_fill(0, 100, ['id' => 1, 'name' => 'Test']);
-    $iterations = 10000;
-    
-    // Sem pool
-    $start = microtime(true);
-    for ($i = 0; $i < $iterations; $i++) {
-        json_encode($data);
-    }
-    $timeWithout = microtime(true) - $start;
-    
-    // Com pool
-    $start = microtime(true);
-    for ($i = 0; $i < $iterations; $i++) {
-        JsonBufferPool::encodeWithPool($data);
-    }
-    $timeWith = microtime(true) - $start;
-    
-    $improvement = ($timeWithout - $timeWith) / $timeWithout * 100;
-    echo "Improvement: {$improvement}%\n";
-}
-```
-
-### Unit Test Example
-```php
-public function testJsonPoolThreshold()
-{
-    // Dados pequenos
-    $smallData = ['id' => 1];
-    $this->assertFalse(JsonBufferPool::shouldUsePooling($smallData));
-    
-    // Dados grandes
-    $largeData = array_fill(0, 50, ['id' => 1, 'data' => str_repeat('x', 100)]);
-    $this->assertTrue(JsonBufferPool::shouldUsePooling($largeData));
-}
-```
-
-## 📈 Performance Guidelines
-
-### Quando o Pool é Mais Eficiente
-
-✅ **IDEAL para:**
-- Arrays com 10+ elementos
-- Objetos com 5+ propriedades  
-- Strings >1KB
-- Operações repetitivas
-- APIs com alta carga
-
-❌ **EVITAR para:**
-- Dados <256 bytes
-- Operações únicas
-- Micro-responses
-- Simple status responses
-
-### Otimizações de Produção
-```php
-// Configuração para alta performance
-JsonBufferPool::configure([
-    'threshold_bytes' => 128,        // Mais agressivo
-    'max_pool_size' => 1000,         // Pool maior
-    'enable_statistics' => false,    // Desabilitar stats em produção
-    'warm_up_pool' => true          // Pre-allocate buffers
-]);
-```
-
-## 🔗 Integração com Framework
-
-### Uso Automático em Responses
-```php
-// O framework usa automaticamente JsonBufferPool::encodeWithPool()
-// em todos os $res->json() quando detecta dados grandes
-
-class Response {
-    public function json($data, int $status = 200): ResponseInterface 
-    {
-        // AUTOMÁTICO: Usa pooling inteligente
-        $json = JsonBufferPool::encodeWithPool($data);
-        
-        return $this->status($status)
-                    ->header('Content-Type', 'application/json')
-                    ->write($json);
-    }
-}
-```
-
-### Middleware para Logging
-```php
-$app->use(function($req, $res, $next) {
-    $before = JsonBufferPool::getStatistics();
-    
-    $response = $next($req, $res);
-    
-    $after = JsonBufferPool::getStatistics();
-    $operations = $after['total_operations'] - $before['total_operations'];
-    
-    if ($operations > 0) {
-        error_log("JSON operations: {$operations}, Pool efficiency: {$after['reuse_rate']}%");
-    }
-    
-    return $response;
-});
-```
-
-## 🎯 Conclusão
-
-O JsonBufferPool otimizado v1.1.4+ oferece:
-
-- ✅ **Performance inteligente** - Usa pool apenas quando benéfico
-- ✅ **Zero configuração** - Funciona automaticamente  
-- ✅ **Monitoramento integrado** - Estatísticas em tempo real
-- ✅ **Compatibilidade total** - Drop-in replacement para json_encode()
-- ✅ **Production-ready** - Testado e validado em alta carga
-
-**Próximos passos:**
-- [Performance Monitoring](../performance/MONITORING.md)
-- [Advanced Configuration](../configuration/ADVANCED.md)
-- [Production Deployment](../../deployment/PRODUCTION.md)
+- [CONSTANTS_REFERENCE.md](CONSTANTS_REFERENCE.md) - referência formal de todas as constantes de `JsonBufferPool`
+- [README.md](README.md) - visão geral do módulo JSON
+- [performance-guide.md](performance-guide.md) - guia de performance relacionado

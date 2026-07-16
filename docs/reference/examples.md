@@ -1,4 +1,8 @@
-# PivotPHP Core v1.1.3 - Examples Reference
+# PivotPHP Core - Examples Reference
+
+> This guide was originally written for v1.1.3. The example files listed still exist and
+> work in v2.1.1 (verified against the current `examples/` directory), but performance
+> numbers below are historical v1.1.3 microbenchmarks, not revalidated for 2.1.x.
 
 This comprehensive guide showcases all available examples in the PivotPHP Core framework, organized by complexity and use case.
 
@@ -6,13 +10,13 @@ This comprehensive guide showcases all available examples in the PivotPHP Core f
 
 ### 🆕 v1.1.3 New Features
 - [Array Callables Demo](../../examples/07-advanced/array-callables.php) - NEW! Array callable syntax
-- [Performance Showcase](../../examples/07-advanced/performance-v1.1.3.php) - NEW! +116% performance improvements
+- [Performance Showcase](../../examples/05-performance/high-performance.php) - Object pooling, JSON optimization, monitoring
 
 ### 📚 Learning Path
 - [Hello World](../../examples/01-basics/hello-world.php) - Start here
 - [Basic CRUD](../../examples/01-basics/basic-routes.php) - Essential operations
 - [Array Callables](../../examples/07-advanced/array-callables.php) - Modern syntax
-- [Performance Demo](../../examples/07-advanced/performance-v1.1.3.php) - Optimization showcase
+- [Performance Demo](../../examples/05-performance/high-performance.php) - Optimization showcase
 
 ## 📁 Complete Examples Catalog
 
@@ -150,8 +154,10 @@ curl -X POST http://localhost:8000/api/v1/products \
 
 ```bash
 curl http://localhost:8000/enable-high-performance?profile=HIGH
-curl http://localhost:8000/performance/metrics
-curl http://localhost:8000/performance/json-test
+curl http://localhost:8000/metrics
+curl http://localhost:8000/pool-demo
+curl http://localhost:8000/benchmark
+curl -X POST http://localhost:8000/json-test
 ```
 
 ### 06-security - Security Features
@@ -200,19 +206,11 @@ curl -X POST http://localhost:8000/users \
      -d '{"name":"John","email":"john@example.com"}'
 ```
 
-#### performance-v1.1.3.php
-**Purpose**: v1.1.3 performance improvements showcase
-**Features**: +116% framework improvement, object pool metrics
-**Run**: `php -S localhost:8000 examples/07-advanced/performance-v1.1.3.php`
-
-```bash
-# Test performance features
-curl http://localhost:8000/performance/metrics             # Real-time metrics
-curl http://localhost:8000/performance/json/large          # JSON optimization
-curl http://localhost:8000/performance/stress-test         # Framework stress test
-curl http://localhost:8000/performance/pool-stats          # Object pool stats
-curl http://localhost:8000/performance/benchmark           # Framework comparison
-```
+> **Nota de revisão:** este documento referenciava `examples/07-advanced/performance-v1.1.3.php`,
+> um arquivo que não existe no repositório atual (nem em `07-advanced/`, que hoje contém
+> apenas `array-callables.php`). O exemplo de performance real do projeto é
+> `examples/05-performance/high-performance.php`, já referenciado na seção "05-performance"
+> acima — use-o em vez disso.
 
 ## 🎯 Use Case Examples
 
@@ -227,7 +225,7 @@ curl http://localhost:8000/performance/benchmark           # Framework compariso
 **Use case**: Full-featured production API
 
 ### High Performance Application
-**Path**: high-performance.php → performance-v1.1.3.php
+**Path**: high-performance.php
 **Time**: 30 minutes
 **Use case**: Performance-critical applications
 
@@ -238,22 +236,26 @@ curl http://localhost:8000/performance/benchmark           # Framework compariso
 
 ## 📊 Performance Examples Summary
 
-### Framework Performance (v1.1.3)
+> Os números abaixo são um microbenchmark histórico da v1.1.3 (não revalidado para a série
+> 2.1.x — ver `PERFORMANCE_RESULTS.md` na raiz do projeto para os últimos números
+> registrados, também históricos, da v1.1.4).
+
+### Framework Performance (v1.1.3, histórico)
 - **Baseline (v1.1.2)**: 20,400 ops/sec
 - **Current (v1.1.3)**: 44,092 ops/sec
 - **Improvement**: +116%
-- **Demo**: performance-v1.1.3.php
+- **Demo**: high-performance.php → `/benchmark`
 
-### JSON Optimization
+### JSON Optimization (v1.1.3, histórico)
 - **Small datasets**: 505K ops/sec
 - **Medium datasets**: 119K ops/sec
 - **Large datasets**: 214K ops/sec
-- **Demo**: performance-v1.1.3.php → /performance/json/{size}
+- **Demo**: high-performance.php → `/json-test`
 
 ### Object Pool Efficiency
 - **Request pool reuse**: 0% → 100%
 - **Response pool reuse**: 0% → 99.9%
-- **Demo**: performance-v1.1.3.php → /performance/pool-stats
+- **Demo**: high-performance.php → `/pool-demo`
 
 ## 🔧 Testing Guidelines
 
@@ -308,7 +310,7 @@ ab -n 1000 -c 10 http://localhost:8000/api/endpoint
 
 ### Advanced (Framework Mastery)
 1. **array-callables.php** - Modern syntax patterns
-2. **performance-v1.1.3.php** - Performance optimization
+2. **high-performance.php** - Performance optimization
 3. **custom-middleware.php** - Extending the framework
 4. **middleware-stack.php** - Complex architectures
 
@@ -342,5 +344,5 @@ curl -X POST http://localhost:8000/api/endpoint \
 
 ---
 
-**Total Examples**: 17 comprehensive examples covering all framework features
-**Updated for**: PivotPHP Core v1.1.3 with latest performance improvements
+**Total Examples**: 17 comprehensive examples covering all framework features (file list verified against v2.1.1's `examples/` directory)
+**Originally written for**: PivotPHP Core v1.1.3 — performance figures in this document are historical and have not been revalidated for 2.1.x

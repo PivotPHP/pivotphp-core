@@ -2,6 +2,18 @@
 
 Guia completo dos métodos de autenticação nativos do PivotPHP, incluindo JWT, Basic Auth, Bearer Token, API Key e configurações avançadas.
 
+> ⚠️ **Nota de revisão:** os namespaces de import foram corrigidos (`AuthMiddleware` é
+> `PivotPHP\Core\Middleware\Security\AuthMiddleware`, não `Http\Psr15\Middleware\...`). O
+> **conteúdo das chaves de configuração abaixo não foi totalmente reauditado** — a
+> implementação real de `AuthMiddleware::__construct(array $config = [], array $publicPaths = [])`
+> (`src/Middleware/Security/AuthMiddleware.php`) só lê as chaves `authMethods`, `jwtSecret`,
+> `basicAuthCallback`, `bearerAuthCallback`, `customAuthCallback` (mais `header`/`prefix`/`secret`
+> usados internamente). Chaves como `jwtAlgorithm`, `excludePaths` (dentro de `$config` — o
+> real é o **2º argumento posicional** do construtor), `jwtOptions`, `tokenLocation`,
+> `headerName`, `headerPrefix`, `errorMessages`, `basicAuthRealm` usadas nos exemplos abaixo
+> **não são lidas pela classe real** e são silenciosamente ignoradas. Confirme cada opção em
+> `src/Middleware/Security/AuthMiddleware.php` antes de depender dela em produção.
+
 ## 📋 Índice
 
 - [Visão Geral](#visão-geral)
@@ -42,7 +54,7 @@ O PivotPHP oferece um sistema de autenticação robusto e flexível que suporta 
 <?php
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Psr15\Middleware\AuthMiddleware;
+use PivotPHP\Core\Middleware\Security\AuthMiddleware;
 
 $app = new Application();
 
@@ -756,7 +768,7 @@ class MultiMethodAuthTest extends TestCase
 <?php
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Psr15\Middleware\AuthMiddleware;
+use PivotPHP\Core\Middleware\Security\AuthMiddleware;
 
 $app = new Application();
 
@@ -886,7 +898,7 @@ $app->get('/admin/users',
 ## 📚 Recursos Adicionais
 
 - **JWT Debugger**: https://jwt.io para debug de tokens
-- **Security Headers**: Combinação com SecurityMiddleware
+- **Security Headers**: Combinação com SecurityHeadersMiddleware
 - **Rate Limiting**: Integração com RateLimitMiddleware
 - **CORS**: Configuração com CorsMiddleware
 

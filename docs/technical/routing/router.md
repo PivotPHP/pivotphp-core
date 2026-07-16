@@ -411,15 +411,19 @@ Router::use('/api/protected',
 
 ### Middlewares por Tipo de Recurso
 
+> **Nota:** `Router::use()` espera `callable ...$middlewares` — passe instâncias (ou
+> closures), não strings `::class` (uma string de nome de classe só é `callable` se a classe
+> tiver `__invoke()`; os middlewares PSR-15 reais do framework usam `process()`, não
+> `__invoke()`). Não existe `ValidationMiddleware` no framework — use
+> `PivotPHP\Core\Validation\Validator` (ver
+> [ValidationMiddleware.md](../middleware/ValidationMiddleware.md)) dentro do seu próprio
+> middleware.
+
 ```php
-// Middleware de rate limiting para uploads
-Router::use('/api/upload', RateLimitMiddleware::class);
+use PivotPHP\Core\Middleware\Performance\CacheMiddleware;
 
-// Middleware de validação para formulários
-Router::use('/api/forms', ValidationMiddleware::class);
-
-// Middleware de cache para dados estáticos
-Router::use('/api/static', CacheMiddleware::class);
+// Middleware de cache para dados estáticos — passe uma instância, não a string ::class
+Router::use('/api/static', new CacheMiddleware());
 ```
 
 ## Recursos Avançados

@@ -73,18 +73,18 @@ minha-extensao/
     },
     "autoload": {
         "psr-4": {
-            "Vendor\\ExpressPhpExtension\\": "src/"
+            "Vendor\\PivotPhpExtension\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Vendor\\ExpressPhpExtension\\Tests\\": "tests/"
+            "Vendor\\PivotPhpExtension\\Tests\\": "tests/"
         }
     },
     "extra": {
         "pivotphp-core": {
             "providers": [
-                "Vendor\\ExpressPhpExtension\\MyExtensionServiceProvider"
+                "Vendor\\PivotPhpExtension\\MyExtensionServiceProvider"
             ],
             "config": {
                 "extension": "config/extension.php"
@@ -103,7 +103,7 @@ minha-extensao/
 ```php
 <?php
 
-namespace Vendor\ExpressPhpExtension;
+namespace Vendor\PivotPhpExtension;
 
 use PivotPHP\Core\Providers\ServiceProvider;
 use PivotPHP\Core\Routing\Router;
@@ -251,7 +251,7 @@ class MyExtensionServiceProvider extends ServiceProvider
 ```php
 <?php
 
-namespace Vendor\ExpressPhpExtension\Services;
+namespace Vendor\PivotPhpExtension\Services;
 
 class ExtensionService
 {
@@ -345,7 +345,7 @@ class ExtensionService
 ```php
 <?php
 
-namespace Vendor\ExpressPhpExtension\Controllers;
+namespace Vendor\PivotPhpExtension\Controllers;
 
 class ExtensionController
 {
@@ -417,7 +417,7 @@ class ExtensionController
 ```php
 <?php
 
-namespace Vendor\ExpressPhpExtension\Middleware;
+namespace Vendor\PivotPhpExtension\Middleware;
 
 class ExtensionMiddleware
 {
@@ -512,7 +512,7 @@ return [
     "extra": {
         "pivotphp-core": {
             "providers": [
-                "Vendor\\ExpressPhpExtension\\MyExtensionServiceProvider"
+                "Vendor\\PivotPhpExtension\\MyExtensionServiceProvider"
             ],
             "config": {
                 "extension": "config/extension.php"
@@ -593,11 +593,11 @@ class PublishExtensionCommand
 ```php
 <?php
 
-namespace Vendor\ExpressPhpExtension\Tests;
+namespace Vendor\PivotPhpExtension\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use Vendor\ExpressPhpExtension\MyExtensionServiceProvider;
+use Vendor\PivotPhpExtension\MyExtensionServiceProvider;
 
 class ExtensionTest extends TestCase
 {

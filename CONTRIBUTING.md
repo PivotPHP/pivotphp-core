@@ -23,7 +23,7 @@ composer test
 ### 2. Diretrizes de Código
 
 #### 📋 Padrões de Qualidade
-- **PHPStan Level 8**: Máxima análise estática
+- **PHPStan Level 9**: Máxima análise estática
 - **PSR-12**: Padrão de code style
 - **PHP 8.1+**: Compatibilidade mínima
 - **100% Test Coverage**: Todos os recursos devem ter testes
@@ -56,7 +56,7 @@ src/
 #### Template de Middleware
 ```php
 <?php
-namespace PivotPHP\Core\Middlewares\Core;
+namespace PivotPHP\Core\Middleware\Core;
 
 class MeuMiddleware
 {
@@ -109,10 +109,10 @@ composer test
 #### Criar Novos Testes
 ```php
 <?php
-namespace PivotPHP\Core\Tests\Middlewares\Core;
+namespace PivotPHP\Core\Tests\Middleware\Core;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Middlewares\Core\MeuMiddleware;
+use PivotPHP\Core\Middleware\Core\MeuMiddleware;
 
 class MeuMiddlewareTest extends TestCase
 {
@@ -152,7 +152,7 @@ class MeuMiddlewareTest extends TestCase
 
 ### Pull Request Checklist
 - [ ] Código segue PSR-12
-- [ ] PHPStan Level 8 sem erros
+- [ ] PHPStan Level 9 sem erros
 - [ ] Todos os testes passam
 - [ ] Documentação atualizada
 - [ ] Exemplos funcionando
@@ -161,7 +161,7 @@ class MeuMiddlewareTest extends TestCase
 ### Hooks de Git
 O projeto inclui hooks automáticos que verificam:
 - Sintaxe PHP
-- PHPStan Level 8
+- PHPStan Level 9
 - Testes unitários
 - Code style PSR-12
 - Validação do composer.json
@@ -199,8 +199,7 @@ For new features:
 
 For security vulnerabilities:
 - **DO NOT** open a public issue
-- Email security@expressphp.com (if available)
-- Or create a private security advisory on GitHub
+- Create a private security advisory on GitHub: https://github.com/PivotPHP/pivotphp-core/security/advisories/new
 
 ## 📚 Types of Contributions
 
@@ -242,9 +241,9 @@ test: add middleware integration tests
 
 ## 📖 Development Resources
 
-- [PivotPHP Documentation](docs/en/README.md)
-- [Security Implementation Guide](docs/guides/SECURITY_IMPLEMENTATION.md)
-- [Migration Guide](docs/development/MIDDLEWARE_MIGRATION.md)
+- [PivotPHP Documentation](docs/index.md)
+- [Middleware Technical Guide](docs/technical/middleware/README.md)
+- [Migration Guide](docs/MIGRATION_GUIDE.md)
 
 ## 🎯 Contribution Areas
 

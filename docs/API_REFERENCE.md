@@ -1,7 +1,11 @@
 # PivotPHP Core - API Reference
 
-**Version:** 1.2.0
-**Last Updated:** July 2025
+**Version:** 2.1.1
+
+> ⚠️ **Nota de revisão:** este documento foi originalmente escrito para a v1.1.3/v1.2.0. A
+> assinatura do construtor de `Application` e alguns exemplos foram corrigidos para refletir
+> a v2.1.1 atual, mas números de performance e algumas seções ("Migration Notes") ainda
+> refletem o estado da v1.1.3 e não foram revalidados — tratar como histórico onde indicado.
 
 > ⚠️ **Nota**: Este projeto é mantido por apenas uma pessoa e pode não receber atualizações constantemente. Ideal para provas de conceito, protótipos e estudos, mas não recomendado para aplicações críticas de produção.
 
@@ -27,49 +31,47 @@ $app->run();
 ### Constructor
 
 ```php
-new Application(?string $basePath = null, ?string $configPath = null)
+new Application(?string $basePath = null)
 ```
 
 **Parameters:**
-- `$basePath` - Base directory path (default: auto-detected)
-- `$configPath` - Configuration directory path (default: `$basePath/config`)
+- `$basePath` - Base directory path (default: auto-detected). There is no `$configPath`
+  parameter — configuration is not passed to the constructor (see "Configuration" below).
 
 ### HTTP Methods
 
+Route handlers accept `callable|array` — either a closure/named function or an array
+callable (`[Controller::class, 'method']`).
+
 #### GET Routes
 ```php
-$app->get(string $path, callable $handler): self
+$app->get(string $path, callable|array $handler): self
 ```
 
 #### POST Routes
 ```php
-$app->post(string $path, callable $handler): self
+$app->post(string $path, callable|array $handler): self
 ```
 
 #### PUT Routes
 ```php
-$app->put(string $path, callable $handler): self
+$app->put(string $path, callable|array $handler): self
 ```
 
 #### DELETE Routes
 ```php
-$app->delete(string $path, callable $handler): self
+$app->delete(string $path, callable|array $handler): self
 ```
 
 #### PATCH Routes
 ```php
-$app->patch(string $path, callable $handler): self
+$app->patch(string $path, callable|array $handler): self
 ```
 
-#### OPTIONS Routes
-```php
-$app->options(string $path, callable $handler): self
-```
-
-#### Multiple Methods
-```php
-$app->route(array $methods, string $path, callable $handler): self
-```
+> **Nota:** `Application` expõe apenas `get()`, `post()`, `put()`, `delete()` e `patch()`.
+> Não existem métodos `options()`, `head()`, `any()` ou `route()` em `Application` — o Router
+> subjacente (`pivotphp/core-routing`) suporta esses verbos internamente, mas eles não são
+> expostos como métodos de conveniência em `Application` (ver `src/Core/Application.php`).
 
 ### Route Parameters
 
@@ -106,27 +108,20 @@ $app->get('/codes/:code<alnum>', $handler);       // [a-zA-Z0-9]+
 
 #### Global Middleware
 ```php
-$app->use(callable $middleware): self
+$app->use(mixed $middleware): self
 ```
 
-#### Route-Specific Middleware
-```php
-$app->get('/protected', $authMiddleware, function ($req, $res) {
-    return $res->json(['protected' => 'data']);
-});
-```
+`$app->middleware($middleware, array $options = [])` is an alias for `use()` — both register
+**global** middleware (they call `Application::use()` internally), not per-route middleware.
 
-#### Multiple Middleware
-```php
-$app->post('/api/data',
-    $corsMiddleware,
-    $authMiddleware,
-    $validationMiddleware,
-    function ($req, $res) {
-        // Handler logic
-    }
-);
-```
+> **Nota:** `Application::get()`/`post()`/`put()`/`delete()`/`patch()` têm a assinatura
+> `(string $path, callable|array $handler)` — apenas 2 parâmetros. Passar um middleware como
+> argumento extra (`$app->get('/protegido', $middleware, $handler)`) resulta em
+> `ArgumentCountError`; essa sintaxe não é suportada por `Application`. O Router subjacente
+> (`pivotphp/core-routing`) aceita middlewares por rota/grupo via `Router::add()` /
+> `Router::group($prefix, $callback, $middlewares)`, mas `Application` não expõe um wrapper
+> para isso — use middleware global via `use()`/`middleware()`, ou chame o `Router` estático
+> diretamente (`PivotPHP\Core\Routing\Router::group(...)`) se precisar de escopo por rota/grupo.
 
 ### Application Lifecycle
 
@@ -144,51 +139,58 @@ $app->run(): void
 
 ## Request Object
 
-### Basic Properties
+> **Nota de revisão:** a seção abaixo foi corrigida para refletir `src/Http/Request.php` e
+> `src/Http/Response.php` (v2.1.1). Diversos itens da versão anterior deste documento
+> descreviam métodos que não existem (ex.: `uri()`, `query()`, `headers()`, `body()`,
+> `cookies()`, `files()` como chamadas de método) — vários desses dados são, na verdade,
+> **propriedades mágicas** (via `__get`), não métodos, e alguns têm tipos diferentes dos
+> documentados anteriormente (ex.: `$req->body` é `stdClass`, não `string`).
+
+### Basic Properties / Methods
 ```php
-$req->method(): string           // HTTP method
-$req->uri(): string             // Request URI
+$req->method                    // string - HTTP method (property, via __get)
+$req->getUri(): UriInterface    // PSR-7 method - Request URI (não existe uri(): string)
 $req->ip(): string              // Client IP
-$req->userAgent(): ?string      // User agent
+$req->userAgent(): string       // User agent
 ```
 
 ### Parameters
 ```php
-$req->param(string $key): ?string                    // Route parameter
-$req->params(): array                                // All route parameters
-$req->get(string $key, mixed $default = null): mixed // Query parameter
-$req->query(): array                                 // All query parameters
+$req->param(string $key, mixed $default = null): mixed  // Route parameter
+$req->params                                             // stdClass - all route parameters (property)
+$req->get(string $key, mixed $default = null): mixed    // Query parameter
+$req->query                                              // stdClass - all query parameters (property)
 ```
 
 ### Headers
 ```php
-$req->header(string $name): ?string  // Single header
-$req->headers(): array               // All headers
+$req->header(string $name): ?string   // Single header
+$req->headers                         // HeaderRequest object (property, not array)
+$req->headers->getAllHeaders(): array // All headers as array
 ```
 
 ### Body Data
 ```php
-$req->body(): string                     // Raw body
-$req->getBodyAsStdClass(): \stdClass     // JSON as object
-$req->input(string $key, mixed $default = null): mixed // JSON property
+$req->body                               // stdClass - parsed body (property, not a raw string)
+$req->getBodyAsStdClass(): \stdClass     // JSON as object (alias/explicit accessor)
+$req->input(string $key, mixed $default = null): mixed  // JSON property
 ```
 
 ### Cookies
 ```php
-$req->cookie(string $name): ?string  // Single cookie
-$req->cookies(): array               // All cookies
+$req->getCookieParams(): array   // PSR-7 method — all cookies (não existe cookie()/cookies() Express-style)
 ```
 
 ### Files
 ```php
-$req->file(string $name): ?array     // Single uploaded file
-$req->files(): array                 // All uploaded files
+$req->file(string $name): ?array   // Single uploaded file
+$req->files                        // array - all uploaded files (property)
 ```
 
 ### Express.js Compatibility
 ```php
 $req->param('id')           // Route parameter
-$req->query()               // Query parameters
+$req->query                 // Query parameters (property)
 $req->get('param')          // Query parameter
 $req->header('Accept')      // Request header
 $req->ip()                  // Client IP
@@ -198,41 +200,45 @@ $req->ip()                  // Client IP
 
 ### Basic Response
 ```php
-$res->send(string $content): self               // Send plain text
-$res->html(string $html): self                  // Send HTML
-$res->json(mixed $data, int $flags = 0): self  // Send JSON
-$res->status(int $code): self                   // Set status code
+$res->send(mixed $data = ''): self   // Send content
+$res->html(mixed $html): self        // Send HTML
+$res->json(mixed $data): self        // Send JSON (não aceita $flags — sanitiza/serializa internamente)
+$res->status(int $code): self        // Set status code
 ```
 
 ### Headers
 ```php
-$res->header(string $name, string $value): self  // Set header
-$res->headers(array $headers): self              // Set multiple headers
+$res->header(string $name, string $value): self  // Set a single header
 ```
+
+> Não existe `$res->headers(array $headers)` para setar múltiplos headers de uma vez —
+> chame `header()` uma vez por header.
 
 ### Cookies
 ```php
-$res->cookie(string $name, string $value, array $options = []): self
+$res->cookie(
+    string $name,
+    string $value,
+    int $expires = 0,
+    string $path = '/',
+    string $domain = '',
+    bool $secure = false,
+    bool $httponly = true
+): self
 ```
 
-**Cookie Options:**
-- `expires` - Expiration timestamp
-- `path` - Cookie path
-- `domain` - Cookie domain
-- `secure` - HTTPS only
-- `httponly` - HTTP only access
-- `samesite` - SameSite policy
+> A assinatura usa parâmetros posicionais, não um array `$options` — não existe suporte a
+> `samesite` nesse método.
 
 ### Redirects
 ```php
-$res->redirect(string $url, int $status = 302): self
+$res->redirect(string $url, int $code = 302): self
 ```
 
 ### File Downloads
-```php
-$res->download(string $path, ?string $name = null): self
-$res->attachment(string $filename): self
-```
+
+Não existem `$res->download()` nem `$res->attachment()` em `Response`. Para servir arquivos
+estáticos, use `Application::staticFiles()` / o mecanismo de `StaticFileManager` do framework.
 
 ### Express.js Compatibility
 ```php
@@ -392,6 +398,10 @@ throw new HttpException(404, 'Resource not found');
 
 ## Configuration
 
+`Application` does not have a `config()` method. Configuration is managed through the
+`Config` object returned by `$app->getConfig()` (`src/Core/Config.php`); there is no
+`$configPath` constructor parameter — set the path explicitly and load files via `Config`.
+
 ### Environment-based Config
 ```php
 // config/app.php
@@ -400,14 +410,18 @@ return [
     'timezone' => $_ENV['APP_TIMEZONE'] ?? 'UTC',
 ];
 
+// Bootstrap
+$app = new Application(__DIR__);
+$app->getConfig()->setConfigPath(__DIR__ . '/config')->loadAll();
+
 // Access in application
-$debug = $app->config('app.debug');
+$debug = $app->getConfig()->get('app.debug');
 ```
 
 ### Custom Configuration
 ```php
-$app->config('custom.setting', 'value');
-$value = $app->config('custom.setting');
+$app->getConfig()->set('custom.setting', 'value');
+$value = $app->getConfig()->get('custom.setting');
 ```
 
 ## Container & Dependency Injection
@@ -427,8 +441,12 @@ $app->singleton('cache', function($container) {
 ### Service Resolution
 ```php
 $logger = $app->make('logger');
-$cache = $app->get('cache');
+$cache = $app->make('cache');
 ```
+
+> **Nota:** use `make()` para resolver serviços do container, não `get()` — `Application::get()`
+> tem a assinatura `get(string $path, callable|array $handler)` e é usado para registrar
+> rotas HTTP GET, não para resolver bindings.
 
 ### Automatic Resolution
 ```php
@@ -468,23 +486,18 @@ Complete working examples are available in the `/examples` directory:
 
 ## Performance Benchmarks
 
-**Latest Results (v1.1.3-dev):**
-- JSON Optimization: 161K ops/sec (small), 17K ops/sec (medium), 1.7K ops/sec (large)
-- Request Creation: 28,693 ops/sec
-- Response Creation: 131,351 ops/sec
-- Object Pooling: 24,161 ops/sec
-- Route Processing: 31,699 ops/sec
+The benchmark figures previously listed here (labeled "v1.1.3-dev") are historical
+microbenchmarks and have not been revalidated for 2.1.x. See
+[`PERFORMANCE_RESULTS.md`](../PERFORMANCE_RESULTS.md) (also historical, v1.1.4) for the
+last recorded cross-framework numbers, and `composer benchmark` to generate current figures
+locally.
 
 ## Migration Notes
 
-### From v1.1.2 to v1.1.3
-- All existing code continues to work
-- New JSON pooling optimizations are automatic
-- Enhanced error handling provides better validation messages
-- All test constants are now properly defined
-
-### Breaking Changes
-- None - full backward compatibility maintained
+For version-to-version migration steps and breaking changes, see
+[`MIGRATION_GUIDE.md`](MIGRATION_GUIDE.md) and [`CHANGELOG.md`](../CHANGELOG.md) — the most
+recent breaking-change release is v2.0.0 (Legacy Cleanup Edition); v2.1.0 started a
+deprecation cycle (see `CHANGELOG.md`) without removing any public API yet.
 
 ## Community & Support
 
@@ -493,4 +506,4 @@ Complete working examples are available in the `/examples` directory:
 - **Examples**: Ready-to-run examples in `/examples` directory
 
 ---
-**PivotPHP Core v1.1.3-dev** - Express.js for PHP 🐘⚡
+**PivotPHP Core v2.1.1** - Express.js for PHP 🐘⚡
