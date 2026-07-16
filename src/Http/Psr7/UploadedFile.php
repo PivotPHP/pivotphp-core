@@ -18,8 +18,8 @@ use Psr\Http\Message\StreamInterface;
  */
 class UploadedFile implements UploadedFileInterface
 {
-    private ?string $file;
-    private ?StreamInterface $stream;
+    private ?string $file = null;
+    private ?StreamInterface $stream = null;
     private ?string $clientFilename;
     private ?string $clientMediaType;
     private int $error;
@@ -57,7 +57,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * {@inheritdoc}
      */
-    public function getStream()
+    public function getStream(): StreamInterface
     {
         if ($this->error !== UPLOAD_ERR_OK) {
             throw new \RuntimeException('Cannot retrieve stream due to upload error');
@@ -85,9 +85,8 @@ class UploadedFile implements UploadedFileInterface
 
     /**
      * {@inheritdoc}
-     * @return void
      */
-    public function moveTo(string $targetPath)
+    public function moveTo(string $targetPath): void
     {
         if ($this->error !== UPLOAD_ERR_OK) {
             throw new \RuntimeException('Cannot move file due to upload error');
@@ -131,7 +130,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * {@inheritdoc}
      */
-    public function getSize()
+    public function getSize(): ?int
     {
         return $this->size;
     }
@@ -139,7 +138,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * {@inheritdoc}
      */
-    public function getError()
+    public function getError(): int
     {
         return $this->error;
     }
@@ -147,7 +146,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * {@inheritdoc}
      */
-    public function getClientFilename()
+    public function getClientFilename(): ?string
     {
         return $this->clientFilename;
     }
@@ -155,7 +154,7 @@ class UploadedFile implements UploadedFileInterface
     /**
      * {@inheritdoc}
      */
-    public function getClientMediaType()
+    public function getClientMediaType(): ?string
     {
         return $this->clientMediaType;
     }

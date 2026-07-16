@@ -9,6 +9,7 @@ use PivotPHP\Core\Json\Pool\JsonBufferPool;
 use PivotPHP\Core\Json\Adapters\JsonBufferPoolAdapter;
 use PivotPHP\Core\Contracts\JsonOptimizerInterface;
 use PivotPHP\Core\Contracts\Psr7PoolInterface;
+use PivotPHP\Core\Http\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use InvalidArgumentException;
@@ -224,13 +225,17 @@ class Response implements ResponseInterface
     }
 
     /**
-     * Retorna o corpo da resposta (compatibilidade com testes).
+     * Retorna o corpo da resposta como StreamInterface (contrato PSR-7).
+     *
+     * Para obter o corpo como string (inclusive em modo teste), use
+     * getBodyAsString()/getBodyString().
      */
-    public function getBody(): StreamInterface|string
+    public function getBody(): StreamInterface
     {
-        // Para compatibilidade com testes existentes, retornar string se em modo teste
+        // Em modo teste, evita acionar a máquina completa do PSR-7 Pool:
+        // envolve o corpo em um Stream leve, mas ainda assim um StreamInterface de verdade.
         if ($this->testMode) {
-            return $this->body;
+            return Stream::createFromString($this->body);
         }
         return $this->getPsr7Response()->getBody();
     }

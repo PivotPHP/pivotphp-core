@@ -107,7 +107,7 @@ class Response extends Message implements ResponseInterface
     /**
      * Gets the response status code.
      */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
@@ -115,9 +115,9 @@ class Response extends Message implements ResponseInterface
     /**
      * Return an instance with the specified status code and, optionally, reason phrase.
      */
-    public function withStatus($code, $reasonPhrase = '')
+    public function withStatus(int $code, string $reasonPhrase = ''): ResponseInterface
     {
-        if (!is_int($code) || $code < 100 || $code > 599) {
+        if ($code < 100 || $code > 599) {
             throw new \InvalidArgumentException('Status code must be an integer between 100 and 599');
         }
 
@@ -131,7 +131,7 @@ class Response extends Message implements ResponseInterface
     /**
      * Gets the response reason phrase associated with the status code.
      */
-    public function getReasonPhrase()
+    public function getReasonPhrase(): string
     {
         return $this->reasonPhrase;
     }

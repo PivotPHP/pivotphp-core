@@ -5,6 +5,39 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-07-15 - PSR-7 2.0 Compatibility Fix
+
+### Fixed
+
+- **Real incompatibility with `psr/http-message` 2.0, despite `composer.json` declaring
+  support for it (`"psr/http-message": "^1.1|^2.0"`, unchanged since 2.1.0).** PSR-7 2.0
+  adds strict return type declarations to the interface methods (e.g.
+  `MessageInterface::getBody(): StreamInterface`). Several PSR-7 classes in this package did
+  not declare compatible return types, so whenever Composer actually resolved
+  `psr/http-message` to `^2.0` — which the constraint itself allowed — every request hit a
+  fatal `Declaration must be compatible` error. Retyped ~46 method signatures across 8 files
+  against the real PSR-7 2.0 interface sources (`php-fig/http-message`, tag `2.0`):
+  `Http/Psr7/Message.php`, `Http/Psr7/Request.php`, `Http/Psr7/Response.php`,
+  `Http/Psr7/ServerRequest.php`, `Http/Psr7/Stream.php`, `Http/Psr7/Uri.php`,
+  `Http/Psr7/UploadedFile.php`, and the hybrid `Http/Response.php`. Verified against both
+  `psr/http-message` 1.1 and a real `^2.0` install; PHPStan level 9 and the full test suite
+  (1114 tests) pass either way.
+  - `Http\Response::getBody()` (the Express.js/PSR-7 hybrid class, not `Psr7\Response`) had a
+    `StreamInterface|string` union return type, also incompatible with the 2.0 interface.
+    Narrowed to `StreamInterface`; in test mode it now wraps the raw body in a `Psr7\Stream`
+    instead of returning the string directly. Code that relied on this undocumented behavior
+    to get a raw string back should call `getBodyAsString()` instead.
+  - `Http\Psr7\UploadedFile`: `$file` and `$stream` had no default value and were only
+    assigned on one branch of the constructor. Accessing the other branch's property (e.g.
+    constructing from a `StreamInterface` and then calling `getStream()`, which checks
+    `$this->stream instanceof StreamInterface` first) threw
+    `Error: must not be accessed before initialization`. Both properties now default to
+    `null`.
+- No public-API or observable behavior change for documented usage — this restores the
+  compatibility `composer.json` already claimed for `psr/http-message ^2.0` since 2.1.0. The
+  only affected caller is undocumented direct use of `Response::getBody()` in test mode
+  expecting a raw string (see above).
+
 ## [2.1.0] - 2026-07-15 - Response Emission, Pool Safety & Deprecation Cycle
 
 ### Fixed

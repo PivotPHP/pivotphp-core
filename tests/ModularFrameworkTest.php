@@ -51,7 +51,7 @@ class ModularFrameworkTest extends TestCase
 
         $response->json(['test' => 'data']);
 
-        $this->assertEquals('{"test":"data"}', $response->getBody());
+        $this->assertEquals('{"test":"data"}', $response->getBodyAsString());
     }
 
     /**

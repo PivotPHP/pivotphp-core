@@ -81,7 +81,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function getProtocolVersion()
+    public function getProtocolVersion(): string
     {
         return $this->protocolVersion;
     }
@@ -89,7 +89,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function withProtocolVersion(string $version)
+    public function withProtocolVersion(string $version): MessageInterface
     {
         if ($this->protocolVersion === $version) {
             return $this;
@@ -104,7 +104,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function getHeaders()
+    public function getHeaders(): array
     {
         return $this->headers;
     }
@@ -112,7 +112,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function hasHeader(string $name)
+    public function hasHeader(string $name): bool
     {
         return isset($this->headerNames[$this->getHeaderPool()->getNormalizedName($name)]);
     }
@@ -120,7 +120,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function getHeader(string $name)
+    public function getHeader(string $name): array
     {
         $normalizedName = $this->getHeaderPool()->getNormalizedName($name);
 
@@ -136,7 +136,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function getHeaderLine(string $name)
+    public function getHeaderLine(string $name): string
     {
         return implode(', ', $this->getHeader($name));
     }
@@ -144,7 +144,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function withHeader(string $name, $value)
+    public function withHeader(string $name, $value): MessageInterface
     {
         // Optimized version with header pooling
         $normalized = $this->getHeaderPool()->getNormalizedName($name);
@@ -164,7 +164,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function withAddedHeader(string $name, $value)
+    public function withAddedHeader(string $name, $value): MessageInterface
     {
         // Optimized version with header pooling
         $normalized = $this->getHeaderPool()->getNormalizedName($name);
@@ -185,7 +185,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function withoutHeader(string $name)
+    public function withoutHeader(string $name): MessageInterface
     {
         $normalized = $this->getHeaderPool()->getNormalizedName($name);
 
@@ -204,7 +204,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function getBody()
+    public function getBody(): StreamInterface
     {
         return $this->body;
     }
@@ -212,7 +212,7 @@ class Message implements MessageInterface
     /**
      * {@inheritdoc}
      */
-    public function withBody(StreamInterface $body)
+    public function withBody(StreamInterface $body): MessageInterface
     {
         if ($body === $this->body) {
             return $this;

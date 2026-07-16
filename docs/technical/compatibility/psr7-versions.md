@@ -1,5 +1,13 @@
 # PSR-7 Version Compatibility
 
+> **Update (v2.1.1):** the sections below describing PivotPHP Core as requiring PSR-7 v2.0
+> "at runtime" and needing a bridge/adapter for PSR-7 v1.x projects are outdated and were the
+> actual bug fixed in v2.1.1. Since v2.1.1, all PSR-7 classes are directly compatible with
+> **both** `psr/http-message` v1.1 and v2.0 with no bridge, adapter, or version switch
+> required — see the [v2.1.1 changelog entry](../../../CHANGELOG.md#211---2026-07-15---psr-7-20-compatibility-fix)
+> for details. The rest of this document is kept for historical context and is being revised;
+> treat the "Compatibility with PSR-7 v1.x Projects" section as no longer accurate.
+
 ## Overview
 
 PivotPHP Core v1.0.1 is designed with PSR-7 v2.0 but allows installation with either PSR-7 v1.x or v2.x through composer constraints.
@@ -26,12 +34,22 @@ PivotPHP Core's HTTP message implementations (`ServerRequest`, `Request`, `Respo
 
 ### Compatibility with PSR-7 v1.x Projects
 
-While composer allows installation alongside PSR-7 v1.x, the actual PivotPHP Core classes require PSR-7 v2.0 interfaces at runtime. This means:
+**As of v2.1.1**, PivotPHP Core's PSR-7 classes declare return types matching the PSR-7 v2.0
+interfaces, which is compatible with both PSR-7 v1.x (whose interfaces don't declare return
+types, so a stricter implementation is legal) and v2.0 (whose interfaces require those exact
+return types). Composer may resolve `psr/http-message` to either `^1.1` or `^2.0` and the
+package works correctly either way — no bridge, adapter, or manual switching is required for
+normal usage.
 
-1. **Direct Usage**: Projects using PivotPHP Core directly should use PSR-7 v2.0
-2. **Mixed Environments**: Projects that need to use both PivotPHP Core and libraries requiring PSR-7 v1.x (like ReactPHP) will need:
-   - A PSR-7 bridge/adapter layer
-   - Or separate PSR-7 implementations for different parts of the application
+Prior to v2.1.1, several classes had signatures that were incompatible with the v2.0
+interfaces despite `composer.json` allowing `^2.0`; whenever Composer resolved to v2.0, every
+request failed with a fatal `Declaration must be compatible` error. That regression is what
+v2.1.1 fixes.
+
+Mixed environments needing a specific PSR-7 v1.x-only library that itself is incompatible
+with the *installed* `psr/http-message` version (e.g. some ReactPHP components) may still
+need a bridge/adapter layer — that is a constraint of the third-party library, not of
+PivotPHP Core.
 
 ### ReactPHP Integration Example
 

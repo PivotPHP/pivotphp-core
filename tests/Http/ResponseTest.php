@@ -124,7 +124,7 @@ class ResponseTest extends TestCase
         $result = $this->response->json($data);
 
         $this->assertInstanceOf(Response::class, $result);
-        $this->assertEquals(json_encode($data), $this->response->getBody());
+        $this->assertEquals(json_encode($data), $this->response->getBodyAsString());
 
         $headers = $this->response->getHeaders();
         $this->assertArrayHasKey('Content-Type', $headers);
@@ -138,7 +138,7 @@ class ResponseTest extends TestCase
         $result = $this->response->text($text);
 
         $this->assertInstanceOf(Response::class, $result);
-        $this->assertEquals($text, $this->response->getBody());
+        $this->assertEquals($text, $this->response->getBodyAsString());
 
         $headers = $this->response->getHeaders();
         $this->assertEquals('text/plain; charset=utf-8', $headers['Content-Type']);
@@ -151,7 +151,7 @@ class ResponseTest extends TestCase
         $result = $this->response->html($html);
 
         $this->assertInstanceOf(Response::class, $result);
-        $this->assertEquals($html, $this->response->getBody());
+        $this->assertEquals($html, $this->response->getBodyAsString());
 
         $headers = $this->response->getHeaders();
         $this->assertEquals('text/html; charset=utf-8', $headers['Content-Type']);
@@ -167,7 +167,7 @@ class ResponseTest extends TestCase
             ->json($data);
 
         $this->assertInstanceOf(Response::class, $result);
-        $this->assertEquals(json_encode($data), $this->response->getBody());
+        $this->assertEquals(json_encode($data), $this->response->getBodyAsString());
         $this->assertEquals(201, $this->response->getStatusCode());
 
         $headers = $this->response->getHeaders();
@@ -194,21 +194,21 @@ class ResponseTest extends TestCase
 
         $this->response->json($complexData);
 
-        $this->assertEquals(json_encode($complexData), $this->response->getBody());
+        $this->assertEquals(json_encode($complexData), $this->response->getBodyAsString());
     }
 
     public function testEmptyJsonResponse(): void
     {
         $this->response->json([]);
 
-        $this->assertEquals('[]', $this->response->getBody());
+        $this->assertEquals('[]', $this->response->getBodyAsString());
     }
 
     public function testNullJsonResponse(): void
     {
         $this->response->json(null);
 
-        $this->assertEquals('null', $this->response->getBody());
+        $this->assertEquals('null', $this->response->getBodyAsString());
     }
 
     public function testBooleanJsonResponse(): void
@@ -216,12 +216,12 @@ class ResponseTest extends TestCase
         $response1 = new Response();
         $response1->setTestMode(true);
         $response1->json(true);
-        $this->assertEquals('true', $response1->getBody());
+        $this->assertEquals('true', $response1->getBodyAsString());
 
         $response2 = new Response();
         $response2->setTestMode(true);
         $response2->json(false);
-        $this->assertEquals('false', $response2->getBody());
+        $this->assertEquals('false', $response2->getBodyAsString());
     }
 
     public function testNumericJsonResponse(): void
@@ -229,26 +229,26 @@ class ResponseTest extends TestCase
         $response1 = new Response();
         $response1->setTestMode(true);
         $response1->json(42);
-        $this->assertEquals('42', $response1->getBody());
+        $this->assertEquals('42', $response1->getBodyAsString());
 
         $response2 = new Response();
         $response2->setTestMode(true);
         $response2->json(3.14);
-        $this->assertEquals('3.14', $response2->getBody());
+        $this->assertEquals('3.14', $response2->getBodyAsString());
     }
 
     public function testStringJsonResponse(): void
     {
         $this->response->json('Hello World');
 
-        $this->assertEquals('"Hello World"', $this->response->getBody());
+        $this->assertEquals('"Hello World"', $this->response->getBodyAsString());
     }
 
     public function testEmptyTextResponse(): void
     {
         $this->response->text('');
 
-        $this->assertEquals('', $this->response->getBody());
+        $this->assertEquals('', $this->response->getBodyAsString());
     }
 
     public function testMultilineTextResponse(): void
@@ -257,7 +257,7 @@ class ResponseTest extends TestCase
 
         $this->response->text($text);
 
-        $this->assertEquals($text, $this->response->getBody());
+        $this->assertEquals($text, $this->response->getBodyAsString());
     }
 
     public function testHtmlWithSpecialCharacters(): void
@@ -266,7 +266,7 @@ class ResponseTest extends TestCase
 
         $this->response->html($html);
 
-        $this->assertEquals($html, $this->response->getBody());
+        $this->assertEquals($html, $this->response->getBodyAsString());
     }
 
     public function testMultipleHeaders(): void

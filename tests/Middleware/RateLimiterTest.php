@@ -124,7 +124,7 @@ class RateLimiterTest extends TestCase
         );
         $this->assertEquals(429, $response->getStatusCode());
 
-        $body = json_decode($response->getBody(), true);
+        $body = json_decode($response->getBodyAsString(), true);
         $this->assertEquals('Too Many Requests', $body['error']);
     }
 
@@ -362,7 +362,7 @@ class RateLimiterTest extends TestCase
         $this->assertEquals(503, $response->getStatusCode());
         $this->assertEquals('120', $response->getHeaders()['Retry-After']);
 
-        $body = json_decode($response->getBody(), true);
+        $body = json_decode($response->getBodyAsString(), true);
         $this->assertEquals('Service Unavailable', $body['message']);
     }
 

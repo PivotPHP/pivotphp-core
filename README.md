@@ -593,6 +593,13 @@ class MinhaExtensaoServiceProvider extends ServiceProvider
 
 O PivotPHP oferece suporte duplo para PSR-7, permitindo uso com projetos modernos (v2.x) e compatibilidade com ReactPHP (v1.x).
 
+> **v2.1.1:** o suporte a `psr/http-message` `^1.1` e `^2.0` funciona nativamente, sem
+> necessidade de rodar o script abaixo — ele corrige uma regressão introduzida na v2.1.0 em
+> que a instalação da v2.0 (permitida pelo próprio `composer.json`) quebrava a aplicação com
+> erro fatal em toda rota. Veja o [changelog da v2.1.1](CHANGELOG.md#211---2026-07-15---psr-7-20-compatibility-fix).
+> O script `switch-psr7-version.php` abaixo permanece disponível, mas não é mais um
+> pré-requisito para compatibilidade básica com as duas versões.
+
 ### Verificar versão atual
 ```bash
 php scripts/utils/switch-psr7-version.php --check

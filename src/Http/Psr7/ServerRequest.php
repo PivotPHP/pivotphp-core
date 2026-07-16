@@ -70,10 +70,10 @@ class ServerRequest extends Request implements ServerRequestInterface
 
     /**
      * Retrieve server parameters.
-
+     *
      * @return array
      */
-    public function getServerParams()
+    public function getServerParams(): array
     {
         return $this->serverParams;
     }
@@ -97,7 +97,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Retrieve cookies.
      */
-    public function getCookieParams()
+    public function getCookieParams(): array
     {
         return $this->cookieParams;
     }
@@ -105,7 +105,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Return an instance with the specified cookies.
      */
-    public function withCookieParams(array $cookies)
+    public function withCookieParams(array $cookies): ServerRequestInterface
     {
         $clone = clone $this;
         $clone->cookieParams = $cookies;
@@ -115,7 +115,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Retrieve query string arguments.
      */
-    public function getQueryParams()
+    public function getQueryParams(): array
     {
         return $this->queryParams;
     }
@@ -123,7 +123,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Return an instance with the specified query string arguments.
      */
-    public function withQueryParams(array $query)
+    public function withQueryParams(array $query): ServerRequestInterface
     {
         $clone = clone $this;
         $clone->queryParams = $query;
@@ -133,7 +133,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Retrieve normalized file upload data.
      */
-    public function getUploadedFiles()
+    public function getUploadedFiles(): array
     {
         return $this->uploadedFiles;
     }
@@ -141,7 +141,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Create a new instance with the specified uploaded files.
      */
-    public function withUploadedFiles(array $uploadedFiles)
+    public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
     {
         $clone = clone $this;
         $clone->uploadedFiles = $uploadedFiles;
@@ -162,7 +162,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Return an instance with the specified body parameters.
      */
-    public function withParsedBody($data)
+    public function withParsedBody($data): ServerRequestInterface
     {
         $clone = clone $this;
         $clone->parsedBody = $data;
@@ -172,7 +172,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Retrieve attributes derived from the request.
      */
-    public function getAttributes()
+    public function getAttributes(): array
     {
         return $this->attributes;
     }
@@ -188,7 +188,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Return an instance with the specified derived request attribute.
      */
-    public function withAttribute($name, $value)
+    public function withAttribute($name, $value): ServerRequestInterface
     {
         $clone = clone $this;
         $clone->attributes[$name] = $value;
@@ -198,7 +198,7 @@ class ServerRequest extends Request implements ServerRequestInterface
     /**
      * Return an instance that removes the specified derived request attribute.
      */
-    public function withoutAttribute($name)
+    public function withoutAttribute($name): ServerRequestInterface
     {
         $clone = clone $this;
         unset($clone->attributes[$name]);

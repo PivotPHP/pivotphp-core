@@ -1,5 +1,18 @@
 # PSR-7 Dual Version Support
 
+> **Update (v2.1.1):** genuine dual-version support (both `psr/http-message` v1.1 and v2.0
+> working correctly out of the box, with no source rewriting) was fixed and verified in
+> v2.1.1 — see the [v2.1.1 changelog entry](../../../CHANGELOG.md#211---2026-07-15---psr-7-20-compatibility-fix).
+> Before that fix, `composer.json` already declared `"psr/http-message": "^1.1|^2.0"` but the
+> classes were not actually type-compatible with the v2.0 interfaces, so resolving to v2.0
+> caused fatal errors on every request. The `switch-psr7-version.php` workflow described
+> below (physically rewriting method signatures to add/remove return types) is no longer
+> necessary for basic v1.x/v2.x compatibility, since the checked-in implementation now works
+> with both simultaneously — return types matching the v2.0 interface are also legal under
+> the v1.x interface, which declares no return types at all. The script may still be useful
+> for other purposes but should not be treated as a prerequisite for switching PSR-7
+> versions.
+
 ## Overview
 
 PivotPHP Core v1.0.1 now supports both PSR-7 v1.x and v2.x through a flexible implementation that can adapt to either version.

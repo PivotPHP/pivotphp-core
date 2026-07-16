@@ -240,7 +240,7 @@ class BaseMiddlewareTest extends TestCase
         $this->assertInstanceOf(Response::class, $result);
         $this->assertEquals(200, $result->getStatusCode());
 
-        $body = json_decode($result->getBody(), true);
+        $body = json_decode($result->getBodyAsString(), true);
         $this->assertTrue($body['success']);
         $this->assertEquals('Success', $body['message']);
     }
@@ -255,7 +255,7 @@ class BaseMiddlewareTest extends TestCase
 
         $this->assertInstanceOf(Response::class, $result);
 
-        $body = json_decode($result->getBody(), true);
+        $body = json_decode($result->getBodyAsString(), true);
         $this->assertTrue($body['success']);
         $this->assertEquals('Success', $body['message']);
         $this->assertEquals($customData, $body['data']);
@@ -268,7 +268,7 @@ class BaseMiddlewareTest extends TestCase
     {
         $result = $this->middleware->respondWithSuccessPublic($this->response, null, 'Custom success message');
 
-        $body = json_decode($result->getBody(), true);
+        $body = json_decode($result->getBodyAsString(), true);
         $this->assertTrue($body['success']);
         $this->assertEquals('Custom success message', $body['message']);
         $this->assertArrayNotHasKey('data', $body);
@@ -282,7 +282,7 @@ class BaseMiddlewareTest extends TestCase
         $customData = ['items' => [1, 2, 3]];
         $result = $this->middleware->respondWithSuccessPublic($this->response, $customData, 'Items retrieved');
 
-        $body = json_decode($result->getBody(), true);
+        $body = json_decode($result->getBodyAsString(), true);
         $this->assertTrue($body['success']);
         $this->assertEquals('Items retrieved', $body['message']);
         $this->assertEquals($customData, $body['data']);
