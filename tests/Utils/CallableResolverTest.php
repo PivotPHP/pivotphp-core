@@ -83,10 +83,11 @@ class CallableResolverTest extends TestCase
 
     public function testArrayCallableWithNonStaticMethod(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("is not static. Use an instance instead");
+        // [Classe::class, 'métodoDeInstância'] resolve de forma lazy (closure).
+        $resolved = CallableResolver::resolve([TestCallableClass::class, 'instanceMethod']);
 
-        CallableResolver::resolve([TestCallableClass::class, 'instanceMethod']);
+        $this->assertInstanceOf(\Closure::class, $resolved);
+        $this->assertEquals('instance method called', $resolved());
     }
 
     public function testArrayCallableWithPrivateMethod(): void

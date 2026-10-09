@@ -516,6 +516,40 @@ class Application implements ApplicationInterface
     }
 
     /**
+     * Resolve um handler de rota em formato array para a forma executável,
+     * resolvendo métodos de instância via container (DI) quando disponível.
+     *
+     * @param  callable|array $handler Handler original
+     * @return callable|array
+     */
+    private function resolveHandler(callable|array $handler): callable|array
+    {
+        if (!is_array($handler) || count($handler) !== 2) {
+            return $handler;
+        }
+
+        $class = $handler[0] ?? null;
+        $method = $handler[1] ?? null;
+
+        if (!is_string($class) || !is_string($method) || !class_exists($class) || !method_exists($class, $method)) {
+            return $handler;
+        }
+
+        if ((new \ReflectionMethod($class, $method))->isStatic()) {
+            return $handler;
+        }
+
+        if ($this->container->has($class)) {
+            /** @var object $instance */
+            $instance = $this->container->get($class);
+
+            return [$instance, $method];
+        }
+
+        return $handler;
+    }
+
+    /**
      * Registra uma rota GET.
      *
      * @param  string         $path    Caminho da rota
@@ -524,7 +558,7 @@ class Application implements ApplicationInterface
      */
     public function get(string $path, callable|array $handler): self
     {
-        $this->router->get($path, $handler);
+        $this->router->get($path, $this->resolveHandler($handler));
         return $this;
     }
 
@@ -537,7 +571,7 @@ class Application implements ApplicationInterface
      */
     public function post(string $path, callable|array $handler): self
     {
-        $this->router->post($path, $handler);
+        $this->router->post($path, $this->resolveHandler($handler));
         return $this;
     }
 
@@ -550,7 +584,7 @@ class Application implements ApplicationInterface
      */
     public function put(string $path, callable|array $handler): self
     {
-        $this->router->put($path, $handler);
+        $this->router->put($path, $this->resolveHandler($handler));
         return $this;
     }
 
@@ -563,7 +597,7 @@ class Application implements ApplicationInterface
      */
     public function delete(string $path, callable|array $handler): self
     {
-        $this->router->delete($path, $handler);
+        $this->router->delete($path, $this->resolveHandler($handler));
         return $this;
     }
 
@@ -576,7 +610,7 @@ class Application implements ApplicationInterface
      */
     public function patch(string $path, callable|array $handler): self
     {
-        $this->router->patch($path, $handler);
+        $this->router->patch($path, $this->resolveHandler($handler));
         return $this;
     }
 
