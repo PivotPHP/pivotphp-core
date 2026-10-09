@@ -16,6 +16,7 @@ use PivotPHP\Core\Utils\Utils;
  *
  * @package PivotPHP\Core\Middleware
  * @since 2.2.0
+ * @deprecated v2.2.2 - código de otimização sem uso no caminho de execução (SPEC-049); remoção na v3.0.0.
  */
 class MiddlewarePipelineCompiler
 {

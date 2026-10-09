@@ -13,6 +13,8 @@ use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
  * Focuses on essential optimizations without unnecessary complexity.
  *
  * Following 'Simplicidade sobre Otimização Prematura' principle.
+ *
+ * @deprecated v2.2.2 - código de otimização sem uso no caminho de execução (SPEC-049); remoção na v3.0.0.
  */
 class PerformanceMode
 {

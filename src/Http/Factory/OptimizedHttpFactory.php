@@ -22,6 +22,7 @@ use Psr\Http\Message\UriInterface;
  *
  * @package PivotPHP\Core\Http\Factory
  * @since 2.1.1
+ * @deprecated v2.2.2 - código de otimização sem uso no caminho de execução (SPEC-049); remoção na v3.0.0.
  */
 class OptimizedHttpFactory
 {
