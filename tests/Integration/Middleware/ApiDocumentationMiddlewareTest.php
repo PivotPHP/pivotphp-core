@@ -31,9 +31,12 @@ class ApiDocumentationMiddlewareTest extends TestCase
 
         $app->use(new ApiDocumentationMiddleware());
 
-        $app->get('/users', function ($req, $res) {
-            return $res->json(['users' => []]);
-        });
+        $app->get(
+            '/users',
+            function ($req, $res) {
+                return $res->json(['users' => []]);
+            }
+        );
 
         $docs = $app->handle(new Request('GET', '/docs', '/docs'));
         $this->assertSame(200, $docs->getStatusCode());
@@ -53,9 +56,12 @@ class ApiDocumentationMiddlewareTest extends TestCase
 
         $app->use(new ApiDocumentationMiddleware());
 
-        $app->get('/users', function ($req, $res) {
-            return $res->json(['users' => []]);
-        });
+        $app->get(
+            '/users',
+            function ($req, $res) {
+                return $res->json(['users' => []]);
+            }
+        );
 
         $response = $app->handle(new Request('GET', '/users', '/users'));
 
