@@ -632,7 +632,7 @@ class Application implements ApplicationInterface
         array $options = []
     ): self {
         // Registra cada arquivo encontrado como uma rota individual
-        StaticFileManager::registerDirectory($routePrefix, $physicalPath, $this, $options);
+        StaticFileManager::registerDirectory($routePrefix, $physicalPath, $options);
 
         return $this;
     }
