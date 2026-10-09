@@ -887,17 +887,41 @@ class Request implements ServerRequestInterface, AttributeInterface
             $paramsArray = array_combine($paramNames, array_slice($values, 0, count($paramNames)));
             if ($paramsArray !== false) {
                 foreach ($paramsArray as $key => $value) {
-                    if (is_numeric($value)) {
-                        $value = (int)$value;
-                    }
-                    $this->params->{$key} = $value;
+                    $this->params->{$key} = $this->normalizeParamValue($value);
                     // Sincronizar com PSR-7 apenas se já foi inicializado
                     if ($this->psr7Request !== null) {
-                        $this->psr7Request = $this->psr7Request->withAttribute($key, $value);
+                        $this->psr7Request = $this->psr7Request->withAttribute($key, $this->params->{$key});
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Normaliza o valor de um parâmetro de rota.
+     *
+     * Aplica rawurldecode() e converte apenas inteiros canônicos (sem leading
+     * zero, dentro do range de int) para int; o restante permanece string
+     * (SPEC-042).
+     *
+     * @return int|string
+     */
+    private function normalizeParamValue(mixed $value): int|string
+    {
+        if (!is_string($value)) {
+            return is_int($value) ? $value : (string) $value;
+        }
+
+        $value = rawurldecode($value);
+
+        if (preg_match('/^-?(?:0|[1-9]\d*)$/', $value) === 1) {
+            $int = (int) $value;
+            if ((string) $int === $value) {
+                return $int;
+            }
+        }
+
+        return $value;
     }
 
     /**
