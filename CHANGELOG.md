@@ -5,6 +5,38 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-10-08 - Route Syntax & DX Edition
+
+> Includes the PSR-7 2.0 compatibility fix documented below under `[2.1.1]`
+> (that patch release was never tagged; its changes ship in 2.2.0).
+
+### Added
+
+- **Brace-delimited route parameters** (`{id}` and `{id<constraint>}`) work end-to-end,
+  equivalent to the colon syntax (`:id`). Requires `pivotphp/core-routing` `^1.2`.
+  ([SPEC-002](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-002-brace-params.md))
+- **Array callables `[Classe::class, 'métodoDeInstância']`** resolve via the DI container
+  (falling back to lazy instantiation) instead of throwing `InvalidArgumentException`.
+  ([SPEC-003](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-003-array-callable.md))
+- **`Request::body()`** method — Express-style accessor returning the parsed body as
+  `stdClass` (alias of `getBodyAsStdClass()`).
+  ([SPEC-004](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-004-request-body.md))
+- **SQLite support in `Database::connect()`** (`driver => 'sqlite'`,
+  `database => '<path>'|':memory:'`).
+  ([SPEC-005](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-005-database-sqlite.md))
+- **`PivotPHP\Core\Application` backward-compatibility alias** to
+  `PivotPHP\Core\Core\Application`.
+  ([SPEC-001](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-001-application-fqcn.md))
+
+### Fixed
+
+- `getBodyAsStdClass()` no longer discards the body on `DELETE` requests.
+  ([SPEC-006](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-006-delete-body.md))
+
+### Changed
+
+- `pivotphp/core-routing` dependency bumped from `^1.0` to `^1.2`.
+
 ## [2.1.1] - 2026-07-15 - PSR-7 2.0 Compatibility Fix
 
 ### Fixed
