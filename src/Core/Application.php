@@ -44,7 +44,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '2.2.0';
+    public const VERSION = '2.2.1';
 
     /**
      * Container de dependências PSR-11.

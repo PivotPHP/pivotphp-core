@@ -5,6 +5,16 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-10-09
+
+### Fixed
+
+- `Application::staticFiles()` passed `$this` to
+  `StaticFileManager::registerDirectory()`, whose signature changed when the static file
+  manager was decoupled into `pivotphp/core-routing` (it now expects
+  `($routePrefix, $physicalPath, $options)`). Removes the stale `$this` argument.
+- PSR-12 "multi-line function call" violations in 4 test files.
+
 ## [2.2.0] - 2026-10-08 - Route Syntax & DX Edition
 
 > Includes the PSR-7 2.0 compatibility fix documented below under `[2.1.1]`

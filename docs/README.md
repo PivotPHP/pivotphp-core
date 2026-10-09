@@ -1,6 +1,6 @@
-# PivotPHP Core v2.2.0 Documentation
+# PivotPHP Core v2.2.1 Documentation
 
-Welcome to the complete documentation for **PivotPHP Core v2.2.0** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
+Welcome to the complete documentation for **PivotPHP Core v2.2.1** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
 
 ## 🚀 Quick Navigation
 
@@ -41,6 +41,11 @@ Welcome to the complete documentation for **PivotPHP Core v2.2.0** - a high-perf
 4. [Extensions](technical/extensions/README.md) - Framework extensions
 
 ## ✨ What's Current (v2.2.x)
+
+### 🩹 **v2.2.1 — Patch**
+- Fixed `Application::staticFiles()` (removed stale `$this` argument to
+  `StaticFileManager::registerDirectory()` after its decoupling into core-routing).
+- PSR-12 corrections in test files.
 
 ### 🎯 **v2.2.0 — Route Syntax & DX Edition**
 - Brace-delimited route parameters (`{id}` / `{id<constraint>}`) — equivalent to `:id`.
@@ -99,7 +104,7 @@ complete v1.1.4 release documentation suite.
 
 ## 🔧 Framework Status
 
-- **Current Version**: v2.2.0 (Route Syntax & DX Edition)
+- **Current Version**: v2.2.1 (Patch)
 - **PHP Requirements**: 8.1+ with strict typing
 - **Production Ready**: Enterprise-grade quality with type safety
 - **Community**: [GitHub](https://github.com/PivotPHP)
