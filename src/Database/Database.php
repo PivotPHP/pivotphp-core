@@ -3,7 +3,10 @@
 namespace PivotPHP\Core\Database;
 
 /**
- * Conexão simples com banco de dados usando PDO
+ * Conexão simples com banco de dados usando PDO.
+ *
+ * Drivers suportados: sqlite (via `database` = caminho ou ':memory:') e
+ * mysql/mariadb/pgsql (via `host`, `port`, `database`, `username`, `password`).
  */
 class Database
 {
@@ -25,6 +28,20 @@ class Database
     private function connect(): void
     {
         $driver = $this->config['driver'] ?? 'mysql';
+
+        $options = [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            \PDO::ATTR_EMULATE_PREPARES => false,
+        ];
+
+        if ($driver === 'sqlite') {
+            $database = $this->config['database'] ?? ':memory:';
+            $this->pdo = new \PDO("sqlite:{$database}", null, null, $options);
+
+            return;
+        }
+
         $host = $this->config['host'] ?? 'localhost';
         $port = $this->config['port'] ?? 3306;
         $database = $this->config['database'];
@@ -33,12 +50,6 @@ class Database
         $charset = $this->config['charset'] ?? 'utf8mb4';
 
         $dsn = "{$driver}:host={$host};port={$port};dbname={$database};charset={$charset}";
-
-        $options = [
-            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            \PDO::ATTR_EMULATE_PREPARES => false,
-        ];
 
         $this->pdo = new \PDO($dsn, $username, $password, $options);
     }
