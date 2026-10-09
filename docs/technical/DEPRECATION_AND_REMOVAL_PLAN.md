@@ -88,7 +88,7 @@ tests/Core/ContainerTest.php  — tests the dead container (573 lines, testing c
 
 - Delete `src/Core/Container.php`.
 - Delete `tests/Core/ContainerTest.php` (or migrate assertions to test `Providers\Container`).
-- No aliases exist in `aliases.php` or `aliases-performance-tools.php`.
+- No aliases exist in `aliases.php`.
 
 ---
 
@@ -202,7 +202,7 @@ $app->use(fn($req, $res, $next) => $limiter->handle($req, $res, $next));
 - Delete `src/Middleware/LoadShedder.php`.
 - Remove `'load-shedder'` entry from `Application::$middlewareAliases`.
 - Delete `tests/Middleware/SimpleLoadShedderTest.php`.
-- No aliases in `aliases.php` or `aliases-performance-tools.php`.
+- No aliases in `aliases.php`.
 
 ---
 
@@ -548,7 +548,7 @@ entra em uso). Aumentam a superfície de manutenção sem benefício real no PHP
 ### Aliases files
 
 - **`src/aliases.php`** — Contains routing aliases only. None of the 6 deprecated items referenced. No changes needed.
-- **`src/aliases-performance-tools.php`** — Contains performance pool aliases. None of the 6 items referenced. The file itself is marked `@deprecated 2.2.0` and follows its own removal schedule.
+- ~~`src/aliases-performance-tools.php`~~ — removido na SPEC-036 (pacote `pivotphp/performance-tools` descontinuado).
 
 ### `composer.json` dependency audit
 

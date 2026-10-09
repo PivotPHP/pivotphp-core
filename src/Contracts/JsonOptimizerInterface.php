@@ -7,8 +7,7 @@ namespace PivotPHP\Core\Contracts;
 /**
  * Interface para otimização de JSON
  *
- * Abstrai a implementação de pooling de buffers JSON,
- * permitindo que o core funcione sem performance-tools.
+ * Abstrai a implementação de pooling de buffers JSON.
  */
 interface JsonOptimizerInterface
 {
