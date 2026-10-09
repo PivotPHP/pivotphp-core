@@ -43,4 +43,22 @@ class DatabaseTest extends TestCase
         $this->assertEquals('ok', $result);
         $this->assertCount(1, $db->select('SELECT * FROM t'));
     }
+
+    public function testExecMultipleStatements(): void
+    {
+        $db = new Database(['driver' => 'sqlite', 'database' => ':memory:']);
+
+        $db->exec(
+            'CREATE TABLE a (id INTEGER PRIMARY KEY);'
+            . 'CREATE TABLE b (id INTEGER PRIMARY KEY);'
+        );
+
+        $tables = $db->select(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('a', 'b') ORDER BY name"
+        );
+        $names = array_column($tables, 'name');
+
+        $this->assertContains('a', $names);
+        $this->assertContains('b', $names);
+    }
 }

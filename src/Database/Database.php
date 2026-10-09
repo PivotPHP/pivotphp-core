@@ -110,12 +110,31 @@ class Database
     }
 
     /**
-     * Executa uma query genérica
+     * Executa uma query genérica (um único statement).
+     *
+     * Para SQL com múltiplos statements (ex.: schema/migrações), use exec().
      */
     public function statement(string $query, array $bindings = []): bool
     {
         $statement = $this->pdo->prepare($query);
         return $statement->execute($bindings);
+    }
+
+    /**
+     * Executa SQL com múltiplos statements (ex.: schema/migrações).
+     *
+     * Delega a PDO::exec(), que aceita vários statements separados por ';'.
+     * Retorna o número de linhas afetadas pela última operação.
+     */
+    public function exec(string $sql): int
+    {
+        $result = $this->pdo->exec($sql);
+
+        if ($result === false) {
+            throw new \PDOException('Falha ao executar SQL (PDO::exec retornou false).');
+        }
+
+        return $result;
     }
 
     /**
