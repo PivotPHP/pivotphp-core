@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get up and running with PivotPHP Core v2.2.1 in under 5 minutes! This guide will walk you through installation, basic setup, and creating your first API endpoints.
+Get up and running with PivotPHP Core v2.3.0 in under 5 minutes! This guide will walk you through installation, basic setup, and creating your first API endpoints.
 
 ## 🚀 Installation
 
@@ -274,4 +274,4 @@ $app->use(new CorsMiddleware(['allowed_origins' => ['*']]));
 
 ---
 
-**Parabéns!** Agora você tem uma base sólida para criar provas de conceito e protótipos com PivotPHP Core v2.2.1. 🎉
+**Parabéns!** Agora você tem uma base sólida para criar provas de conceito e protótipos com PivotPHP Core v2.3.0. 🎉
