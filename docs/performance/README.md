@@ -102,19 +102,7 @@ Veja o [guia completo](../../benchmarks/DOCKER_BENCHMARKS.md) para mais detalhes
 
 *Benchmarks realizados com configuração idêntica
 
-## 🔮 Roadmap de Performance
 
-### v1.0.0 (Próximo Release)
-- [ ] Suporte assíncrono nativo
-- [ ] Connection pooling avançado
-- [ ] Route compilation cache
-- [ ] HTTP/3 support
-
-### Pesquisa Futura
-- WebAssembly integration
-- GPU-accelerated JSON
-- Edge computing optimizations
-- Predictive prefetching
 
 ---
 

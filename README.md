@@ -510,7 +510,6 @@ composer require pivotphp/reactphp
 
 Runtime assíncrono para aplicações de longa duração:
 - Servidor HTTP contínuo sem reinicializações
-- Suporte a WebSocket (em breve)
 - Operações I/O assíncronas
 - Arquitetura orientada a eventos
 - Timers e tarefas periódicas
@@ -534,14 +533,6 @@ $app->register(new ReactServiceProvider([
 ### 🌐 Extensões da Comunidade
 
 A comunidade PivotPHP está crescendo! Estamos animados para ver as extensões que serão criadas.
-
-**Extensões Planejadas:**
-- Gerador de documentação OpenAPI/Swagger
-- Sistema de filas para jobs em background
-- Cache avançado com múltiplos drivers
-- Abstração para envio de emails
-- Servidor WebSocket
-- Suporte GraphQL
 
 ### 🔧 Criando Sua Própria Extensão
 
