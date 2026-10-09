@@ -1056,6 +1056,19 @@ class Request implements ServerRequestInterface, AttributeInterface
     }
 
     /**
+     * Retorna o corpo da requisição como stdClass (atalho Express.js).
+     *
+     * Alias de getBodyAsStdClass() para compatibilidade com a API
+     * Express.js (`$req->body()`).
+     *
+     * @return stdClass
+     */
+    public function body(): stdClass
+    {
+        return $this->getBodyAsStdClass();
+    }
+
+    /**
      * Set attribute
      */
     public function setAttribute(string $name, $value): self
