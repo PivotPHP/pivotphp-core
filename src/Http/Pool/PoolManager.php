@@ -24,6 +24,8 @@ namespace PivotPHP\Core\Http\Pool;
  *   justifica hoje: nenhuma das duas classes é usada no caminho de produção
  *   do framework (o pooling real de request/response é feito via
  *   HttpPoolFacade/Psr7Pool, não por nenhum destes dois PoolManager).
+ *
+ * @deprecated v2.2.2 - código de otimização sem uso no caminho de execução (SPEC-049); remoção na v3.0.0.
  */
 class PoolManager
 {

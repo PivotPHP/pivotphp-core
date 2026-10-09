@@ -27,6 +27,9 @@ No item is removed without first completing a full deprecation cycle with at lea
 | ITEM-006 | `PivotPHP\Core\Providers\Logger` | `src/Providers/Logger.php` | Class | v2.1.0 | v3.0.0 | 1 src file (LoggingServiceProvider) | `PsrLogger` criado em `src/Logging/`; `LoggingServiceProvider` atualizado; `@deprecated` + `trigger_error` em `Providers\Logger` aplicados; `Logging\Logger.php` morto removido. |
 | ITEM-007 | `PivotPHP\Core\Providers\EventDispatcher` | `src/Providers/EventDispatcher.php` | Class | v2.1.0 | v3.0.0 | `Providers/` como namespace incorreto | `@deprecated` aplicado em `Providers\EventDispatcher`; `Events\EventDispatcher` atualizado para PSR-14 e absorve responsabilidade. |
 | ITEM-008 | `PivotPHP\Core\Providers\ListenerProvider` | `src/Providers/ListenerProvider.php` | Class | v2.1.0 | v3.0.0 | `Providers/` como namespace incorreto | `@deprecated` aplicado; `Events\ListenerProvider` e o substituto canonico. |
+| ITEM-009 | JSON pooling (`JsonBufferPool`, `JsonBuffer`) | `src/Json/Pool/*` | Classes | v2.2.2 | v3.0.0 | 1 src file (Response), testes | `@deprecated` aplicado; `Response::json()` usa `json_encode` direto (SPEC-044). |
+| ITEM-010 | PSR-7 pooling (`Psr7Pool`, `HeaderPool`, `ResponsePool`, `EnhancedStreamPool`, `OperationsCache`, `Psr7PoolAdapter`, `HeaderPoolAdapter`) | `src/Http/Pool`, `src/Http/Psr7/Pool`, `src/Http/Psr7/Cache`, `src/Http/Adapters`, `src/Http/Psr7/Adapters` | Classes | v2.2.2 | v3.0.0 | Request/Response/Message | `@deprecated` aplicado; PSR-7 criado direto, sem pool (SPEC-045). |
+| ITEM-011 | Código de otimização sem uso (`PerformanceMode`, `PerformanceMonitor`, `OptimizedHttpFactory`, `MemoryManager`, `Http\Pool\PoolManager`, `Http\Psr7\Pool\PoolManager`, `MiddlewarePipelineCompiler`, `SerializationCache`) | `src/Performance`, `src/Http/Factory`, `src/Memory`, `src/Http/Pool`, `src/Http/Psr7/Pool`, `src/Middleware`, `src/Utils` | Classes | v2.2.2 | v3.0.0 | 0 referências fora dos próprios módulos | `@deprecated` aplicado (SPEC-049). |
 
 ---
 
@@ -471,6 +474,72 @@ use PivotPHP\Core\Events\ListenerProvider;
 
 - Deletar `src/Providers/ListenerProvider.php`.
 - Verificar referencias remanescentes em service providers e `Application`.
+
+---
+
+### [ITEM-009] Classes: JSON pooling (`JsonBufferPool`, `JsonBuffer`)
+
+| Property | Value |
+|---|---|
+| Files | `src/Json/Pool/JsonBufferPool.php`, `src/Json/Pool/JsonBuffer.php` |
+| Substitute | `json_encode()` direto (caminho padrao de `Response::json()`) |
+| Deprecation | v2.2.2 |
+| Removal | v3.0.0 |
+| Impact | `Response::json()` (ja atualizado) + testes |
+
+**Contexto**
+
+O pool era mais lento que `json_encode` (medição byte-a-byte: +5% a +78%) e não trazia
+ganho no PHP-FPM (processo por requisição). `Response::json()` passou a usar `json_encode`
+direto (SPEC-044). O caminho injetável `JsonOptimizerInterface` permanece, desligado por padrão.
+
+**Actions for v3.0.0**
+
+- Deletar `src/Json/Pool/JsonBufferPool.php` e `src/Json/Pool/JsonBuffer.php` (e testes de pool).
+
+---
+
+### [ITEM-010] Classes: PSR-7 pooling (`Psr7Pool`, `HeaderPool`, `ResponsePool`, `EnhancedStreamPool`, `OperationsCache` + adapters)
+
+| Property | Value |
+|---|---|
+| Files | `src/Http/Pool/Psr7Pool.php`, `src/Http/Psr7/Pool/{HeaderPool,ResponsePool,EnhancedStreamPool}.php`, `src/Http/Psr7/Cache/OperationsCache.php`, `src/Http/Adapters/Psr7PoolAdapter.php`, `src/Http/Psr7/Adapters/HeaderPoolAdapter.php` |
+| Substitute | Criação direta de objetos PSR-7 (`new ServerRequest/Uri/Stream`, `new Psr7Response`); `strtolower()` em `Psr7\Message` |
+| Deprecation | v2.2.2 |
+| Removal | v3.0.0 |
+| Impact | `Request`, `Response`, `Psr7\Message` (ja atualizados) |
+
+**Contexto**
+
+Os pools eram mais lentos (1,7x a 5,5x) e retinham corpo/headers de requisições anteriores
+em arrays estáticos (retenção de dados sensíveis). `Request`/`Response`/`Message` passaram a
+criar objetos PSR-7 diretamente (SPEC-045).
+
+**Actions for v3.0.0**
+
+- Deletar os 7 arquivos e os contratos/adapters associados.
+
+---
+
+### [ITEM-011] Classes: código de otimização sem uso (`PerformanceMode`, `PerformanceMonitor`, `OptimizedHttpFactory`, `MemoryManager`, `PoolManager` ×2, `MiddlewarePipelineCompiler`, `SerializationCache`)
+
+| Property | Value |
+|---|---|
+| Files | `src/Performance/{PerformanceMode,PerformanceMonitor}.php`, `src/Http/Factory/OptimizedHttpFactory.php`, `src/Memory/MemoryManager.php`, `src/Http/Pool/PoolManager.php`, `src/Http/Psr7/Pool/PoolManager.php`, `src/Middleware/MiddlewarePipelineCompiler.php`, `src/Utils/SerializationCache.php` |
+| Substitute | Nenhum (sem uso no caminho de execução) |
+| Deprecation | v2.2.2 |
+| Removal | v3.0.0 |
+| Impact | 0 referências fora dos próprios módulos |
+
+**Contexto**
+
+Componentes de otimização não usados em nenhum caminho de execução do core (a `Application`
+chama `MiddlewareStack::execute()` sem `cacheKey`, então o compilador de pipeline/cache nunca
+entra em uso). Aumentam a superfície de manutenção sem benefício real no PHP-FPM (SPEC-049).
+
+**Actions for v3.0.0**
+
+- Deletar os 8 arquivos (e simplificar `MiddlewareStack` removendo `$compiledPipelines`/`getCompiler()`).
 
 ---
 
