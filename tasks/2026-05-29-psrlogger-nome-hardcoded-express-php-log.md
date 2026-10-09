@@ -59,3 +59,7 @@ Baixa
 - [ ] Nome do arquivo de log padrao e `pivotphp.log` (ou configuravel sem valor hardcoded errado)
 - [ ] Separador de diretorio usa `DIRECTORY_SEPARATOR`
 - [ ] PHPStan Level 9 passa
+
+## Status
+
+**Resolvido (2026-10-09)** — SPEC-019.

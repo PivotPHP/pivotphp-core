@@ -96,3 +96,7 @@ Media (Alta se Swoole/RoadRunner for alvo)
 - [ ] Cada instancia de `Request` le `php://input` de forma independente
 - [ ] Testes de `parseBody` com bodies diferentes nao interferem entre si
 - [ ] PHPStan Level 9 continua passando
+
+## Status
+
+**Resolvido (2026-10-09)** — src/Http/Request.php:97.

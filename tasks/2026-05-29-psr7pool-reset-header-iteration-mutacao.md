@@ -74,3 +74,7 @@ Media
 - [ ] `resetResponse()` captura keys antes do foreach
 - [ ] Testes de pool passam sem regressao
 - [ ] PHPStan Level 9 sem erros
+
+## Status
+
+**Resolvido (2026-10-09)** — src/Http/Pool/Psr7Pool.php:253-256.
