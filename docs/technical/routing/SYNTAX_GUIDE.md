@@ -94,6 +94,21 @@ $app->get('/status', [HealthController::class, 'getStatus']);
 $app->get('/info', [ApiController::class, 'getInfo']);
 ```
 
+> **✅ Método de instância via nome de classe**: também é possível referenciar um
+> método de instância pelo nome da classe (`[UserController::class, 'index']`).
+> A instância é resolvida pelo container de DI quando o controller está registrado
+> nele; caso contrário, a classe é instanciada de forma lazy (construtor sem
+> argumentos obrigatórios).
+
+```php
+// Controller registrado no container (DI)
+$app->singleton(UserController::class, fn($c) => new UserController($c->get(UserRepository::class)));
+$app->get('/users', [UserController::class, 'index']); // DI via container
+
+// Fallback: instanciação lazy (construtor sem argumentos)
+$app->get('/health', [HealthController::class, 'healthCheck']);
+```
+
 #### Vantagens dos Array Callables
 
 - **Organização**: Código organizado em classes e métodos
