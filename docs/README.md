@@ -134,7 +134,6 @@ complete v1.1.4 release documentation suite.
 
 ### Official Extensions
 - **[Cycle ORM Extension](https://github.com/PivotPHP/pivotphp-cycle-orm)** - Database integration
-- **[ReactPHP Extension](https://github.com/PivotPHP/pivotphp-reactphp)** - Async runtime
 
 ### Community Resources
 - **[Benchmarks Repository](https://github.com/PivotPHP/pivotphp-benchmarks)** - Performance testing

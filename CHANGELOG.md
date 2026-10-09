@@ -5,6 +5,17 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- `src/aliases-performance-tools.php` e a entrada em `autoload.files` — a ponte de aliases
+  para o `pivotphp/performance-tools` (pacote descontinuado e nunca publicado no Packagist).
+- Entradas `suggest` de `pivotphp/performance-tools`, `pivotphp/reactphp` e `react/http`
+  (extensão ReactPHP descontinuada).
+- `docs/PERFORMANCE-TOOLS-MIGRATION.md` e a seção "ReactPHP Extension" do `README.md`.
+  ([SPEC-036](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-036-discontinue-performance-tools-reactphp.md))
+
 ## [2.3.4] - 2026-10-09
 
 ### Changed

@@ -503,33 +503,6 @@ $app->get('/users', function($req, $res) use ($container) {
 });
 ```
 
-### ⚡ ReactPHP Extension
-```bash
-composer require pivotphp/reactphp
-```
-
-Runtime assíncrono para aplicações de longa duração:
-- Servidor HTTP contínuo sem reinicializações
-- Operações I/O assíncronas
-- Arquitetura orientada a eventos
-- Timers e tarefas periódicas
-
-```php
-use PivotPHP\ReactPHP\ReactServiceProvider;
-
-$app->register(new ReactServiceProvider([
-    'server' => [
-        'host' => '0.0.0.0',
-        'port' => 8080
-    ]
-]));
-
-// O provider assume o ciclo de vida do servidor; a forma de iniciá-lo
-// (comando, script de bootstrap, etc.) é definida pelo pacote pivotphp/reactphp —
-// consulte a documentação desse pacote. `Application::run()` continua sendo o
-// ponto de entrada padrão para o runtime tradicional (não-ReactPHP).
-```
-
 ### 🌐 Extensões da Comunidade
 
 A comunidade PivotPHP está crescendo! Estamos animados para ver as extensões que serão criadas.
@@ -572,7 +545,7 @@ class MinhaExtensaoServiceProvider extends ServiceProvider
 
 ## 🔄 Compatibilidade PSR-7
 
-O PivotPHP oferece suporte duplo para PSR-7, permitindo uso com projetos modernos (v2.x) e compatibilidade com ReactPHP (v1.x).
+O PivotPHP oferece suporte duplo para PSR-7, permitindo uso com projetos modernos (v2.x) e legados (v1.x).
 
 > **v2.1.1:** o suporte a `psr/http-message` `^1.1` e `^2.0` funciona nativamente, sem
 > necessidade de rodar o script abaixo — ele corrige uma regressão introduzida na v2.1.0 em
@@ -588,7 +561,7 @@ php scripts/utils/switch-psr7-version.php --check
 
 ### Alternar entre versões
 ```bash
-# Mudar para PSR-7 v1.x (compatível com ReactPHP)
+# Mudar para PSR-7 v1.x (legado)
 php scripts/utils/switch-psr7-version.php 1
 
 # Mudar para PSR-7 v2.x (padrão moderno)
