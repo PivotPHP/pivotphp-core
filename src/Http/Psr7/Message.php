@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Http\Psr7;
 
-use PivotPHP\Core\Contracts\Psr7\HeaderPoolInterface;
-use PivotPHP\Core\Http\Psr7\Adapters\HeaderPoolAdapter;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -45,11 +43,6 @@ class Message implements MessageInterface
     protected StreamInterface $body;
 
     /**
-     * Header pool (injeção)
-     */
-    protected ?HeaderPoolInterface $headerPool = null;
-
-    /**
      * Constructor
      */
     public function __construct(
@@ -60,22 +53,6 @@ class Message implements MessageInterface
         $this->body = $body;
         $this->protocolVersion = $version;
         $this->setHeaders($headers);
-    }
-
-    /**
-     * Injetar pool de headers
-     */
-    public function setHeaderPool(HeaderPoolInterface $pool): void
-    {
-        $this->headerPool = $pool;
-    }
-
-    /**
-     * Obter pool de headers (fallback para adapter)
-     */
-    private function getHeaderPool(): HeaderPoolInterface
-    {
-        return $this->headerPool ?? new HeaderPoolAdapter();
     }
 
     /**
@@ -114,7 +91,7 @@ class Message implements MessageInterface
      */
     public function hasHeader(string $name): bool
     {
-        return isset($this->headerNames[$this->getHeaderPool()->getNormalizedName($name)]);
+        return isset($this->headerNames[strtolower($name)]);
     }
 
     /**
@@ -122,7 +99,7 @@ class Message implements MessageInterface
      */
     public function getHeader(string $name): array
     {
-        $normalizedName = $this->getHeaderPool()->getNormalizedName($name);
+        $normalizedName = strtolower($name);
 
         if (!isset($this->headerNames[$normalizedName])) {
             return [];
@@ -147,7 +124,7 @@ class Message implements MessageInterface
     public function withHeader(string $name, $value): MessageInterface
     {
         // Optimized version with header pooling
-        $normalized = $this->getHeaderPool()->getNormalizedName($name);
+        $normalized = strtolower($name);
         $clone = clone $this;
 
         // Remove existing header if present
@@ -156,7 +133,7 @@ class Message implements MessageInterface
         }
 
         $clone->headerNames[$normalized] = $name;
-        $clone->headers[$name] = $this->getHeaderPool()->getHeaderValues($name, $value);
+        $clone->headers[$name] = is_array($value) ? $value : [$value];
 
         return $clone;
     }
@@ -167,9 +144,9 @@ class Message implements MessageInterface
     public function withAddedHeader(string $name, $value): MessageInterface
     {
         // Optimized version with header pooling
-        $normalized = $this->getHeaderPool()->getNormalizedName($name);
+        $normalized = strtolower($name);
         $clone = clone $this;
-        $valueArray = $this->getHeaderPool()->getHeaderValues($name, $value);
+        $valueArray = is_array($value) ? $value : [$value];
 
         if (isset($clone->headerNames[$normalized])) {
             $headerName = $clone->headerNames[$normalized];
@@ -187,7 +164,7 @@ class Message implements MessageInterface
      */
     public function withoutHeader(string $name): MessageInterface
     {
-        $normalized = $this->getHeaderPool()->getNormalizedName($name);
+        $normalized = strtolower($name);
 
         if (!isset($this->headerNames[$normalized])) {
             return $this;
@@ -236,9 +213,9 @@ class Message implements MessageInterface
 
         // Optimized version with header pooling
         foreach ($headers as $name => $value) {
-            $normalized = $this->getHeaderPool()->getNormalizedName($name);
+            $normalized = strtolower($name);
             $this->headerNames[$normalized] = $name;
-            $this->headers[$name] = $this->getHeaderPool()->getHeaderValues($name, $value);
+            $this->headers[$name] = is_array($value) ? $value : [$value];
         }
     }
 
@@ -295,8 +272,9 @@ class Message implements MessageInterface
      */
     public function withHeaderStrict(string $name, $value): MessageInterface
     {
-        $value = $this->getHeaderPool()->getValidatedHeaderValues($name, $value);
-        $normalized = $this->getHeaderPool()->getNormalizedName($name);
+        $this->validateHeaderName($name);
+        $value = $this->normalizeHeaderValue($value);
+        $normalized = strtolower($name);
         $clone = clone $this;
 
         // Remove existing header if present
@@ -320,8 +298,9 @@ class Message implements MessageInterface
      */
     public function withAddedHeaderStrict(string $name, $value): MessageInterface
     {
-        $value = $this->getHeaderPool()->getValidatedHeaderValues($name, $value);
-        $normalized = $this->getHeaderPool()->getNormalizedName($name);
+        $this->validateHeaderName($name);
+        $value = $this->normalizeHeaderValue($value);
+        $normalized = strtolower($name);
         $clone = clone $this;
 
         if (isset($clone->headerNames[$normalized])) {

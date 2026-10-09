@@ -21,6 +21,7 @@ use Psr\Http\Message\StreamInterface;
  *
  * @package PivotPHP\Core\Http\Pool
  * @since 2.1.1
+ * @deprecated v2.2.2 - não usado no caminho de execução (SPEC-045); remoção na v3.0.0.
  */
 class Psr7Pool
 {

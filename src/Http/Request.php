@@ -8,7 +8,8 @@ use PivotPHP\Core\Http\HeaderRequest;
 use PivotPHP\Core\Http\CustomHeaderCollection;
 use PivotPHP\Core\Http\Contracts\AttributeInterface;
 use PivotPHP\Core\Http\Psr7\Stream;
-use PivotPHP\Core\Http\Facades\HttpPoolFacade;
+use PivotPHP\Core\Http\Psr7\ServerRequest;
+use PivotPHP\Core\Http\Psr7\Uri;
 use PivotPHP\Core\Contracts\Psr7PoolInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -32,11 +33,6 @@ class Request implements ServerRequestInterface, AttributeInterface
      * Instância PSR-7 interna (lazy loaded)
      */
     private ?ServerRequestInterface $psr7Request = null;
-
-    /**
-     * PSR-7 Pool Interface
-     */
-    private ?Psr7PoolInterface $psr7Pool = null;
 
     /**
      * Método HTTP.
@@ -114,17 +110,6 @@ class Request implements ServerRequestInterface, AttributeInterface
     }
 
     /**
-     * Retorna objetos PSR-7 ao pool quando não precisamos mais deles
-     */
-    public function __destruct()
-    {
-        if ($this->psr7Request !== null) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $pool->returnServerRequest($this->psr7Request);
-        }
-    }
-
-    /**
      * Construtor da classe Request.
      *
      * @param string $method       Método HTTP.
@@ -157,10 +142,10 @@ class Request implements ServerRequestInterface, AttributeInterface
      *
      * @param Psr7PoolInterface $pool
      * @return self
+     * @deprecated v2.2.2 — o pool não é mais usado (SPEC-045); mantido por BC como no-op.
      */
     public function setPsr7Pool(Psr7PoolInterface $pool): self
     {
-        $this->psr7Pool = $pool;
         return $this;
     }
 
@@ -181,20 +166,19 @@ class Request implements ServerRequestInterface, AttributeInterface
      */
     private function initializePsr7Request(): void
     {
-        $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-        $uri = $pool->getUri($this->pathCallable);
-        $body = $pool->getStream($this->getCachedInput());
+        $uri = new Uri($this->pathCallable);
+        $body = Stream::createFromString($this->getCachedInput());
         $headers = $this->convertHeadersToPsr7Format($_SERVER);
 
         /** @var array<string,string>|null $cookies */
         $cookies = is_array($_COOKIE) ? $_COOKIE : null;
-        $this->psr7Request = $pool->getServerRequest(
+        $this->psr7Request = new ServerRequest(
             $this->method,
             $uri,
             $body,
             $headers,
             '1.1',
-            $cookies
+            $cookies ?? []
         );
 
         // Configurar query params
@@ -303,8 +287,7 @@ class Request implements ServerRequestInterface, AttributeInterface
 
         // Para testes, criar um stream vazio se o arquivo não existir
         if (!file_exists($file['tmp_name'])) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $stream = $pool->getStream('');
+            $stream = Stream::createFromString('');
         } else {
             $stream = Stream::createFromFile($file['tmp_name']);
         }
