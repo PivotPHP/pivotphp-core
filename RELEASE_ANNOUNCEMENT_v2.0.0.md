@@ -111,9 +111,9 @@ composer test
 
 ### Guias Completos
 
-- 📖 [Guia Completo de Migração](https://github.com/HelixPHP/helixphp-core/blob/main/docs/releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md)
-- 📊 [Framework Overview](https://github.com/HelixPHP/helixphp-core/blob/main/docs/releases/v2.0.0/FRAMEWORK_OVERVIEW.md)
-- 📝 [Release Notes Completo](https://github.com/HelixPHP/helixphp-core/blob/main/docs/releases/v2.0.0/RELEASE_NOTES.md)
+- 📖 [Guia Completo de Migração](https://github.com/PivotPHP/pivotphp-core/blob/main/docs/releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md)
+- 📊 [Framework Overview](https://github.com/PivotPHP/pivotphp-core/blob/main/docs/releases/v2.0.0/FRAMEWORK_OVERVIEW.md)
+- 📝 [Release Notes Completo](https://github.com/PivotPHP/pivotphp-core/blob/main/docs/releases/v2.0.0/RELEASE_NOTES.md)
 
 ---
 
@@ -177,6 +177,10 @@ Esta release reflete nosso compromisso com **manutenibilidade sobre backward com
 
 ## 🗺️ Roadmap v2.x
 
+> **Registro histórico** — este roadmap **não foi implementado**. As versões v2.1.0 e v2.2.0
+> foram lançadas com escopo diferente do previsto aqui. Mantido apenas como registro do
+> anúncio original da v2.0.0.
+
 ### v2.1.0 (Q2 2025) - Pluggable Architecture
 
 - 🚧 **Injeção de Router** - Router customizado via Application constructor
@@ -215,7 +219,7 @@ composer require pivotphp/core:^2.0
 composer require pivotphp/core:^2.0
 
 # Seguir guia de migração
-# https://github.com/HelixPHP/helixphp-core/blob/main/docs/releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md
+# https://github.com/PivotPHP/pivotphp-core/blob/main/docs/releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md
 ```
 
 ---
@@ -226,8 +230,8 @@ PivotPHP é **mantido por uma pessoa** e se beneficia muito da colaboração da 
 
 ### Formas de Contribuir
 
-- 🐛 **Reportar Bugs** - [GitHub Issues](https://github.com/HelixPHP/helixphp-core/issues)
-- 💡 **Sugerir Features** - [GitHub Discussions](https://github.com/HelixPHP/helixphp-core/discussions)
+- 🐛 **Reportar Bugs** - [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
+- 💡 **Sugerir Features** - [GitHub Discussions](https://github.com/PivotPHP/pivotphp-core/discussions)
 - 📝 **Melhorar Documentação** - Pull requests bem-vindos
 - 🧪 **Adicionar Testes** - Cobertura sempre pode melhorar
 - 🔌 **Criar Extensões** - Expanda o ecossistema
@@ -238,15 +242,15 @@ PivotPHP é **mantido por uma pessoa** e se beneficia muito da colaboração da 
 
 ### Precisa de Ajuda?
 
-- 📖 **Documentação:** [docs/](https://github.com/HelixPHP/helixphp-core/tree/main/docs)
+- 📖 **Documentação:** [docs/](https://github.com/PivotPHP/pivotphp-core/tree/main/docs)
 - 💬 **Discord:** [discord.gg/DMtxsP7z](https://discord.gg/DMtxsP7z)
-- 🐛 **Issues:** [GitHub Issues](https://github.com/HelixPHP/helixphp-core/issues)
-- 💡 **Discussions:** [GitHub Discussions](https://github.com/HelixPHP/helixphp-core/discussions)
+- 🐛 **Issues:** [GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)
+- 💡 **Discussions:** [GitHub Discussions](https://github.com/PivotPHP/pivotphp-core/discussions)
 
 ### Problemas com Migração?
 
-1. Consulte o [Troubleshooting Guide](https://github.com/HelixPHP/helixphp-core/blob/main/docs/releases/v2.0.0/RELEASE_NOTES.md#troubleshooting)
-2. Procure [issues existentes](https://github.com/HelixPHP/helixphp-core/issues)
+1. Consulte o [Troubleshooting Guide](https://github.com/PivotPHP/pivotphp-core/blob/main/docs/releases/v2.0.0/RELEASE_NOTES.md#troubleshooting)
+2. Procure [issues existentes](https://github.com/PivotPHP/pivotphp-core/issues)
 3. Abra nova issue com tag `[migration]`
 4. Junte-se ao Discord para ajuda em tempo real
 
@@ -296,10 +300,9 @@ Esta não é apenas uma release de cleanup - é um **compromisso com simplicidad
 ### Links Úteis
 
 - 📦 [Packagist](https://packagist.org/packages/pivotphp/core)
-- 🔗 [GitHub Repository](https://github.com/HelixPHP/helixphp-core)
-- 📖 [Documentação Completa](https://github.com/HelixPHP/helixphp-core/tree/main/docs)
-- 🗺️ [Roadmap](https://github.com/HelixPHP/helixphp-core/blob/main/docs/ROADMAP_1.1.0.md)
-- 📊 [Changelog](https://github.com/HelixPHP/helixphp-core/blob/main/CHANGELOG.md)
+- 🔗 [GitHub Repository](https://github.com/PivotPHP/pivotphp-core)
+- 📖 [Documentação Completa](https://github.com/PivotPHP/pivotphp-core/tree/main/docs)
+- 📊 [Changelog](https://github.com/PivotPHP/pivotphp-core/blob/main/CHANGELOG.md)
 
 ---
 
