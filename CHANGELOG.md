@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Database::exec(string $sql): int` — executa SQL com múltiplos statements (ex.:
+  schema/migrações), delegando a `PDO::exec()`. `statement()` permanece single-statement.
+  ([SPEC-050](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-050-database-exec-multi-statement.md))
+
 ### Removed
 
 - `src/aliases-performance-tools.php` e a entrada em `autoload.files` — a ponte de aliases
