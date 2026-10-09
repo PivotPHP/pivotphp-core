@@ -57,7 +57,8 @@ Todas as entradas abaixo linkam para o registro oficial da versão — um docume
 `FRAMEWORK_OVERVIEW` dedicado quando existe um, ou a entrada correspondente no
 [CHANGELOG](../CHANGELOG.md) quando não existe:
 
-- [**v2.3.3 (Atual)**](releases/FRAMEWORK_OVERVIEW_v2.3.3.md) - Patch
+- [**v2.3.4 (Atual)**](releases/FRAMEWORK_OVERVIEW_v2.3.4.md) - Patch
+- [**v2.3.3**](releases/FRAMEWORK_OVERVIEW_v2.3.3.md) - Patch
 - [**v2.3.2**](releases/FRAMEWORK_OVERVIEW_v2.3.2.md) - Patch
 - [**v2.3.1**](releases/FRAMEWORK_OVERVIEW_v2.3.1.md) - Patch
 - [**v2.3.0**](releases/FRAMEWORK_OVERVIEW_v2.3.0.md) - Simplification Edition

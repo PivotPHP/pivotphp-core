@@ -5,6 +5,14 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.4] - 2026-10-09
+
+### Changed
+
+- Nome de arquivo de log padrão alterado de `express-php.log` para `pivotphp.log`
+  (constante `PsrLogger::DEFAULT_LOG_FILENAME`). `LOG_PATH` continua tendo precedência.
+  ([SPEC-019](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-019-logger-legacy-filename.md))
+
 ## [2.3.3] - 2026-10-09
 
 ### Fixed
