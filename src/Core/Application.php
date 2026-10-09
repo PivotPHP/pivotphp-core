@@ -27,6 +27,9 @@ use PivotPHP\Core\Events\RequestReceived;
 use PivotPHP\Core\Events\ResponseSent;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
 /**
@@ -425,59 +428,68 @@ class Application implements ApplicationInterface
             $middleware = $this->middlewareAliases[$middleware];
         }
 
+        // Resolve class name to instance (via container when available)
         if (is_string($middleware) && class_exists($middleware)) {
-            $this->middlewares->add($this->resolveClassMiddleware($middleware));
-        } elseif (is_callable($middleware)) {
-            $this->middlewares->add($middleware);
-        } else {
-            $this->middlewares->add($this->wrapObjectMiddleware($middleware));
+            $middleware = $this->container->has($middleware)
+                ? $this->container->get($middleware)
+                : new $middleware();
         }
+
+        $this->middlewares->add($this->adaptMiddleware($middleware));
 
         return $this;
     }
 
     /**
-     * Resolve a middleware class name into a callable, using the container when available.
+     * Adapta um middleware (PSR-15, callable ou objeto com handle()) para a
+     * assinatura Express-style da pilha ($request, $response, $next).
      *
-     * @param  string $class Fully-qualified class name of the middleware
+     * @param  mixed $middleware Middleware a ser adaptado
      * @return callable
-     * @throws \InvalidArgumentException When the resolved instance has no handle() method
+     * @throws \InvalidArgumentException Quando não é adaptável
      */
-    private function resolveClassMiddleware(string $class): callable
+    private function adaptMiddleware(mixed $middleware): callable
     {
-        $instance = $this->container->has($class)
-            ? $this->container->get($class)
-            : new $class();
+        // PSR-15: detectar ANTES de is_callable() — o __invoke do objeto pode
+        // ter uma assinatura incompatível com a pilha (SPEC-023).
+        if ($middleware instanceof MiddlewareInterface) {
+            return function ($request, $response, $next) use ($middleware) {
+                $handler = new class ($next, $response) implements RequestHandlerInterface {
+                    /** @var callable */
+                    private $next;
+                    private ResponseInterface $response;
 
-        if (!is_object($instance) || !method_exists($instance, 'handle')) {
-            throw new \InvalidArgumentException(
-                "Middleware class '{$class}' must have a handle() method"
-            );
+                    public function __construct(callable $next, ResponseInterface $response)
+                    {
+                        $this->next = $next;
+                        $this->response = $response;
+                    }
+
+                    public function handle(\Psr\Http\Message\ServerRequestInterface $request): ResponseInterface
+                    {
+                        $result = ($this->next)($request, $this->response);
+
+                        return $result instanceof ResponseInterface ? $result : $this->response;
+                    }
+                };
+
+                return $middleware->process($request, $handler);
+            };
         }
 
-        return function ($request, $response, $next) use ($instance) {
-            return $instance->handle($request, $response, $next);
-        };
-    }
-
-    /**
-     * Wraps a middleware object's handle() method into a callable.
-     *
-     * @param  mixed $middleware Object expected to expose a handle() method
-     * @return callable
-     * @throws \InvalidArgumentException When the value is not an object or lacks a handle() method
-     */
-    private function wrapObjectMiddleware(mixed $middleware): callable
-    {
-        if (!is_object($middleware) || !method_exists($middleware, 'handle')) {
-            throw new \InvalidArgumentException(
-                'Middleware must be callable or an object with a handle() method'
-            );
+        if (is_callable($middleware)) {
+            return $middleware;
         }
 
-        return function ($request, $response, $next) use ($middleware) {
-            return $middleware->handle($request, $response, $next);
-        };
+        if (is_object($middleware) && method_exists($middleware, 'handle')) {
+            return function ($request, $response, $next) use ($middleware) {
+                return $middleware->handle($request, $response, $next);
+            };
+        }
+
+        throw new \InvalidArgumentException(
+            'Middleware must be callable, PSR-15, or an object with a handle() method'
+        );
     }
 
     /**
