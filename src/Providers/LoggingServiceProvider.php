@@ -50,7 +50,7 @@ class LoggingServiceProvider extends ServiceProvider
             mkdir($logsDir, 0755, true);
         }
 
-        return $logsDir . '/express-php.log';
+        return $logsDir . '/' . PsrLogger::DEFAULT_LOG_FILENAME;
     }
 
     /**

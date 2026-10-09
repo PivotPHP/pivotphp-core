@@ -12,6 +12,8 @@ use Psr\Log\LogLevel;
  */
 class PsrLogger extends AbstractLogger
 {
+    public const DEFAULT_LOG_FILENAME = 'pivotphp.log';
+
     private string $logPath;
     private string $dateFormat;
     private array $logLevels;
@@ -23,7 +25,7 @@ class PsrLogger extends AbstractLogger
         string $logPath = '',
         string $dateFormat = 'Y-m-d H:i:s'
     ) {
-        $this->logPath = $logPath ?: ($_ENV['LOG_PATH'] ?? sys_get_temp_dir() . '/pivotphp.log');
+        $this->logPath = $logPath ?: ($_ENV['LOG_PATH'] ?? sys_get_temp_dir() . '/' . self::DEFAULT_LOG_FILENAME);
         $this->dateFormat = $dateFormat;
         $this->logLevels = [
             LogLevel::EMERGENCY => 0,
