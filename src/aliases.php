@@ -80,3 +80,12 @@ if (class_exists('PivotPHP\Routing\Router\RouterInstance')) {
         'PivotPHP\Core\Routing\RouterInstance'
     );
 }
+
+// Application - backward-compatibility alias for the pre-2.x FQCN
+// PivotPHP\Core\Application (the canonical class lives in PivotPHP\Core\Core\Application).
+if (class_exists('PivotPHP\Core\Core\Application')) {
+    class_alias(
+        'PivotPHP\Core\Core\Application',
+        'PivotPHP\Core\Application'
+    );
+}

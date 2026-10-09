@@ -33,6 +33,10 @@ $app->get('/', function($req, $res) {
 $app->run();
 ```
 
+> **Compatibilidade**: `PivotPHP\Core\Application` também funciona como alias de
+> `PivotPHP\Core\Core\Application` (retrocompatibilidade). O FQCN canônico é
+> `PivotPHP\Core\Core\Application`.
+
 ### Configuração Avançada
 
 ```php
