@@ -20,10 +20,15 @@ $app->get('/users', function($req, $res) {
     return $res->json(['users' => []]);
 });
 
-// Rota com parâmetros
+// Rota com parâmetros — sintaxes `:id` e `{id}` são equivalentes
 $app->get('/users/:id', function($req, $res) {
     $id = $req->param('id');
     return $res->json(['user_id' => $id]);
+});
+
+$app->get('/books/{isbn}', function($req, $res) {
+    $isbn = $req->param('isbn');
+    return $res->json(['isbn' => $isbn]);
 });
 
 // Rota POST com dados

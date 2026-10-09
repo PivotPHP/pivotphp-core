@@ -844,24 +844,39 @@ class Request implements ServerRequestInterface, AttributeInterface
      */
     private function parsePath(): void
     {
-        $pattern = preg_replace('/\/:([^\/]+)/', '/([^/]+)', $this->path);
-        $pattern = rtrim($pattern ?: '', '/');
+        $paramNames = [];
+
+        $pattern = preg_replace_callback(
+            '/[{:]([a-zA-Z_][a-zA-Z0-9_]*)(?:<([^>]+)>)?\}?/',
+            function (array $matches) use (&$paramNames): string {
+                $paramNames[] = $matches[1];
+                $constraint = isset($matches[2]) && $matches[2] !== '' ? $matches[2] : '[^/]+';
+
+                return '(' . $constraint . ')';
+            },
+            $this->path
+        );
+
+        if ($pattern === null) {
+            $pattern = $this->path;
+        }
+
+        $pattern = rtrim($pattern, '/');
         $pattern = '#^' . $pattern . '/?$#';
+
         $matchResult = preg_match($pattern, rtrim($this->pathCallable ?: '', '/'), $values);
         if ($matchResult && !empty($values)) {
             array_shift($values);
         } else {
             $values = [];
         }
-        preg_match_all('/\/:([^\/]+)/', $this->path, $params);
-        $params = $params[1];
 
-        if (count($params) > count($values)) {
+        if (count($paramNames) > count($values)) {
             throw new InvalidArgumentException('Number of parameters does not match the number of values');
         }
 
-        if (!empty($params)) {
-            $paramsArray = array_combine($params, array_slice($values, 0, count($params)));
+        if (!empty($paramNames)) {
+            $paramsArray = array_combine($paramNames, array_slice($values, 0, count($paramNames)));
             if ($paramsArray !== false) {
                 foreach ($paramsArray as $key => $value) {
                     if (is_numeric($value)) {

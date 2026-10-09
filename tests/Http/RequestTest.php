@@ -225,4 +225,33 @@ class RequestTest extends TestCase
 
         unset($_SERVER['QUERY_STRING']);
     }
+
+    public function testBraceParameterExtraction(): void
+    {
+        $request = new Request('GET', '/users/{id}', '/users/123');
+
+        $this->assertSame(123, $request->param('id'));
+    }
+
+    public function testBraceParameterWithConstraint(): void
+    {
+        $request = new Request('GET', '/api/items/{id<\d+>}', '/api/items/42');
+
+        $this->assertSame(42, $request->param('id'));
+    }
+
+    public function testMixedBraceAndColonParameters(): void
+    {
+        $request = new Request('GET', '/users/{userId}/posts/:postId', '/users/456/posts/789');
+
+        $this->assertSame(456, $request->param('userId'));
+        $this->assertSame(789, $request->param('postId'));
+    }
+
+    public function testColonParameterStillExtracts(): void
+    {
+        $request = new Request('GET', '/users/:id', '/users/123');
+
+        $this->assertSame(123, $request->param('id'));
+    }
 }
