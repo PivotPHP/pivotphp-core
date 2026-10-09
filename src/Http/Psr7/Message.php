@@ -123,7 +123,9 @@ class Message implements MessageInterface
      */
     public function withHeader(string $name, $value): MessageInterface
     {
-        // Optimized version with header pooling
+        $this->validateHeaderName($name);
+        $value = $this->normalizeHeaderValue($value);
+
         $normalized = strtolower($name);
         $clone = clone $this;
 
@@ -133,7 +135,7 @@ class Message implements MessageInterface
         }
 
         $clone->headerNames[$normalized] = $name;
-        $clone->headers[$name] = is_array($value) ? $value : [$value];
+        $clone->headers[$name] = $value;
 
         return $clone;
     }
@@ -143,17 +145,18 @@ class Message implements MessageInterface
      */
     public function withAddedHeader(string $name, $value): MessageInterface
     {
-        // Optimized version with header pooling
+        $this->validateHeaderName($name);
+        $value = $this->normalizeHeaderValue($value);
+
         $normalized = strtolower($name);
         $clone = clone $this;
-        $valueArray = is_array($value) ? $value : [$value];
 
         if (isset($clone->headerNames[$normalized])) {
             $headerName = $clone->headerNames[$normalized];
-            $clone->headers[$headerName] = array_merge($clone->headers[$headerName], $valueArray);
+            $clone->headers[$headerName] = array_merge($clone->headers[$headerName], $value);
         } else {
             $clone->headerNames[$normalized] = $name;
-            $clone->headers[$name] = $valueArray;
+            $clone->headers[$name] = $value;
         }
 
         return $clone;
@@ -252,7 +255,7 @@ class Message implements MessageInterface
             function ($v) {
                 $v = (string) $v;
 
-                if (preg_match('/[^\x09\x0A\x0D\x20-\x7E\x80-\xFE]/', $v) > 0) {
+                if (preg_match('/[^\x09\x20-\x7E\x80-\xFF]/', $v) > 0) {
                     throw new \InvalidArgumentException('Header value contains invalid characters');
                 }
 
@@ -263,54 +266,26 @@ class Message implements MessageInterface
     }
 
     /**
-     * Add header with strict validation
+     * Add header with strict validation (alias — withHeader() now validates).
      *
      * @param string $name
      * @param string|array<string> $value
      * @return MessageInterface
-     * @throws \InvalidArgumentException
      */
     public function withHeaderStrict(string $name, $value): MessageInterface
     {
-        $this->validateHeaderName($name);
-        $value = $this->normalizeHeaderValue($value);
-        $normalized = strtolower($name);
-        $clone = clone $this;
-
-        // Remove existing header if present
-        if (isset($clone->headerNames[$normalized])) {
-            unset($clone->headers[$clone->headerNames[$normalized]]);
-        }
-
-        $clone->headerNames[$normalized] = $name;
-        $clone->headers[$name] = $value;
-
-        return $clone;
+        return $this->withHeader($name, $value);
     }
 
     /**
-     * Add header with strict validation
+     * Add header with strict validation (alias — withAddedHeader() now validates).
      *
      * @param string $name
      * @param string|array<string> $value
      * @return MessageInterface
-     * @throws \InvalidArgumentException
      */
     public function withAddedHeaderStrict(string $name, $value): MessageInterface
     {
-        $this->validateHeaderName($name);
-        $value = $this->normalizeHeaderValue($value);
-        $normalized = strtolower($name);
-        $clone = clone $this;
-
-        if (isset($clone->headerNames[$normalized])) {
-            $headerName = $clone->headerNames[$normalized];
-            $clone->headers[$headerName] = array_merge($clone->headers[$headerName], $value);
-        } else {
-            $clone->headerNames[$normalized] = $name;
-            $clone->headers[$name] = $value;
-        }
-
-        return $clone;
+        return $this->withAddedHeader($name, $value);
     }
 }
