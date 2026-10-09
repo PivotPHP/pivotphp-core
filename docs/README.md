@@ -1,6 +1,6 @@
-# PivotPHP Core v2.1.1 Documentation
+# PivotPHP Core v2.2.0 Documentation
 
-Welcome to the complete documentation for **PivotPHP Core v2.1.1** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
+Welcome to the complete documentation for **PivotPHP Core v2.2.0** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
 
 ## 🚀 Quick Navigation
 
@@ -40,7 +40,15 @@ Welcome to the complete documentation for **PivotPHP Core v2.1.1** - a high-perf
 3. [Service Providers](technical/providers/README.md) - Dependency injection
 4. [Extensions](technical/extensions/README.md) - Framework extensions
 
-## ✨ What's Current (v2.1.x)
+## ✨ What's Current (v2.2.x)
+
+### 🎯 **v2.2.0 — Route Syntax & DX Edition**
+- Brace-delimited route parameters (`{id}` / `{id<constraint>}`) — equivalent to `:id`.
+- Array callables `[Classe::class, 'métodoDeInstância']` resolved via the DI container.
+- New `Request::body()` method; `getBodyAsStdClass()` no longer discards `DELETE` bodies.
+- SQLite support in `Database::connect()`.
+- `PivotPHP\Core\Application` backward-compatibility alias.
+- Carries the PSR-7 2.0 compatibility fix (recorded below as `v2.1.1`, never tagged).
 
 ### 🩹 **v2.1.1 — PSR-7 2.0 Compatibility Fix**
 - Fixed a real incompatibility with `psr/http-message` 2.0 that could fatal-error every
@@ -62,7 +70,7 @@ See the [CHANGELOG](../CHANGELOG.md) for complete release notes.
 
 ## 📜 Previous Versions (Historical)
 
-The v2.1.x line above is current. Earlier releases, most recent first:
+The v2.2.x line above is current. Earlier releases, most recent first:
 **v2.0.0** (Legacy Cleanup Edition) → **v1.2.0** (Simplicity Edition) → **v1.1.4**
 (Developer Experience) → **v1.1.3** (Performance Breakthrough) and earlier — see the
 [CHANGELOG](../CHANGELOG.md) for the complete history.
@@ -91,7 +99,7 @@ complete v1.1.4 release documentation suite.
 
 ## 🔧 Framework Status
 
-- **Current Version**: v2.1.1 (PSR-7 2.0 Compatibility Fix)
+- **Current Version**: v2.2.0 (Route Syntax & DX Edition)
 - **PHP Requirements**: 8.1+ with strict typing
 - **Production Ready**: Enterprise-grade quality with type safety
 - **Community**: [GitHub](https://github.com/PivotPHP)
