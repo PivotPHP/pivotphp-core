@@ -25,7 +25,10 @@ class Logger extends AbstractLogger
         string $logPath = '',
         string $dateFormat = 'Y-m-d H:i:s'
     ) {
-        trigger_error('PivotPHP\\Core\\Providers\\Logger is deprecated. Use PivotPHP\\Core\\Logging\\PsrLogger instead.', E_USER_DEPRECATED);
+        trigger_error(
+            'PivotPHP\\Core\\Providers\\Logger is deprecated. Use PivotPHP\\Core\\Logging\\PsrLogger instead.',
+            E_USER_DEPRECATED
+        );
         $this->logPath = $logPath ?: ($_ENV['LOG_PATH'] ?? sys_get_temp_dir() . '/express-php.log');
         $this->dateFormat = $dateFormat;
         $this->logLevels = [

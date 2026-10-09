@@ -79,7 +79,10 @@ class Container
      */
     public static function getInstance(): Container
     {
-        trigger_error('PivotPHP\\Core\\Core\\Container is deprecated. Use PivotPHP\\Core\\Providers\\Container instead.', E_USER_DEPRECATED);
+        trigger_error(
+            'PivotPHP\\Core\\Core\\Container is deprecated. Use PivotPHP\\Core\\Providers\\Container instead.',
+            E_USER_DEPRECATED
+        );
         if (self::$instance === null) {
             self::$instance = new self();
         }

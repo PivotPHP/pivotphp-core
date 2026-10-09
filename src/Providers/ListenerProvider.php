@@ -21,7 +21,8 @@ class ListenerProvider implements ListenerProviderInterface
     public function __construct()
     {
         trigger_error(
-            'PivotPHP\\Core\\Providers\\ListenerProvider is deprecated. Use PivotPHP\\Core\\Events\\ListenerProvider instead.',
+            'PivotPHP\\Core\\Providers\\ListenerProvider is deprecated. Use '
+            . 'PivotPHP\\Core\\Events\\ListenerProvider instead.',
             E_USER_DEPRECATED
         );
     }

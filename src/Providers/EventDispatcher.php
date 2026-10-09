@@ -20,7 +20,8 @@ class EventDispatcher implements EventDispatcherInterface
     public function __construct(ListenerProviderInterface $listenerProvider)
     {
         trigger_error(
-            'PivotPHP\\Core\\Providers\\EventDispatcher is deprecated. Use PivotPHP\\Core\\Events\\EventDispatcher instead.',
+            'PivotPHP\\Core\\Providers\\EventDispatcher is deprecated. Use '
+            . 'PivotPHP\\Core\\Events\\EventDispatcher instead.',
             E_USER_DEPRECATED
         );
         $this->listenerProvider = $listenerProvider;

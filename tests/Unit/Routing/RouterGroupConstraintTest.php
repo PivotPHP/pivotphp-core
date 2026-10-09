@@ -86,7 +86,9 @@ class RouterGroupConstraintTest extends TestCase
      */
     public function testNestedGroupsWithConstraints(): void
     {
-        $this->markTestSkipped('Needs update for v2.0.0 modular routing - incorrect usage of nested groups and identifyByGroup method');
+        $this->markTestSkipped(
+            'Needs update for v2.0.0 modular routing - incorrect usage of nested groups and identifyByGroup method'
+        );
 
         // Grupos aninhados
         Router::group(
