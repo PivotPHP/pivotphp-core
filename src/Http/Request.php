@@ -35,6 +35,14 @@ class Request implements ServerRequestInterface, AttributeInterface
     private ?ServerRequestInterface $psr7Request = null;
 
     /**
+     * Overrides de header aplicados via withHeader/withAddedHeader/withoutHeader.
+     * Chave em minúsculas; valor null remove o header (SPEC-024).
+     *
+     * @var array<string, array<string>|null>
+     */
+    private array $headerOverrides = [];
+
+    /**
      * Método HTTP.
      */
     private string $method;
@@ -180,6 +188,15 @@ class Request implements ServerRequestInterface, AttributeInterface
             '1.1',
             $cookies ?? []
         );
+
+        // Aplicar overrides de header (withHeader/withAddedHeader/withoutHeader).
+        foreach ($this->headerOverrides as $name => $value) {
+            if ($value === null) {
+                $this->psr7Request = $this->psr7Request->withoutHeader($name);
+            } else {
+                $this->psr7Request = $this->psr7Request->withHeader($name, $value);
+            }
+        }
 
         // Configurar query params
         $this->psr7Request = $this->psr7Request->withQueryParams($_GET);
@@ -762,8 +779,10 @@ class Request implements ServerRequestInterface, AttributeInterface
     public function withHeader($name, $value): ServerRequestInterface
     {
         $clone = clone $this;
-        // Forçar re-criação do PSR-7 na próxima chamada para garantir imutabilidade
+        $clone->headerOverrides[strtolower($name)] = is_array($value) ? $value : [$value];
+        // Forçar re-criação do PSR-7 para aplicar o override
         $clone->psr7Request = null;
+
         return $clone;
     }
 
@@ -773,8 +792,12 @@ class Request implements ServerRequestInterface, AttributeInterface
     public function withAddedHeader($name, $value): ServerRequestInterface
     {
         $clone = clone $this;
-        // Forçar re-criação do PSR-7 na próxima chamada para garantir imutabilidade
+        $key = strtolower($name);
+        $values = is_array($value) ? $value : [$value];
+        $clone->headerOverrides[$key] = array_merge($clone->headerOverrides[$key] ?? [], $values);
+        // Forçar re-criação do PSR-7 para aplicar o override
         $clone->psr7Request = null;
+
         return $clone;
     }
 
@@ -784,8 +807,10 @@ class Request implements ServerRequestInterface, AttributeInterface
     public function withoutHeader($name): ServerRequestInterface
     {
         $clone = clone $this;
-        // Forçar re-criação do PSR-7 na próxima chamada para garantir imutabilidade
+        $clone->headerOverrides[strtolower($name)] = null;
+        // Forçar re-criação do PSR-7 para aplicar o override
         $clone->psr7Request = null;
+
         return $clone;
     }
 
