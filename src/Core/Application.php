@@ -528,8 +528,12 @@ class Application implements ApplicationInterface
     }
 
     /**
-     * Resolve um handler de rota em formato array para a forma executável,
-     * resolvendo métodos de instância via container (DI) quando disponível.
+     * Resolve um handler de rota em formato array para a forma executável.
+     *
+     * Métodos de instância `[Classe::class, 'método']` são resolvidos de forma
+     * lazy: a instância é obtida do contêiner a cada requisição (respeitando
+     * bind()/singleton()), em vez de no registro — evita erro dependente de ordem
+     * e instância compartilhada entre requisições (SPEC-041).
      *
      * @param  callable|array $handler Handler original
      * @return callable|array
@@ -551,14 +555,13 @@ class Application implements ApplicationInterface
             return $handler;
         }
 
-        if ($this->container->has($class)) {
-            /** @var object $instance */
-            $instance = $this->container->get($class);
+        return function (Request $request, Response $response) use ($class, $method) {
+            $instance = $this->container->has($class)
+                ? $this->container->get($class)
+                : new $class();
 
-            return [$instance, $method];
-        }
-
-        return $handler;
+            return $instance->{$method}($request, $response);
+        };
     }
 
     /**
