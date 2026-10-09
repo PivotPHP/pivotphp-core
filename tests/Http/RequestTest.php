@@ -254,4 +254,27 @@ class RequestTest extends TestCase
 
         $this->assertSame(123, $request->param('id'));
     }
+
+    public function testBodyMethodReturnsParsedBody(): void
+    {
+        $_POST = ['name' => 'John', 'email' => 'john@example.com'];
+
+        $request = new Request('POST', '/users', '/users');
+
+        $body = $request->body();
+
+        $this->assertInstanceOf(\stdClass::class, $body);
+        $this->assertEquals('John', $body->name);
+        $this->assertEquals('john@example.com', $body->email);
+
+        $_POST = [];
+    }
+
+    public function testBodyMethodEmptyForGet(): void
+    {
+        $request = new Request('GET', '/users', '/users');
+
+        $this->assertInstanceOf(\stdClass::class, $request->body());
+        $this->assertEmpty((array) $request->body());
+    }
 }

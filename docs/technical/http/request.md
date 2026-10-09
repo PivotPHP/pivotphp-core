@@ -233,6 +233,10 @@ $app->post('/api/data', function($req, $res) {
 });
 ```
 
+> **Método `body()`**: além do acesso por propriedade (`$req->body`), também existe o
+> método Express.js `$req->body()`, que retorna o corpo como `stdClass` — um alias de
+> `getBodyAsStdClass()`.
+
 ### Trabalhando com JSON Complexo
 
 ```php
