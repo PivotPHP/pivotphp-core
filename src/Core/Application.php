@@ -728,7 +728,27 @@ class Application implements ApplicationInterface
         // Isso é necessário para middlewares que dependem do path para definir os parâmetros
         $request->setPath($route['path']);
 
-        return $this->callRouteHandler($route, $request, $response);
+        // Executar middlewares da rota (os globais já rodaram), se houver.
+        $routeMiddlewares = $route['middlewares'] ?? [];
+
+        if (empty($routeMiddlewares)) {
+            return $this->callRouteHandler($route, $request, $response);
+        }
+
+        $stack = new MiddlewareStack();
+        foreach ($routeMiddlewares as $middleware) {
+            $stack->add($this->adaptMiddleware($middleware));
+        }
+
+        $result = $stack->execute(
+            $request,
+            $response,
+            function ($req, $res) use ($route) {
+                return $this->callRouteHandler($route, $req, $res);
+            }
+        );
+
+        return $result instanceof Response ? $result : $response;
     }
 
     /**
