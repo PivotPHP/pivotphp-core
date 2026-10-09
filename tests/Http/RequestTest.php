@@ -277,4 +277,18 @@ class RequestTest extends TestCase
         $this->assertInstanceOf(\stdClass::class, $request->body());
         $this->assertEmpty((array) $request->body());
     }
+
+    public function testDeleteBodyIsNotDiscarded(): void
+    {
+        $_POST = ['reason' => 'test'];
+
+        $request = new Request('DELETE', '/users/1', '/users/1');
+
+        $body = $request->getBodyAsStdClass();
+
+        $this->assertInstanceOf(\stdClass::class, $body);
+        $this->assertEquals('test', $body->reason);
+
+        $_POST = [];
+    }
 }

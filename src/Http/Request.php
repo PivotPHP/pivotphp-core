@@ -1043,13 +1043,13 @@ class Request implements ServerRequestInterface, AttributeInterface
      * Retorna o corpo da requisição como stdClass (API Express.js).
      *
      * Método preferido para acesso ao body em handlers de rota.
-     * Retorna um stdClass vazio para métodos sem body (GET, HEAD, OPTIONS, DELETE).
+     * Retorna um stdClass vazio para métodos sem body (GET, HEAD, OPTIONS).
      *
      * @return stdClass
      */
     public function getBodyAsStdClass(): stdClass
     {
-        if (in_array($this->method, ['GET', 'HEAD', 'OPTIONS', 'DELETE'])) {
+        if (in_array($this->method, ['GET', 'HEAD', 'OPTIONS'])) {
             return new stdClass();
         }
         return $this->body;
