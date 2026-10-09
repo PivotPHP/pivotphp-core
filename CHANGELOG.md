@@ -5,6 +5,31 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-10-09 - Simplification Edition
+
+### Changed
+
+- `Response::json()` now uses `json_encode()` directly — the `JsonBufferPool` was always
+  slower and offered no benefit under PHP-FPM.
+  ([SPEC-044](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-044-json-buffer-pool-removal.md))
+- `Request`/`Response`/`Psr7\Message` create PSR-7 objects directly instead of via
+  `Psr7Pool`/`HeaderPool`, and no longer return objects to a pool in `__destruct()` (fixes
+  static retention of request/response data).
+  ([SPEC-045](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-045-psr7-pools-overhead-retention.md))
+
+### Deprecated
+
+Removal planned for v3.0.0 (no runtime use, or slower than the plain alternative):
+
+- `Json\Pool\JsonBufferPool`, `Json\Pool\JsonBuffer` ([SPEC-044]).
+- `Http\Pool\Psr7Pool`, `Http\Psr7\Pool\{HeaderPool,ResponsePool,EnhancedStreamPool}`,
+  `Http\Psr7\Cache\OperationsCache` + adapters ([SPEC-045]).
+- `Performance\{PerformanceMode,PerformanceMonitor}`, `Http\Factory\OptimizedHttpFactory`,
+  `Memory\MemoryManager`, `Http\Pool\PoolManager`, `Http\Psr7\Pool\PoolManager`,
+  `Middleware\MiddlewarePipelineCompiler`, `Utils\SerializationCache` ([SPEC-049]).
+
+See `docs/technical/DEPRECATION_AND_REMOVAL_PLAN.md` (ITEM-009/010/011).
+
 ## [2.2.1] - 2026-10-09
 
 ### Fixed

@@ -57,7 +57,8 @@ Todas as entradas abaixo linkam para o registro oficial da versão — um docume
 `FRAMEWORK_OVERVIEW` dedicado quando existe um, ou a entrada correspondente no
 [CHANGELOG](../CHANGELOG.md) quando não existe:
 
-- [**v2.2.1 (Atual)**](releases/FRAMEWORK_OVERVIEW_v2.2.1.md) - Patch
+- [**v2.3.0 (Atual)**](releases/FRAMEWORK_OVERVIEW_v2.3.0.md) - Simplification Edition
+- [**v2.2.1**](releases/FRAMEWORK_OVERVIEW_v2.2.1.md) - Patch
 - [**v2.2.0**](releases/FRAMEWORK_OVERVIEW_v2.2.0.md) - Route Syntax & DX Edition
 - [**v2.1.1**](../CHANGELOG.md) - PSR-7 2.0 Compatibility Fix (nunca taggeada; incluída na v2.2.0)
 - [**v2.1.0**](../CHANGELOG.md) - Response Emission, Pool Safety & Deprecation Cycle
@@ -110,4 +111,4 @@ Todas as entradas abaixo linkam para o registro oficial da versão — um docume
 
 ---
 
-*📖 Documentação atualizada em: 09 de outubro de 2026 - v2.2.1*
+*📖 Documentação atualizada em: 09 de outubro de 2026 - v2.3.0*
