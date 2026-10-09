@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Http;
 
 use PivotPHP\Core\Http\Facades\HttpPoolFacade;
-use PivotPHP\Core\Json\Pool\JsonBufferPool;
-use PivotPHP\Core\Json\Adapters\JsonBufferPoolAdapter;
 use PivotPHP\Core\Contracts\JsonOptimizerInterface;
 use PivotPHP\Core\Contracts\Psr7PoolInterface;
 use PivotPHP\Core\Http\Psr7\Stream;
@@ -890,20 +888,19 @@ class Response implements ResponseInterface
     }
 
     /**
-     * Determines if JSON pooling should be used for the given data
+     * Determines if JSON pooling should be used for the given data.
+     *
+     * JsonBufferPool foi removido do caminho padrão (mais lento que json_encode
+     * e sem ganho em PHP-FPM — ver SPEC-044). Só é usado se um
+     * JsonOptimizerInterface for injetado explicitamente.
      */
     private function shouldUseJsonPooling(mixed $data): bool
     {
-        if ($this->jsonOptimizer !== null) {
-            return $this->jsonOptimizer->shouldOptimize($data);
-        }
-
-        // Fallback para uso direto do JsonBufferPool
-        return JsonBufferPool::shouldUsePooling($data);
+        return $this->jsonOptimizer !== null && $this->jsonOptimizer->shouldOptimize($data);
     }
 
     /**
-     * Codifica JSON usando otimizador ou fallback
+     * Codifica JSON usando o otimizador injetado (se houver) ou json_encode.
      */
     private function encodeWithPooling(mixed $sanitizedData): string
     {
@@ -912,8 +909,13 @@ class Response implements ResponseInterface
                 return $this->jsonOptimizer->encodeJson($sanitizedData, self::JSON_ENCODE_FLAGS);
             }
 
-            // Fallback para uso direto do JsonBufferPool
-            return JsonBufferPool::encodeWithPool($sanitizedData, self::JSON_ENCODE_FLAGS);
+            $encoded = json_encode($sanitizedData, self::JSON_ENCODE_FLAGS);
+            if ($encoded === false) {
+                error_log('JSON encoding failed: ' . json_last_error_msg());
+                return '{}';
+            }
+
+            return $encoded;
         } catch (\Throwable $e) {
             // Fallback para encoding tradicional em caso de erro
             error_log('JSON optimization failed, falling back to traditional encoding: ' . $e->getMessage());

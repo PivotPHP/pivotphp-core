@@ -7,10 +7,8 @@ namespace PivotPHP\Core\Json\Pool;
 /**
  * JSON Buffer Pool
  *
- * Simple and effective JSON buffer pooling for the microframework.
- * Provides basic pooling functionality without unnecessary complexity.
- *
- * Following 'Simplicidade sobre Otimização Prematura' principle.
+ * @deprecated v2.2.2 — removido do caminho de Response::json() (mais lento que
+ * json_encode e sem ganho em PHP-FPM, ver SPEC-044). Será removido na v3.0.0.
  */
 class JsonBufferPool
 {
