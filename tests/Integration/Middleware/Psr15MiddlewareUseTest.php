@@ -23,8 +23,10 @@ class Psr15MiddlewareUseTest extends TestCase
 
         $app->use(
             new class implements MiddlewareInterface {
-                public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-                {
+                public function process(
+                    ServerRequestInterface $request,
+                    RequestHandlerInterface $handler
+                ): ResponseInterface {
                     $response = $handler->handle($request);
 
                     return $response->withHeader('X-Psr15', 'yes');
