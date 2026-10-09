@@ -17,9 +17,12 @@ class SimpleLoadShedderTest extends TestCase
     protected function setUp(): void
     {
         // Suppress E_USER_DEPRECATED from the deprecated LoadShedder class under test
-        set_error_handler(static function (int $errno): bool {
-            return $errno === E_USER_DEPRECATED;
-        }, E_ALL);
+        set_error_handler(
+            static function (int $errno): bool {
+                return $errno === E_USER_DEPRECATED;
+            },
+            E_ALL
+        );
 
         $this->loadShedder = new LoadShedder(5, 60); // 5 requests per 60 seconds
     }
