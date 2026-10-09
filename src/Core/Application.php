@@ -669,32 +669,14 @@ class Application implements ApplicationInterface
         $this->dispatchEvent(new RequestReceived($request, new \DateTime()));
 
         try {
-            // Encontrar rota
-            $route = $this->router::identify($request->getMethod(), $request->getPathCallable());
-
-            if (!$route) {
-                // Buscar rotas disponíveis para suggestions
-                $availableRoutes = array_map(
-                    fn($r) => "{$r['method']} {$r['path']}",
-                    array_slice($this->router::getRoutes(), 0, 10)
-                );
-
-                throw ContextualException::routeNotFound(
-                    $request->getMethod(),
-                    $request->getPathCallable(),
-                    $availableRoutes
-                );
-            }
-            // Definindo o path configurado na requisição
-            // Isso é necessário para middlewares que dependem do path para definir os parâmetros
-            $request->setPath($route['path']);
-
-            // Executar middlewares e handler
+            // Executar middlewares globais ENVOLVENDO a resolução de rota, para
+            // que middlewares vejam todas as requisições (incl. 404/OPTIONS) e
+            // possam responder antes do roteamento (SPEC-040).
             $result = $this->middlewares->execute(
                 $request,
                 $response,
-                function ($req, $res) use ($route) {
-                    return $this->callRouteHandler($route, $req, $res);
+                function ($req, $res) {
+                    return $this->resolveAndExecuteRoute($req, $res);
                 }
             );
 
@@ -714,6 +696,39 @@ class Application implements ApplicationInterface
 
             return $errorResponse;
         }
+    }
+
+    /**
+     * Identifica a rota e executa seu handler.
+     *
+     * @param  Request  $request  Requisição
+     * @param  Response $response Resposta
+     * @return Response
+     */
+    private function resolveAndExecuteRoute(Request $request, Response $response): Response
+    {
+        // Encontrar rota
+        $route = $this->router::identify($request->getMethod(), $request->getPathCallable());
+
+        if (!$route) {
+            // Buscar rotas disponíveis para suggestions
+            $availableRoutes = array_map(
+                fn($r) => "{$r['method']} {$r['path']}",
+                array_slice($this->router::getRoutes(), 0, 10)
+            );
+
+            throw ContextualException::routeNotFound(
+                $request->getMethod(),
+                $request->getPathCallable(),
+                $availableRoutes
+            );
+        }
+
+        // Definindo o path configurado na requisição
+        // Isso é necessário para middlewares que dependem do path para definir os parâmetros
+        $request->setPath($route['path']);
+
+        return $this->callRouteHandler($route, $request, $response);
     }
 
     /**
