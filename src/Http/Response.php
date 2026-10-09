@@ -24,7 +24,7 @@ class Response implements ResponseInterface
     /**
      * Flags for consistent JSON encoding
      */
-    private const JSON_ENCODE_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+    private const JSON_ENCODE_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
 
     /**
      * Internal PSR-7 instance (lazy loaded)
@@ -244,22 +244,11 @@ class Response implements ResponseInterface
     {
         $this->header('Content-Type', 'application/json; charset=utf-8');
 
-        // Sanitizar dados para UTF-8 válido antes da codificação
-        $sanitizedData = $this->sanitizeForJson($data);
-
-        // Usar pooling para datasets médios e grandes
-        if ($this->shouldUseJsonPooling($sanitizedData)) {
-            $encoded = $this->encodeWithPooling($sanitizedData);
-        } else {
-            // Usar encoding tradicional para dados pequenos
-            $encoded = json_encode($sanitizedData, self::JSON_ENCODE_FLAGS);
-
-            // Handle JSON encoding failures for traditional path
-            if ($encoded === false) {
-                error_log('JSON encoding failed: ' . json_last_error_msg());
-                $encoded = '{}';
-            }
-        }
+        // json_encode trata objetos/JsonSerializable/enums; em falha (NAN, ciclo)
+        // lança exceção (SPEC-039).
+        $encoded = $this->shouldUseJsonPooling($data)
+            ? $this->encodeWithPooling($data)
+            : $this->encodeJson($data);
 
         $this->body = $encoded;
         if ($this->psr7Response !== null) {
@@ -596,16 +585,7 @@ class Response implements ResponseInterface
      */
     public function writeJson(mixed $data, bool $flush = true): self
     {
-        // Sanitizar dados para UTF-8 válido antes da codificação
-        $sanitizedData = $this->sanitizeForJson($data);
-
-        $json = json_encode($sanitizedData, self::JSON_ENCODE_FLAGS);
-        if ($json === false) {
-            error_log('JSON encoding failed: ' . json_last_error_msg());
-            $json = '{}';
-        }
-
-        return $this->write($json, $flush);
+        return $this->write($this->encodeJson($data), $flush);
     }
 
     /**
@@ -783,27 +763,15 @@ class Response implements ResponseInterface
     }
 
     /**
-     * Sanitiza dados para garantir codificação UTF-8 válida para JSON.
+     * Codifica dados para JSON, lançando exceção em caso de falha (NAN, ciclo).
      */
-    private function sanitizeForJson(mixed $data): mixed
+    private function encodeJson(mixed $data): string
     {
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $data[$key] = $this->sanitizeForJson($value);
-            }
-        } elseif (is_object($data)) {
-            // Converter objeto para array, sanitizar e retornar como stdClass
-            $dataArray = (array) $data;
-            foreach ($dataArray as $key => $value) {
-                $dataArray[$key] = $this->sanitizeForJson($value);
-            }
-            $data = (object) $dataArray;
-        } elseif (is_string($data)) {
-            // Converter para UTF-8 válido, removendo/substituindo bytes inválidos
-            $data = mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+        try {
+            return json_encode($data, self::JSON_ENCODE_FLAGS | JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \RuntimeException('JSON encoding failed: ' . $e->getMessage(), 0, $e);
         }
-
-        return $data;
     }
 
     /**
@@ -882,31 +850,12 @@ class Response implements ResponseInterface
     /**
      * Codifica JSON usando o otimizador injetado (se houver) ou json_encode.
      */
-    private function encodeWithPooling(mixed $sanitizedData): string
+    private function encodeWithPooling(mixed $data): string
     {
-        try {
-            if ($this->jsonOptimizer !== null) {
-                return $this->jsonOptimizer->encodeJson($sanitizedData, self::JSON_ENCODE_FLAGS);
-            }
-
-            $encoded = json_encode($sanitizedData, self::JSON_ENCODE_FLAGS);
-            if ($encoded === false) {
-                error_log('JSON encoding failed: ' . json_last_error_msg());
-                return '{}';
-            }
-
-            return $encoded;
-        } catch (\Throwable $e) {
-            // Fallback para encoding tradicional em caso de erro
-            error_log('JSON optimization failed, falling back to traditional encoding: ' . $e->getMessage());
-
-            // Fallback to traditional encoding (handle JSON encoding failures internally)
-            $encoded = json_encode($sanitizedData, self::JSON_ENCODE_FLAGS);
-            if ($encoded === false) {
-                error_log('JSON fallback encoding failed: ' . json_last_error_msg());
-                return '{}';
-            }
-            return $encoded;
+        if ($this->jsonOptimizer !== null) {
+            return $this->jsonOptimizer->encodeJson($data, self::JSON_ENCODE_FLAGS);
         }
+
+        return $this->encodeJson($data);
     }
 }
