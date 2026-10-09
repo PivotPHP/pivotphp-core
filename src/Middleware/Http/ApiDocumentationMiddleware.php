@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware\Http;
 
-use PivotPHP\Core\Http\Psr7\Response as Psr7Response;
-use PivotPHP\Core\Http\Psr7\Stream;
-use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Http\Response;
 use PivotPHP\Core\Routing\Router;
+use PivotPHP\Core\Core\Application;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -32,6 +31,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
     private string $docsPath = '/docs';
     private string $swaggerPath = '/swagger';
     private ?string $baseUrl = null;
+    private string $version;
     private bool $enabled = true;
 
     /**
@@ -42,6 +42,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
         $this->docsPath = $options['docs_path'] ?? '/docs';
         $this->swaggerPath = $options['swagger_path'] ?? '/swagger';
         $this->baseUrl = $options['base_url'] ?? null;
+        $this->version = $options['version'] ?? Application::VERSION;
         $this->enabled = $options['enabled'] ?? true;
     }
 
@@ -76,11 +77,10 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
         try {
             $docs = $this->generateOpenApiDocs();
 
-            $json = json_encode($docs, JSON_THROW_ON_ERROR);
-            return (new Psr7Response(200))
-                ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withBody(Stream::createFromString($json));
+            return (new Response())
+                ->status(200)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->json($docs);
         } catch (\Exception $e) {
             return $this->createErrorResponse('Error generating documentation: ' . $e->getMessage(), 500);
         }
@@ -121,7 +121,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
             'openapi' => '3.0.0',
             'info' => [
                 'title' => 'PivotPHP API',
-                'version' => '2.0.0',
+                'version' => $this->version,
                 'description' => 'Auto-generated API documentation'
             ],
             'servers' => [
@@ -136,9 +136,9 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
      */
     private function handleSwaggerUi(ServerRequestInterface $request): ResponseInterface
     {
-        return (new Psr7Response(200))
-            ->withHeader('Content-Type', 'text/html; charset=utf-8')
-            ->withBody(Stream::createFromString($this->getSwaggerUiHtml()));
+        return (new Response())
+            ->status(200)
+            ->html($this->getSwaggerUiHtml());
     }
 
     /**
@@ -191,38 +191,8 @@ HTML;
      */
     private function createErrorResponse(string $message, int $statusCode = 500): ResponseInterface
     {
-        $json = json_encode(['error' => $message], JSON_THROW_ON_ERROR);
-        return (new Psr7Response($statusCode))
-            ->withHeader('Content-Type', 'application/json')
-            ->withBody(Stream::createFromString($json));
-    }
-
-    /**
-     * Magic method for direct invocation
-     */
-    public function __invoke(Request $request, ResponseInterface $response, callable $next): ResponseInterface
-    {
-        return $this->process($request, $this->createHandler($next));
-    }
-
-    /**
-     * Create handler from callable
-     */
-    private function createHandler(callable $next): RequestHandlerInterface
-    {
-        return new class ($next) implements RequestHandlerInterface {
-            /** @var callable */
-            private $next;
-
-            public function __construct(callable $next)
-            {
-                $this->next = $next;
-            }
-
-            public function handle(ServerRequestInterface $request): ResponseInterface
-            {
-                return ($this->next)($request);
-            }
-        };
+        return (new Response())
+            ->status($statusCode)
+            ->json(['error' => $message]);
     }
 }
