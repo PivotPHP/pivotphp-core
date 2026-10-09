@@ -5,6 +5,17 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.2] - 2026-10-09
+
+### Fixed
+
+- `Psr7\Message::withHeader()`/`withAddedHeader()` validam nome (token RFC 7230) e valor
+  (rejeita CR/LF/NUL), corrigindo injeção de header/response splitting. ([SPEC-043])
+- `Request::withHeader()`/`withAddedHeader()`/`withoutHeader()` aplicam a alteração (antes
+  clonavam e descartavam o argumento). ([SPEC-024])
+- `Response::json()` deixa `json_encode` tratar objetos/`JsonSerializable`/enums e lança
+  exceção em falha (NAN/ciclo) em vez de retornar `{}` com 200. ([SPEC-039])
+
 ## [2.3.1] - 2026-10-09
 
 ### Fixed
