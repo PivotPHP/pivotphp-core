@@ -5,6 +5,18 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2026-10-09
+
+### Fixed
+
+- **Middleware PSR-15** (`CorsMiddleware`, `AuthMiddleware`, `SecurityHeadersMiddleware`,
+  `CsrfMiddleware`, `XssMiddleware`) agora funcionam com `$app->use()`. ([SPEC-023])
+- **Middlewares globais** executam antes da resolução de rota (404/preflight `OPTIONS` incluídos). ([SPEC-040])
+- **Middlewares de rota/grupo** agora são executados (antes ficavam ignorados — bypass de autenticação). ([SPEC-038])
+- **Controller** `[Classe::class, 'método']` resolvido por requisição (não no registro). ([SPEC-041])
+- **`ApiDocumentationMiddleware`** serve `/docs` e `/swagger` via `$app->use()`; `info.version`
+  usa a versão real. ([SPEC-022])
+
 ## [2.3.0] - 2026-10-09 - Simplification Edition
 
 ### Changed

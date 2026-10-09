@@ -1,6 +1,6 @@
-# PivotPHP Core v2.3.0 Documentation
+# PivotPHP Core v2.3.1 Documentation
 
-Welcome to the complete documentation for **PivotPHP Core v2.3.0** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
+Welcome to the complete documentation for **PivotPHP Core v2.3.1** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
 
 ## 🚀 Quick Navigation
 
@@ -41,6 +41,11 @@ Welcome to the complete documentation for **PivotPHP Core v2.3.0** - a high-perf
 4. [Extensions](technical/extensions/README.md) - Framework extensions
 
 ## ✨ What's Current (v2.3.x)
+
+### 🩹 **v2.3.1 — Patch**
+- Middlewares PSR-15 funcionam com `$app->use()` (SPEC-023).
+- Middlewares globais executam antes da rota; middlewares de rota/grupo executam (SPEC-040/038).
+- Controller resolvido por requisição (SPEC-041); `ApiDocumentationMiddleware` serve `/docs`/`/swagger` (SPEC-022).
 
 ### 🎯 **v2.3.0 — Simplification Edition**
 - `Response::json()` usa `json_encode` direto; pooling JSON removido do caminho.
@@ -109,7 +114,7 @@ complete v1.1.4 release documentation suite.
 
 ## 🔧 Framework Status
 
-- **Current Version**: v2.3.0 (Simplification Edition)
+- **Current Version**: v2.3.1 (Simplification Edition)
 - **PHP Requirements**: 8.1+ with strict typing
 - **Production Ready**: Enterprise-grade quality with type safety
 - **Community**: [GitHub](https://github.com/PivotPHP)

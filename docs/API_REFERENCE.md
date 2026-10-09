@@ -1,6 +1,6 @@
 # PivotPHP Core - API Reference
 
-**Version:** 2.3.0
+**Version:** 2.3.1
 
 > ⚠️ **Nota de revisão:** este documento foi originalmente escrito para a v1.1.3/v1.2.0. A
 > assinatura do construtor de `Application` e alguns exemplos foram corrigidos para refletir
