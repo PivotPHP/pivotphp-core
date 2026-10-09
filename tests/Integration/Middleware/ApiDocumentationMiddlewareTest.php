@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PivotPHP\Core\Tests\Integration\Middleware;
+
+use PHPUnit\Framework\TestCase;
+use PivotPHP\Core\Core\Application;
+use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Middleware\Http\ApiDocumentationMiddleware;
+use PivotPHP\Routing\Router\Router;
+
+/**
+ * Cobre que ApiDocumentationMiddleware funciona via $app->use() (SPEC-022).
+ */
+class ApiDocumentationMiddlewareTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        Router::clear();
+    }
+
+    protected function tearDown(): void
+    {
+        Router::clear();
+    }
+
+    public function testDocsAndSwaggerAreServed(): void
+    {
+        $app = new Application(__DIR__ . '/../../..');
+
+        $app->use(new ApiDocumentationMiddleware());
+
+        $app->get('/users', function ($req, $res) {
+            return $res->json(['users' => []]);
+        });
+
+        $docs = $app->handle(new Request('GET', '/docs', '/docs'));
+        $this->assertSame(200, $docs->getStatusCode());
+
+        $spec = json_decode($docs->getBodyAsString(), true);
+        $this->assertSame('3.0.0', $spec['openapi']);
+        $this->assertSame(Application::VERSION, $spec['info']['version']);
+
+        $swagger = $app->handle(new Request('GET', '/swagger', '/swagger'));
+        $this->assertSame(200, $swagger->getStatusCode());
+        $this->assertStringContainsString('swagger-ui', $swagger->getBodyAsString());
+    }
+
+    public function testNormalRouteStillWorksWithMiddlewareRegistered(): void
+    {
+        $app = new Application(__DIR__ . '/../../..');
+
+        $app->use(new ApiDocumentationMiddleware());
+
+        $app->get('/users', function ($req, $res) {
+            return $res->json(['users' => []]);
+        });
+
+        $response = $app->handle(new Request('GET', '/users', '/users'));
+
+        $this->assertSame(200, $response->getStatusCode());
+    }
+}
