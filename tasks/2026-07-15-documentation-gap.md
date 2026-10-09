@@ -76,3 +76,7 @@ release para não repetir o padrão.
       anteriores como "atual"
 - [ ] Processo de release (`scripts/release/*`) documenta ou automatiza a sincronização
       dessas menções para releases futuros
+
+## Status
+
+**Resolvido (2026-10-09)** — VERSION/docs atualizados (2.3.3).

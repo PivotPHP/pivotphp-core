@@ -79,3 +79,7 @@ Media
 - [ ] `required` rejeita `null` e `''` (string vazia)
 - [ ] Testes unitarios para todos os tipos falsy
 - [ ] Sem regressao nos testes existentes de validacao
+
+## Status
+
+**Resolvido (2026-10-09)** — src/Validation/Validator.php:106.

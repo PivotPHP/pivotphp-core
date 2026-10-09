@@ -64,3 +64,7 @@ use PivotPHP\Core\Http\Contracts\AttributeInterface;
 - [ ] `use PivotPHP\Core\Http\CustomHeaderCollection;` presente no bloco de imports
 - [ ] PHPStan Level 9 passa sem erros
 - [ ] PSR-12 check passa sem violacoes
+
+## Status
+
+**Resolvido (2026-10-09)** — src/Http/Request.php:8.

@@ -103,3 +103,7 @@ Alta
 - [ ] Teste cobrindo `POST /endpoint` com `body = {"key":"value"}`
 - [ ] Teste cobrindo `POST /endpoint` com form urlencoded
 - [ ] Teste cobrindo body vazio
+
+## Status
+
+**Resolvido (2026-10-09)** — src/Http/Request.php (array JSON convertido para objeto).

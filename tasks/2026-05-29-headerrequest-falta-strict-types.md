@@ -63,3 +63,7 @@ Baixa
 - [ ] Todos os metodos publicos tem type hints completos
 - [ ] PHPStan Level 9 passa sem erros
 - [ ] PSR-12 check passa
+
+## Status
+
+**Resolvido (2026-10-09)** — src/Http/HeaderRequest.php:3.
