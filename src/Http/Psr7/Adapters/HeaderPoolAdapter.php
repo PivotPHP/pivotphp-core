@@ -11,6 +11,8 @@ use PivotPHP\Core\Http\Psr7\Pool\HeaderPool;
  * Adapter para HeaderPool
  *
  * Implementa HeaderPoolInterface delegando para HeaderPool.
+ *
+ * @deprecated v2.2.2 - não usado no caminho de execução (SPEC-045); remoção na v3.0.0.
  */
 class HeaderPoolAdapter implements HeaderPoolInterface
 {

@@ -16,6 +16,8 @@ use Psr\Http\Message\StreamInterface;
  *
  * Implementa Psr7PoolInterface delegando para Psr7Pool
  * mantendo compatibilidade com object pooling.
+ *
+ * @deprecated v2.2.2 - não usado no caminho de execução (SPEC-045); remoção na v3.0.0.
  */
 class Psr7PoolAdapter implements Psr7PoolInterface
 {

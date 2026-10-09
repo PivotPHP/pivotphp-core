@@ -15,6 +15,7 @@ use PivotPHP\Core\Http\Psr7\Stream;
  *
  * @package PivotPHP\Core\Http\Psr7\Pool
  * @since 2.1.1
+ * @deprecated v2.2.2 - não usado no caminho de execução (SPEC-045); remoção na v3.0.0.
  */
 class ResponsePool
 {

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Http;
 
-use PivotPHP\Core\Http\Facades\HttpPoolFacade;
 use PivotPHP\Core\Contracts\JsonOptimizerInterface;
 use PivotPHP\Core\Contracts\Psr7PoolInterface;
 use PivotPHP\Core\Http\Psr7\Stream;
+use PivotPHP\Core\Http\Psr7\Response as Psr7Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use InvalidArgumentException;
@@ -74,11 +74,6 @@ class Response implements ResponseInterface
     private ?JsonOptimizerInterface $jsonOptimizer = null;
 
     /**
-     * PSR-7 Pool Interface
-     */
-    private ?Psr7PoolInterface $psr7Pool = null;
-
-    /**
      * Response class constructor.
      */
     public function __construct()
@@ -104,10 +99,10 @@ class Response implements ResponseInterface
      *
      * @param Psr7PoolInterface $pool
      * @return self
+     * @deprecated v2.2.2 — o pool não é mais usado (SPEC-045); mantido por BC como no-op.
      */
     public function setPsr7Pool(Psr7PoolInterface $pool): self
     {
-        $this->psr7Pool = $pool;
         return $this;
     }
 
@@ -117,25 +112,13 @@ class Response implements ResponseInterface
     private function getPsr7Response(): ResponseInterface
     {
         if ($this->psr7Response === null) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $this->psr7Response = $pool->getResponse(
+            $this->psr7Response = new Psr7Response(
                 $this->statusCode,
                 $this->headers,
-                $pool->getStream($this->body)
+                Stream::createFromString($this->body)
             );
         }
         return $this->psr7Response;
-    }
-
-    /**
-     * Retorna objetos PSR-7 ao pool quando não precisamos mais deles
-     */
-    public function __destruct()
-    {
-        if ($this->psr7Response !== null) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $pool->returnResponse($this->psr7Response);
-        }
     }
 
     // =============================================================================
@@ -280,8 +263,7 @@ class Response implements ResponseInterface
 
         $this->body = $encoded;
         if ($this->psr7Response !== null) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $this->psr7Response = $this->psr7Response->withBody($pool->getStream($encoded));
+            $this->psr7Response = $this->psr7Response->withBody(Stream::createFromString($encoded));
         }
 
         return $this;
@@ -300,8 +282,7 @@ class Response implements ResponseInterface
         );
         $this->body = $textString;
         if ($this->psr7Response !== null) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $this->psr7Response = $this->psr7Response->withBody($pool->getStream($textString));
+            $this->psr7Response = $this->psr7Response->withBody(Stream::createFromString($textString));
         }
 
         return $this;
@@ -320,8 +301,7 @@ class Response implements ResponseInterface
         );
         $this->body = $htmlString;
         if ($this->psr7Response !== null) {
-            $pool = $this->psr7Pool ?? HttpPoolFacade::getPool();
-            $this->psr7Response = $this->psr7Response->withBody($pool->getStream($htmlString));
+            $this->psr7Response = $this->psr7Response->withBody(Stream::createFromString($htmlString));
         }
 
         return $this;
