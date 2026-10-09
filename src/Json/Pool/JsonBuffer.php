@@ -7,8 +7,7 @@ namespace PivotPHP\Core\Json\Pool;
 /**
  * High-performance JSON buffer with memory optimization
  *
- * Provides efficient buffer management for JSON operations with
- * automatic expansion and reuse capabilities.
+ * @deprecated v2.2.2 — ver SPEC-044; será removido na v3.0.0.
  *
  * @package PivotPHP\Core\Json\Pool
  * @since 1.1.1
