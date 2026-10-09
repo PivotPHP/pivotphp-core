@@ -194,9 +194,9 @@ reports/
 
 ## 📚 Links Úteis
 
-- **[📊 Relatório Completo](reports/COMPREHENSIVE_PERFORMANCE_SUMMARY.md)**
-- **[🔧 Guia de Implementação](../docs/guides/QUICK_START_GUIDE.md)**
-- **[📖 Documentação](../docs/DOCUMENTATION_INDEX.md)**
+- **[📊 Resumo de Performance](PERFORMANCE_SUMMARY.md)**
+- **[🔧 Quick Start](../docs/quick-start.md)**
+- **[📖 Documentação](../docs/README.md)**
 
 ---
 

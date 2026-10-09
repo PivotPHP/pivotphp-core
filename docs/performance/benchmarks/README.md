@@ -440,46 +440,18 @@ if ($dashboard['performance_alerts']) {
 
 ## Benchmark Customizado
 
-### Criando Seu Próprio Benchmark
+Não existe uma classe `BenchmarkRunner` no core. Para benchmarks customizados, use os scripts
+reais em `benchmarks/`:
 
-```php
-<?php
+```bash
+# Benchmark simples (CI-friendly)
+php benchmarks/SimpleBenchmark.php
 
-use PivotPHP\Core\Benchmarks\BenchmarkRunner;
+# Benchmark completo do framework
+php benchmarks/ExpressPhpBenchmark.php
 
-$benchmark = new BenchmarkRunner();
-
-$benchmark->add('my_operation', function() {
-    // Sua operação personalizada
-    return myCustomFunction();
-});
-
-$benchmark->run(1000); // 1000 iterações
-$results = $benchmark->getResults();
-
-foreach ($results as $name => $result) {
-    echo "{$name}: {$result['ops_per_second']} ops/s\n";
-}
-```
-
-### Benchmark de Integração
-
-```php
-// Benchmark de fluxo completo
-$benchmark->addIntegrationTest('complete_api_flow', function() {
-    $app = new Application();
-
-    // Setup routes
-    $app->get('/api/test', function($req, $res) {
-        return $res->json(['test' => true]);
-    });
-
-    // Simulate request
-    $request = new Request('GET', '/api/test', '/api/test');
-    $response = $app->handle($request);
-
-    return $response->getStatusCode() === 200;
-});
+# Todos os benchmarks
+php benchmarks/run_all_benchmarks.php
 ```
 
 ## Recursos Adicionais
