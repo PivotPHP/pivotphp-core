@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Listeners de ciclo de vida não derrubam a requisição** (SPEC-085). Uma exceção lançada por um listener
   de `RequestReceived` ou `ResponseSent` não escapa mais de `Application::handle()`: é registrada no log e a
   requisição segue. `ResponseSent` é disparado uma única vez, inclusive em respostas de erro.
+- **DSN do PostgreSQL** (SPEC-074). `Database` monta o DSN por driver: porta padrão 5432 no `pgsql` (3306 no
+  `mysql`), sem `charset` no DSN do PostgreSQL (um `charset` explícito vira `options='--client_encoding=…'`) e
+  aliases `postgres`/`postgresql` → `pgsql` e `mariadb` → `mysql` (`mariadb:` não é driver PDO). Driver não
+  suportado falha com `InvalidArgumentException` clara, em vez de um erro opaco do PDO.
+
+### CI
+- Novo job `databases`, que roda os testes de banco contra MySQL 8.4 e PostgreSQL 16 reais.
 
 ## [4.0.1] - 2026-10-10
 
