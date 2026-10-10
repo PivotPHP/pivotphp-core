@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Tests\Integration\Routing;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Http\ExpressRequest;
+use PivotPHP\Http\ExpressResponse;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Controller com dependência de construtor (não instanciável via `new` sem
@@ -18,7 +19,7 @@ final class DiGreetingController
     {
     }
 
-    public function greet(Request $req, Response $res): Response
+    public function greet(ExpressRequest $req, ExpressResponse $res): ResponseInterface
     {
         return $res->json(['greeting' => $this->prefix . ' hello']);
     }

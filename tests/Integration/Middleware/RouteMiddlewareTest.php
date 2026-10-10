@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Integration\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 use PivotPHP\Routing\Router\Router;
 
 /**
@@ -39,11 +39,11 @@ class RouteMiddlewareTest extends TestCase
             }
         );
 
-        $response = $app->handle(new Request('GET', '/protected', '/protected'));
+        $response = $app->handle(new ServerRequest('GET', '/protected'));
 
         $this->assertSame(403, $response->getStatusCode());
 
-        $body = json_decode($response->getBodyAsString(), true);
+        $body = json_decode((string) $response->getBody(), true);
         $this->assertSame('forbidden', $body['error']);
     }
 
@@ -68,7 +68,7 @@ class RouteMiddlewareTest extends TestCase
             ]
         );
 
-        $response = $app->handle(new Request('GET', '/admin/painel', '/admin/painel'));
+        $response = $app->handle(new ServerRequest('GET', '/admin/painel'));
 
         $this->assertSame(401, $response->getStatusCode());
     }
@@ -88,11 +88,11 @@ class RouteMiddlewareTest extends TestCase
             }
         );
 
-        $response = $app->handle(new Request('GET', '/allowed', '/allowed'));
+        $response = $app->handle(new ServerRequest('GET', '/allowed'));
 
         $this->assertSame(200, $response->getStatusCode());
 
-        $body = json_decode($response->getBodyAsString(), true);
+        $body = json_decode((string) $response->getBody(), true);
         $this->assertTrue($body['ok']);
     }
 }

@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Tests\Integration\Middleware;
 
+use Nyholm\Psr7\Response;
+use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Cobre que middlewares globais executam mesmo sem rota (404/OPTIONS) — SPEC-040.
+ *
+ * Asserta apenas o wiring (o middleware executou / respondeu antes do roteamento),
+ * não detalhes de mensagem HTTP (domínio do pivotphp/http — SPEC-093).
  */
 class GlobalMiddlewareBeforeRoutingTest extends TestCase
 {
@@ -17,36 +25,59 @@ class GlobalMiddlewareBeforeRoutingTest extends TestCase
     {
         $app = new Application(__DIR__ . '/../../..');
 
-        $app->use(
-            function ($req, $res, $next) {
-                $res->header('X-Global-Mw', 'ran');
+        $ran = false;
 
-                return $next($req, $res);
+        $app->use(new class (function () use (&$ran): void {
+            $ran = true;
+        }) implements MiddlewareInterface {
+            /** @var \Closure */
+            private \Closure $onRun;
+
+            public function __construct(callable $onRun)
+            {
+                $this->onRun = \Closure::fromCallable($onRun);
             }
-        );
 
-        $response = $app->handle(new Request('GET', '/does-not-exist', '/does-not-exist'));
+            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+            {
+                ($this->onRun)();
 
+                return $handler->handle($request);
+            }
+        });
+
+        $response = $app->handle(new ServerRequest('GET', '/does-not-exist'));
+
+        $this->assertTrue($ran);
         $this->assertSame(404, $response->getStatusCode());
-        $this->assertSame('ran', $response->getHeaderLine('X-Global-Mw'));
     }
 
     public function testGlobalMiddlewareCanRespondBeforeRouting(): void
     {
         $app = new Application(__DIR__ . '/../../..');
 
-        $app->use(
-            function ($req, $res, $next) {
-                if ($req->getMethod() === 'OPTIONS') {
-                    return $res->status(204)->json(['ok' => true]);
+        $routeReached = false;
+
+        $app->use(new class implements MiddlewareInterface {
+            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+            {
+                if ($request->getMethod() === 'OPTIONS') {
+                    return new Response(204);
                 }
 
-                return $next($req, $res);
+                return $handler->handle($request);
             }
-        );
+        });
 
-        $response = $app->handle(new Request('OPTIONS', '/api/status', '/api/status'));
+        $app->get('/api/status', function ($req, $res) use (&$routeReached) {
+            $routeReached = true;
+
+            return $res->json(['ok' => true]);
+        });
+
+        $response = $app->handle(new ServerRequest('OPTIONS', '/api/status'));
 
         $this->assertSame(204, $response->getStatusCode());
+        $this->assertFalse($routeReached);
     }
 }

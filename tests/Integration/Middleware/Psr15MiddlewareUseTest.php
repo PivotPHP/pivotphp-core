@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Integration\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -41,7 +41,7 @@ class Psr15MiddlewareUseTest extends TestCase
             }
         );
 
-        $response = $app->handle(new Request('GET', '/hello', '/hello'));
+        $response = $app->handle(new ServerRequest('GET', '/hello'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('yes', $response->getHeaderLine('X-Psr15'));
@@ -60,7 +60,7 @@ class Psr15MiddlewareUseTest extends TestCase
             }
         );
 
-        $response = $app->handle(new Request('GET', '/data', '/data'));
+        $response = $app->handle(new ServerRequest('GET', '/data'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));

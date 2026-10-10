@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Integration\Routing;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 use PivotPHP\Core\Tests\Integration\Routing\CountingController;
 use PivotPHP\Routing\Router\Router;
 
@@ -36,11 +36,11 @@ class ControllerResolutionTest extends TestCase
         // Binding só depois — não deve importar (resolução é lazy).
         $app->instance(CountingController::class, new CountingController('bound'));
 
-        $response = $app->handle(new Request('GET', '/hi', '/hi'));
+        $response = $app->handle(new ServerRequest('GET', '/hi'));
 
         $this->assertSame(200, $response->getStatusCode());
 
-        $body = json_decode($response->getBodyAsString(), true);
+        $body = json_decode((string) $response->getBody(), true);
         $this->assertSame('bound', $body['prefix']);
     }
 
@@ -53,8 +53,8 @@ class ControllerResolutionTest extends TestCase
 
         $ids = [];
         for ($i = 0; $i < 3; $i++) {
-            $response = $app->handle(new Request('GET', '/fresh', '/fresh'));
-            $body = json_decode($response->getBodyAsString(), true);
+            $response = $app->handle(new ServerRequest('GET', '/fresh'));
+            $body = json_decode((string) $response->getBody(), true);
             $ids[] = $body['id'];
         }
 
@@ -70,8 +70,8 @@ class ControllerResolutionTest extends TestCase
 
         $ids = [];
         for ($i = 0; $i < 3; $i++) {
-            $response = $app->handle(new Request('GET', '/shared', '/shared'));
-            $body = json_decode($response->getBodyAsString(), true);
+            $response = $app->handle(new ServerRequest('GET', '/shared'));
+            $body = json_decode((string) $response->getBody(), true);
             $ids[] = $body['id'];
         }
 

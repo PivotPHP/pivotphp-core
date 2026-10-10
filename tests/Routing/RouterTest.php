@@ -6,8 +6,8 @@ namespace PivotPHP\Core\Tests\Routing;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Routing\Router\Router;
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use Nyholm\Psr7\ServerRequest;
+use Nyholm\Psr7\Response;
 
 class RouterTest extends TestCase
 {

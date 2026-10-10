@@ -4,8 +4,8 @@ namespace PivotPHP\Core\Tests\Middleware\Http;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Http\ErrorMiddleware;
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use Nyholm\Psr7\ServerRequest;
+use Nyholm\Psr7\Response;
 use PivotPHP\Core\Exceptions\HttpException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,7 +18,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = new ServerRequest('GET', '/');
 
         $handler = new class implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface
@@ -37,7 +37,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware();
 
-        $request = new Request('GET', '/', '/');
+        $request = new ServerRequest('GET', '/');
 
         $handler = new class implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface
@@ -56,9 +56,8 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware();
 
-        $request = new Request('GET', '/', '/');
-        $expectedResponse = new Response();
-        $expectedResponse->status(200);
+        $request = new ServerRequest('GET', '/');
+        $expectedResponse = new Response(200);
 
         $handler = new class ($expectedResponse) implements RequestHandlerInterface {
             private ResponseInterface $response;
@@ -84,7 +83,7 @@ class ErrorMiddlewareTest extends TestCase
     {
         $middleware = new ErrorMiddleware(true);
 
-        $request = new Request('GET', '/', '/');
+        $request = new ServerRequest('GET', '/');
 
         $handler = new class implements RequestHandlerInterface {
             public function handle(ServerRequestInterface $request): ResponseInterface

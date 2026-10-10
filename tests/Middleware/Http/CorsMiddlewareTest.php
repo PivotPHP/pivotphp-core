@@ -6,10 +6,10 @@ namespace PivotPHP\Core\Tests\Middleware\Http;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Http\CorsMiddleware;
-use PivotPHP\Core\Http\Psr7\Request;
-use PivotPHP\Core\Http\Psr7\Response;
-use PivotPHP\Core\Http\Psr7\ServerRequest;
-use PivotPHP\Core\Http\Psr7\Factory\ResponseFactory;
+use Nyholm\Psr7\Request;
+use Nyholm\Psr7\Response;
+use Nyholm\Psr7\ServerRequest;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
@@ -484,7 +484,7 @@ class MockRequestHandler implements RequestHandlerInterface
 {
     public function handle(\Psr\Http\Message\ServerRequestInterface $request): ResponseInterface
     {
-        $factory = new ResponseFactory();
+        $factory = new Psr17Factory();
         return $factory->createResponse(200)
                       ->withHeader('Content-Type', 'application/json');
     }

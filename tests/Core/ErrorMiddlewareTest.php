@@ -4,7 +4,7 @@ namespace PivotPHP\Core\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Http\ErrorMiddleware;
-use PivotPHP\Core\Http\Psr7\ServerRequest;
+use Nyholm\Psr7\ServerRequest;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 

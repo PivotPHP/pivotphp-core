@@ -5,7 +5,7 @@ namespace PivotPHP\Core\Tests\Security;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use PivotPHP\Core\Http\Psr7\Response;
+use Nyholm\Psr7\Response;
 
 class DummyHandler implements RequestHandlerInterface
 {

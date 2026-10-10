@@ -4,8 +4,8 @@ namespace PivotPHP\Core\Tests\Middleware\Performance;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\Performance\CacheMiddleware;
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use Nyholm\Psr7\ServerRequest;
+use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -16,9 +16,8 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware();
 
-        $request = new Request('GET', '/', '/');
-        $response = new Response();
-        $response->status(200);
+        $request = new ServerRequest('GET', '/');
+        $response = new Response(200);
 
         $handler = new class ($response) implements RequestHandlerInterface {
             private ResponseInterface $response;
@@ -43,9 +42,8 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware(3600);
 
-        $request = new Request('GET', '/', '/');
-        $response = new Response();
-        $response->status(200);
+        $request = new ServerRequest('GET', '/');
+        $response = new Response(200);
 
         $handler = new class ($response) implements RequestHandlerInterface {
             private ResponseInterface $response;
@@ -71,9 +69,8 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware();
 
-        $request = new Request('POST', '/', '/');
-        $response = new Response();
-        $response->status(200);
+        $request = new ServerRequest('POST', '/');
+        $response = new Response(200);
 
         $handler = new class ($response) implements RequestHandlerInterface {
             private ResponseInterface $response;
@@ -99,9 +96,8 @@ class CacheMiddlewareTest extends TestCase
     {
         $middleware = new CacheMiddleware(300, '/tmp/test_cache');
 
-        $request = new Request('GET', '/', '/');
-        $response = new Response();
-        $response->status(200);
+        $request = new ServerRequest('GET', '/');
+        $response = new Response(200);
 
         $handler = new class ($response) implements RequestHandlerInterface {
             private ResponseInterface $response;
