@@ -1,15 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PivotPHP\Core\Tests\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Middleware\MiddlewareStack;
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
-use PivotPHP\Core\Middleware\Core\BaseMiddleware;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 class MiddlewareStackTest extends TestCase
 {
+    private function passthrough(): MiddlewareInterface
+    {
+        return new class implements MiddlewareInterface {
+            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+            {
+                return $handler->handle($request);
+            }
+        };
+    }
+
     public function testBasicMiddlewareStack(): void
     {
         $stack = new MiddlewareStack();
@@ -20,14 +33,7 @@ class MiddlewareStackTest extends TestCase
     public function testMiddlewareStackAddMiddleware(): void
     {
         $stack = new MiddlewareStack();
-        $middleware = new class extends BaseMiddleware {
-            public function handle($request, $response, callable $next)
-            {
-                return $next($request, $response);
-            }
-        };
-
-        $stack->add($middleware);
+        $stack->add($this->passthrough());
 
         $this->assertCount(1, $stack->getMiddlewares());
     }
@@ -43,23 +49,8 @@ class MiddlewareStackTest extends TestCase
     public function testMiddlewareStackMultipleMiddlewares(): void
     {
         $stack = new MiddlewareStack();
-
-        $middleware1 = new class extends BaseMiddleware {
-            public function handle($request, $response, callable $next)
-            {
-                return $next($request, $response);
-            }
-        };
-
-        $middleware2 = new class extends BaseMiddleware {
-            public function handle($request, $response, callable $next)
-            {
-                return $next($request, $response);
-            }
-        };
-
-        $stack->add($middleware1);
-        $stack->add($middleware2);
+        $stack->add($this->passthrough());
+        $stack->add($this->passthrough());
 
         $this->assertCount(2, $stack->getMiddlewares());
     }

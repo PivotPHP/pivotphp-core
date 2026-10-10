@@ -4,57 +4,63 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Pilha de middlewares simples (sem cache/compilação de pipeline).
+ * Pilha de middlewares PSR-15.
  */
-class MiddlewareStack
+final class MiddlewareStack
 {
     /**
-     * @var array<callable>
+     * @var array<int, MiddlewareInterface>
      */
     private array $middlewares = [];
 
     /**
-     * Adiciona um middleware à stack.
+     * Adiciona um middleware PSR-15 à stack.
      */
-    public function add(callable $middleware): void
+    public function add(MiddlewareInterface $middleware): void
     {
         $this->middlewares[] = $middleware;
     }
 
     /**
-     * Executa todos os middlewares na stack.
-     *
-     * @return mixed
+     * Executa a pipeline PSR-15, delegando ao handler final quando não há
+     * mais middlewares.
      */
     public function execute(
-        Request $request,
-        Response $response,
-        callable $finalHandler
-    ) {
-        if (empty($this->middlewares)) {
-            return $finalHandler($request, $response);
-        }
-
-        $stack = $finalHandler;
+        ServerRequestInterface $request,
+        RequestHandlerInterface $finalHandler
+    ): ResponseInterface {
+        $next = $finalHandler;
 
         foreach (array_reverse($this->middlewares) as $middleware) {
-            $current = $stack;
-            $stack = static function ($req, $res) use ($middleware, $current) {
-                return $middleware($req, $res, $current);
+            $next = new class ($middleware, $next) implements RequestHandlerInterface {
+                private MiddlewareInterface $middleware;
+
+                private RequestHandlerInterface $next;
+
+                public function __construct(MiddlewareInterface $middleware, RequestHandlerInterface $next)
+                {
+                    $this->middleware = $middleware;
+                    $this->next = $next;
+                }
+
+                public function handle(ServerRequestInterface $request): ResponseInterface
+                {
+                    return $this->middleware->process($request, $this->next);
+                }
             };
         }
 
-        return $stack($request, $response);
+        return $next->handle($request);
     }
 
     /**
-     * Obtém todos os middlewares.
-     *
-     * @return array<callable>
+     * @return array<int, MiddlewareInterface>
      */
     public function getMiddlewares(): array
     {
@@ -82,6 +88,6 @@ class MiddlewareStack
      */
     public function isEmpty(): bool
     {
-        return empty($this->middlewares);
+        return $this->middlewares === [];
     }
 }
