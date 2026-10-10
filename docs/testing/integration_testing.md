@@ -20,7 +20,6 @@ Testes de integração verificam se diferentes componentes da aplicação funcio
 // tests/IntegrationTestCase.php
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Routing\Router\Router;
 
 abstract class IntegrationTestCase extends TestCase
 {
@@ -163,21 +162,21 @@ abstract class IntegrationTestCase extends TestCase
         $this->app->post('/auth/logout', [AuthController::class, 'logout']);
 
         // Rotas de usuários
-        Router::group('/api/users', function (): void {
-            Router::get('/', [UserController::class, 'index']);
-            Router::get('/:id', [UserController::class, 'show']);
-            Router::post('/', [UserController::class, 'create']);
-            Router::put('/:id', [UserController::class, 'update']);
-            Router::delete('/:id', [UserController::class, 'delete']);
+        $this->app->group('/api/users', function (): void {
+            $this->app->get('/', [UserController::class, 'index']);
+            $this->app->get('/:id', [UserController::class, 'show']);
+            $this->app->post('/', [UserController::class, 'create']);
+            $this->app->put('/:id', [UserController::class, 'update']);
+            $this->app->delete('/:id', [UserController::class, 'delete']);
         }, [$this->jwtAuth]); // ex.: new JwtAuthMiddleware($factory, $jwtConfig) do pivotphp/security
 
         // Rotas de posts
-        Router::group('/api/posts', function (): void {
-            Router::get('/', [PostController::class, 'index']);
-            Router::get('/:id', [PostController::class, 'show']);
-            Router::post('/', [PostController::class, 'create']);
-            Router::put('/:id', [PostController::class, 'update']);
-            Router::delete('/:id', [PostController::class, 'delete']);
+        $this->app->group('/api/posts', function (): void {
+            $this->app->get('/', [PostController::class, 'index']);
+            $this->app->get('/:id', [PostController::class, 'show']);
+            $this->app->post('/', [PostController::class, 'create']);
+            $this->app->put('/:id', [PostController::class, 'update']);
+            $this->app->delete('/:id', [PostController::class, 'delete']);
         }, [$this->jwtAuth]); // ex.: new JwtAuthMiddleware($factory, $jwtConfig) do pivotphp/security
     }
 

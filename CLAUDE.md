@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repository Overview
 
 PivotPHP Core is a PHP microframework inspired by Express.js, designed for building APIs. Current
-version: **4.1.0** (Validator rule semantics + OpenAPI path templating). It targets PHP 8.1+ and is
+version: **5.0.0** (router state per `Application` — SPEC-076). It targets PHP 8.1+ and is
 strict PSR-7 (HTTP messages), PSR-15 (middleware) and PSR-12 (style) compliant.
 
 Since the 4.0 line the core does one thing: it wires together the application, the routing engine and
@@ -139,7 +139,8 @@ src/
 ### Key components
 
 1. **Application** (`src/Core/Application.php`) — bootstraps the framework, owns the PSR-11
-   container, the routing engine (`PivotPHP\Routing\Router\Router`, from `pivotphp/core-routing`)
+   container, its **own** routing engine instance (`PivotPHP\Routing\Router\Router`, from
+   `pivotphp/core-routing` 3.x — no state shared between applications)
    and the global `MiddlewareStack`. It registers six core service providers in its constructor
    (`Container`, `Event`, `Logging`, `Hook`, `Extension`, `Routing`), configures error handling and
    dispatches lifecycle events (`ApplicationStarted`, `RequestReceived`, `ResponseSent`).
@@ -149,7 +150,8 @@ src/
    routing (including for 404/OPTIONS). Both `MiddlewareInterface` instances and callables
    `fn ($req, $res, $next)` are accepted; `$req` is the PSR-7 `ServerRequestInterface` and `$next`
    runs the rest of the pipeline once. Route/group middleware is provided by the underlying
-   `pivotphp/core-routing` router. The only middleware shipped in this package is
+   `pivotphp/core-routing` router (`$app->group(...)`, or `...$middlewares` after `$metadata` on each
+   verb). The only middleware shipped in this package is
    `Http\ApiDocumentationMiddleware`.
 
 3. **HTTP layer** — provided by `pivotphp/http`. Route handlers receive
@@ -202,11 +204,11 @@ src/
 
 ## Current Version Status
 
-- **Current version**: 4.1.0
+- **Current version**: 5.0.0
 - **Code quality**: PHPStan Level 9, PSR-12 compliant
 - **Architecture**: application + pipeline + router integration; HTTP, routing and security are
   delegated to `pivotphp/http`, `pivotphp/core-routing` and `pivotphp/security`
-- **Companions**: `pivotphp/core-routing` `^2.2.3`, `pivotphp/http` `^1.0`, `pivotphp/security` `^1.0`
+- **Companions**: `pivotphp/core-routing` `^3.0`, `pivotphp/http` `^1.0`, `pivotphp/security` `^1.0`
 - **Extensions**: `pivotphp/cycle-orm` is **paused** and only targets core 1.x — do not treat it as
   an active integration
 

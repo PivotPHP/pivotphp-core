@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Application::handle()` injeta a instância de `Router` no atributo de requisição PSR-7 (`Router::class`), permitindo que middlewares como `ApiDocumentationMiddleware` inspecionem as rotas da aplicação isoladamente.
   - Requer `pivotphp/core-routing` `^3.0.0`.
 
+### Fixed
+- **Arquivos estáticos em duas `Application`** (SPEC-076): a segunda aplicação que registrava a mesma pasta com
+  `staticFiles()` respondia 404 (deduplicação global no core-routing; corrigida no 3.0.0).
+- **`ApiDocumentationMiddleware`**: a opção `enabled => false` voltou a desativar `/docs` e `/swagger`.
+
+### Migration
+- Ver a seção "4.x → 5.0" de `docs/MIGRATION_GUIDE.md`.
+
 ## [4.1.1] - 2026-10-10
 
 ### Fixed

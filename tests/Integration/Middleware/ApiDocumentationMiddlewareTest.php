@@ -58,6 +58,24 @@ class ApiDocumentationMiddlewareTest extends TestCase
         $this->assertSame(200, $response->getStatusCode());
     }
 
+    public function testDisabledMiddlewareDoesNotServeDocs(): void
+    {
+        $app = new Application(__DIR__ . '/../../..');
+
+        $app->use(new ApiDocumentationMiddleware(['enabled' => false]));
+
+        $app->get(
+            '/users',
+            function ($req, $res) {
+                return $res->json(['users' => []]);
+            }
+        );
+
+        $this->assertSame(404, $app->handle(new ServerRequest('GET', '/docs'))->getStatusCode());
+        $this->assertSame(404, $app->handle(new ServerRequest('GET', '/swagger'))->getStatusCode());
+        $this->assertSame(200, $app->handle(new ServerRequest('GET', '/users'))->getStatusCode());
+    }
+
     public function testPathTemplatingAndParametersGeneration(): void
     {
         $app = new Application(__DIR__ . '/../../..');

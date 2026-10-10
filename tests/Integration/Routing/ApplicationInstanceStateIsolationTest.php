@@ -105,4 +105,25 @@ class ApplicationInstanceStateIsolationTest extends TestCase
         $body2 = json_decode((string) $res2->getBody(), true);
         $this->assertSame(2, $body2['app']);
     }
+
+    public function testSameStaticDirectoryIsServedByEachApplication(): void
+    {
+        $dir = sys_get_temp_dir() . '/pivot-core-spec076-' . uniqid();
+        mkdir($dir);
+        file_put_contents($dir . '/app.txt', 'x');
+
+        try {
+            $first = new Application(__DIR__ . '/../../..');
+            $second = new Application(__DIR__ . '/../../..');
+
+            $first->staticFiles('/assets', $dir);
+            $second->staticFiles('/assets', $dir);
+
+            $this->assertSame(200, $first->handle(new ServerRequest('GET', '/assets/app.txt'))->getStatusCode());
+            $this->assertSame(200, $second->handle(new ServerRequest('GET', '/assets/app.txt'))->getStatusCode());
+        } finally {
+            unlink($dir . '/app.txt');
+            rmdir($dir);
+        }
+    }
 }

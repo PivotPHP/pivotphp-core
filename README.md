@@ -85,12 +85,12 @@ $app->get('/files/{name}', fn ($req, $res) => $res->json($req->params()));
 $app->get('/users', [UserController::class, 'index']);
 $app->post('/users', [$controller, 'store']);
 
-// Grupos e middlewares por grupo/rota (pivotphp/core-routing)
-use PivotPHP\Routing\Router\Router;
-
-Router::group('/admin', function (): void {
-    Router::get('/stats', fn ($req, $res) => $res->json(['ok' => true]));
+// Grupos e middlewares por grupo/rota (cada Application tem seu próprio router)
+$app->group('/admin', function () use ($app): void {
+    $app->get('/stats', fn ($req, $res) => $res->json(['ok' => true]));
 }, [$requireAdmin]);
+
+$app->get('/health', fn ($req, $res) => $res->json(['ok' => true]), [], $logRequest); // middleware de rota
 ```
 
 `'Controller@method'` não é suportado (`TypeError`). Guia completo:

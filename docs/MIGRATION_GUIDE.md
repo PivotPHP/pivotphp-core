@@ -1,10 +1,33 @@
-# PivotPHP Core — Migration Guide (3.x → 4.0)
+# PivotPHP Core — Migration Guide
+
+## 4.x → 5.0
+
+5.0 requires `pivotphp/core-routing` 3.0, whose `Router` keeps its state **per instance** (SPEC-076).
+Each `Application` owns its own router, so two applications in the same process (tests, persistent
+workers) no longer share routes, groups or middlewares.
+
+| 4.x | 5.0 |
+|---|---|
+| `Router::get('/x', $h)` / `Router::group(...)` (static) | `$app->get('/x', $h)` / `$app->group('/api', fn () => ..., [$mw])` |
+| `Router::getRoutes()`, `Router::identify()` | `$app->getContainer()->get('router')->getRoutes()` / `->identify()` |
+| `Router::clear()` between tests | Not needed: create a new `Application` |
+| `StaticFileManager::registerDirectory($prefix, $dir)` | `$app->staticFiles($prefix, $dir)` (registers in the app's router) |
+
+- `Application` gained `options()`, `head()`, `any()`, `match()` and `group()`, and every verb accepts
+  `$metadata` and route middlewares: `$app->get($path, $handler, $metadata = [], ...$middlewares)`.
+- `Application::handle()` stores the application's router in the request attribute `Router::class`;
+  `ApiDocumentationMiddleware` reads the routes from it (or from a router passed to its constructor).
+- Code outside the application that still needs the old global table can use the deprecated
+  `RouterFacade` / `Router::default()` from `pivotphp/core-routing` while it is migrated. Routes
+  registered there are **not** seen by an `Application`.
+
+## 3.x → 4.0
 
 4.0 is a breaking release. Read the sections that apply to your application; the
 [CHANGELOG](../CHANGELOG.md) lists every change. Guides for older versions live in
 [releases/](releases/).
 
-## 1. Dependencies
+### 1. Dependencies
 
 ```bash
 composer require pivotphp/core:^4.0
@@ -14,7 +37,7 @@ composer require pivotphp/core:^4.0
 Install the libraries of the security adapters you use (`firebase/php-jwt`, `bepsvpt/secure-headers`,
 `yiisoft/csrf`, `symfony/rate-limiter`). `ext-mbstring` is required; `ext-session` is no longer used.
 
-## 2. HTTP: request, response and middleware
+### 2. HTTP: request, response and middleware
 
 | 3.x | 4.0 |
 |---|---|
@@ -41,11 +64,11 @@ $app->use(function ($req, $res, $next) {            // $req: PSR-7 ServerRequest
 
 Headers set on `$res` are **not** merged into the response returned by `$next()`.
 `$app->use('/path', $middleware)` (path-scoped) does not exist: check the path inside the middleware
-or use `Router::group()`.
+or use `$app->group()`.
 
 Routes must **return** the response (`return $res->json(...)`).
 
-## 3. Security → `pivotphp/security`
+### 3. Security → `pivotphp/security`
 
 The core no longer ships security middlewares. `pivotphp/security` (^1.0) is installed as a core
 dependency; update imports and configuration:
@@ -82,7 +105,7 @@ limiting needs `symfony/rate-limiter` — install only what you use.
 
 Details and options: [pivotphp/security README](https://github.com/PivotPHP/pivotphp-security#readme).
 
-## 4. Removed without replacement
+### 4. Removed without replacement
 
 | Removed | Why / what to do |
 |---|---|
@@ -94,7 +117,7 @@ Details and options: [pivotphp/security README](https://github.com/PivotPHP/pivo
 | `PivotPHP\Core\Routing\*`, `PivotPHP\Core\Application` aliases | Never loaded; use `PivotPHP\Routing\Router\*` and `PivotPHP\Core\Core\Application`. |
 | `registerExtension($name, $provider, $config)` third argument | It was ignored. |
 
-## 5. Behaviour changes worth testing
+### 5. Behaviour changes worth testing
 
 - Unknown method on a known path → `405` + `Allow` (was `404`); `OPTIONS` → `204` + `Allow`; `HEAD`
   uses the `GET` route.

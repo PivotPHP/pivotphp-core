@@ -46,6 +46,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
         $this->swaggerPath = (string) ($options['swagger_path'] ?? '/swagger');
         $this->baseUrl = isset($options['base_url']) ? (string) $options['base_url'] : null;
         $this->version = (string) ($options['version'] ?? Application::VERSION);
+        $this->enabled = (bool) ($options['enabled'] ?? true);
         $optionsRouter = isset($options['router']) && $options['router'] instanceof Router
             ? $options['router']
             : null;
