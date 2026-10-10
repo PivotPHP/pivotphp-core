@@ -25,8 +25,8 @@ Se aplicável, adicione screenshots para ajudar a explicar o problema.
 
 ## 🖥️ Ambiente
  - OS: [ex: Windows, macOS, Linux]
- - PHP Version: [ex: 8.1.0]
- - PivotPHP Version: [ex: 1.0.0]
+ - PHP Version: [ex: 8.3.0]
+ - PivotPHP Version: [ex: 4.0.2]
  - Web Server: [ex: Apache, Nginx]
 
 ## 📝 Contexto Adicional
