@@ -17,13 +17,7 @@ class ControllerResolutionTest extends TestCase
 {
     protected function setUp(): void
     {
-        Router::clear();
         CountingController::reset();
-    }
-
-    protected function tearDown(): void
-    {
-        Router::clear();
     }
 
     public function testRouteRegisteredBeforeBindingResolvesAtRequestTime(): void

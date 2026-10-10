@@ -31,12 +31,12 @@ $requireAdmin = function ($req, $res, $next) {
     return $next();
 };
 
-Router::group('/api/v1', function (): void {
-    Router::get('/status', fn ($req, $res) => $res->json(['status' => 'ok', 'version' => 'v1']));
+$app->group('/api/v1', function () use ($app): void {
+    $app->get('/status', fn ($req, $res) => $res->json(['status' => 'ok', 'version' => 'v1']));
 });
 
-Router::group('/api/v1/admin', function (): void {
-    Router::get('/stats', fn ($req, $res) => $res->json(['users' => 42, 'orders' => 7]));
+$app->group('/api/v1/admin', function () use ($app): void {
+    $app->get('/stats', fn ($req, $res) => $res->json(['users' => 42, 'orders' => 7]));
 }, [$requireAdmin]);
 
 $app->run();

@@ -14,21 +14,11 @@ use PivotPHP\Routing\Router\Router;
  */
 class RouteMiddlewareTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Router::clear();
-    }
-
-    protected function tearDown(): void
-    {
-        Router::clear();
-    }
-
     public function testRouteMiddlewareExecutesAndBlocksHandler(): void
     {
         $app = new Application(__DIR__ . '/../../..');
 
-        Router::get(
+        $app->get(
             '/protected',
             function ($req, $res) {
                 return $res->json(['secret' => true]);
@@ -51,10 +41,10 @@ class RouteMiddlewareTest extends TestCase
     {
         $app = new Application(__DIR__ . '/../../..');
 
-        Router::group(
+        $app->group(
             '/admin',
-            function () {
-                Router::get(
+            function () use ($app) {
+                $app->get(
                     '/painel',
                     function ($req, $res) {
                         return $res->json(['ok' => true]);
@@ -77,7 +67,7 @@ class RouteMiddlewareTest extends TestCase
     {
         $app = new Application(__DIR__ . '/../../..');
 
-        Router::get(
+        $app->get(
             '/allowed',
             function ($req, $res) {
                 return $res->json(['ok' => true]);

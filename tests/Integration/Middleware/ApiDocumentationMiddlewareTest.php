@@ -15,16 +15,6 @@ use PivotPHP\Routing\Router\Router;
  */
 class ApiDocumentationMiddlewareTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Router::clear();
-    }
-
-    protected function tearDown(): void
-    {
-        Router::clear();
-    }
-
     public function testDocsAndSwaggerAreServed(): void
     {
         $app = new Application(__DIR__ . '/../../..');
@@ -66,6 +56,24 @@ class ApiDocumentationMiddlewareTest extends TestCase
         $response = $app->handle(new ServerRequest('GET', '/users'));
 
         $this->assertSame(200, $response->getStatusCode());
+    }
+
+    public function testDisabledMiddlewareDoesNotServeDocs(): void
+    {
+        $app = new Application(__DIR__ . '/../../..');
+
+        $app->use(new ApiDocumentationMiddleware(['enabled' => false]));
+
+        $app->get(
+            '/users',
+            function ($req, $res) {
+                return $res->json(['users' => []]);
+            }
+        );
+
+        $this->assertSame(404, $app->handle(new ServerRequest('GET', '/docs'))->getStatusCode());
+        $this->assertSame(404, $app->handle(new ServerRequest('GET', '/swagger'))->getStatusCode());
+        $this->assertSame(200, $app->handle(new ServerRequest('GET', '/users'))->getStatusCode());
     }
 
     public function testPathTemplatingAndParametersGeneration(): void

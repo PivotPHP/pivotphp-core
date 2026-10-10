@@ -18,16 +18,6 @@ use PivotPHP\Routing\Router\Router;
  */
 class ArrayCallableContainerResolutionTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Router::clear();
-    }
-
-    protected function tearDown(): void
-    {
-        Router::clear();
-    }
-
     public function testInstanceMethodResolvedViaContainer(): void
     {
         $app = new Application(__DIR__ . '/../../..');
