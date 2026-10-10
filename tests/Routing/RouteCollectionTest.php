@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Tests\Routing;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Routing\RouteCollection;
-use PivotPHP\Core\Routing\Route;
+use PivotPHP\Routing\Router\RouteCollection;
+use PivotPHP\Routing\Router\Route;
 
 class RouteCollectionTest extends TestCase
 {

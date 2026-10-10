@@ -1,6 +1,6 @@
-# PivotPHP Core v2.3.4 Documentation
+# PivotPHP Core v3.0.0 Documentation
 
-Welcome to the complete documentation for **PivotPHP Core v2.3.4** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
+Welcome to the complete documentation for **PivotPHP Core v3.0.0** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
 
 ## 🚀 Quick Navigation
 
@@ -42,7 +42,7 @@ Welcome to the complete documentation for **PivotPHP Core v2.3.4** - a high-perf
 
 ## ✨ What's Current (v2.3.x)
 
-### 🩹 **v2.3.4 — Patch**
+### 🎯 **v3.0.0 — Major**
 - Nome de log padrão agora `pivotphp.log` (SPEC-019).
 
 ### 🩹 **v2.3.3 — Patch**
@@ -125,7 +125,7 @@ complete v1.1.4 release documentation suite.
 
 ## 🔧 Framework Status
 
-- **Current Version**: v2.3.4 (Patch)
+- **Current Version**: v3.0.0 (Major)
 - **PHP Requirements**: 8.1+ with strict typing
 - **Production Ready**: Enterprise-grade quality with type safety
 - **Community**: [GitHub](https://github.com/PivotPHP)

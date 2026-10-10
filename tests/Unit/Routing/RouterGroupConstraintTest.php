@@ -3,7 +3,7 @@
 namespace PivotPHP\Core\Tests\Unit\Routing;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 
 class RouterGroupConstraintTest extends TestCase
 {

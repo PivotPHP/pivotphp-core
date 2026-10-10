@@ -38,7 +38,7 @@ class RoutingServiceProvider extends ServiceProvider
     {
         // Router is ready for route registration
         // The modular routing system from core-routing is now available
-        // via PivotPHP\Core\Routing\Router (aliased in src/aliases.php)
+        // via PivotPHP\Routing\Router\Router (aliased in src/aliases.php)
     }
 
     /**

@@ -6,8 +6,8 @@ namespace PivotPHP\Core\Core;
 
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
-use PivotPHP\Core\Routing\Router;
-use PivotPHP\Core\Routing\StaticFileManager;
+use PivotPHP\Routing\Router\Router;
+use PivotPHP\Routing\Router\StaticFileManager;
 use PivotPHP\Core\Utils\CallableResolver;
 use PivotPHP\Core\Middleware\MiddlewareStack;
 use PivotPHP\Core\Exceptions\HttpException;
@@ -47,7 +47,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '2.3.4';
+    public const VERSION = '3.0.0';
 
     /**
      * Container de dependências PSR-11.
@@ -104,8 +104,6 @@ class Application implements ApplicationInterface
      * @var array<string, string>
      */
     protected array $middlewareAliases = [
-        // @deprecated v2.1.0 — 'load-shedder' alias will be removed in v3.0.0. Use RateLimiter directly.
-        'load-shedder' => \PivotPHP\Core\Middleware\LoadShedder::class,
         'rate-limiter' => \PivotPHP\Core\Middleware\RateLimiter::class,
     ];
 
@@ -423,7 +421,7 @@ class Application implements ApplicationInterface
      */
     public function use(mixed $middleware): self
     {
-        // Resolve alias string ('load-shedder' → class name)
+        // Resolve alias string ('rate-limiter' → class name)
         if (is_string($middleware) && isset($this->middlewareAliases[$middleware])) {
             $middleware = $this->middlewareAliases[$middleware];
         }

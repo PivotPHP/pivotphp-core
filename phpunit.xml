@@ -27,12 +27,6 @@
       <directory>tests/Services</directory>
     </testsuite>
     
-    <!-- Performance Tests -->
-    <testsuite name="Performance">
-      <directory>tests/Performance</directory>
-      <directory>tests/Json</directory>
-    </testsuite>
-    
     <!-- Security Tests -->
     <testsuite name="Security">
       <directory>tests/Security</directory>
@@ -41,14 +35,12 @@
     <!-- Fast Tests (excluding stress tests) -->
     <testsuite name="Fast">
       <directory>tests</directory>
-      <exclude>tests/Stress</exclude>
     </testsuite>
     
-    <!-- CI/CD Tests (excluding integration and stress tests for clean output) -->
+    <!-- CI/CD Tests (excluding integration tests for clean output) -->
     <testsuite name="CI">
       <directory>tests</directory>
       <exclude>tests/Integration</exclude>
-      <exclude>tests/Stress</exclude>
     </testsuite>
     
     <!-- Integration Tests -->
@@ -65,11 +57,6 @@
       <directory>tests/Services</directory>
       <directory>tests/Support</directory>
       <directory>tests/Validation</directory>
-    </testsuite>
-    
-    <!-- Stress Tests -->
-    <testsuite name="Stress">
-      <directory>tests/Stress</directory>
     </testsuite>
   </testsuites>
   

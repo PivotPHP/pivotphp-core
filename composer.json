@@ -72,8 +72,7 @@
             "PivotPHP\\Core\\": "src/"
         },
         "files": [
-            "src/functions.php",
-            "src/aliases.php"
+            "src/functions.php"
         ]
     },
     "autoload-dev": {
@@ -88,11 +87,9 @@
         "test:fast": "vendor/bin/phpunit --testsuite=Fast",
         "test:unit": "vendor/bin/phpunit --testsuite=Unit",
         "test:integration": "vendor/bin/phpunit --testsuite=Integration",
-        "test:performance": "vendor/bin/phpunit --testsuite=Performance",
         "test:security": "vendor/bin/phpunit --testsuite=Security",
         "test:core": "vendor/bin/phpunit --testsuite=Core",
         "test:coverage": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html reports/coverage",
-        "test:stress": "vendor/bin/phpunit --testsuite=Stress",
         "test:no-stress": "vendor/bin/phpunit --exclude-group=stress,slow",
         "test:auth": "php test/auth_test.php",
         "phpstan": "phpstan analyse",
@@ -163,9 +160,6 @@
         "examples:cors-middleware": "php -S localhost:8000 examples/03-middleware/cors-middleware.php",
         "examples:auth-middleware": "php -S localhost:8000 examples/03-middleware/auth-middleware.php",
         "examples:rest-api": "php -S localhost:8000 examples/04-api/rest-api.php",
-        "benchmark": "./benchmarks/run_benchmark.sh",
-        "benchmark:quick": "./benchmarks/run_benchmark.sh -q",
-        "benchmark:simple": "php benchmarks/SimpleBenchmark.php",
         "docker:test-all": "./scripts/testing/test-all-php-versions.sh",
         "docker:test-quality": "./scripts/testing/test-all-php-versions.sh --with-quality",
         "ci:validate": "./scripts/quality/quality-check.sh",

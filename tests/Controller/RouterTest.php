@@ -3,7 +3,7 @@
 namespace PivotPHP\Core\Tests\Controller;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 
 class RouterTest extends TestCase
 {

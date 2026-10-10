@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Http;
 
 use PivotPHP\Core\Contracts\JsonOptimizerInterface;
-use PivotPHP\Core\Contracts\Psr7PoolInterface;
 use PivotPHP\Core\Http\Psr7\Stream;
 use PivotPHP\Core\Http\Psr7\Response as Psr7Response;
 use Psr\Http\Message\ResponseInterface;
@@ -91,18 +90,6 @@ class Response implements ResponseInterface
     public function setJsonOptimizer(JsonOptimizerInterface $optimizer): self
     {
         $this->jsonOptimizer = $optimizer;
-        return $this;
-    }
-
-    /**
-     * Injetar PSR-7 Pool
-     *
-     * @param Psr7PoolInterface $pool
-     * @return self
-     * @deprecated v2.2.2 — o pool não é mais usado (SPEC-045); mantido por BC como no-op.
-     */
-    public function setPsr7Pool(Psr7PoolInterface $pool): self
-    {
         return $this;
     }
 

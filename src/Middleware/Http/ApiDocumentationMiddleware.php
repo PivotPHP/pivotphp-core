@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Middleware\Http;
 
 use PivotPHP\Core\Http\Response;
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 use PivotPHP\Core\Core\Application;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

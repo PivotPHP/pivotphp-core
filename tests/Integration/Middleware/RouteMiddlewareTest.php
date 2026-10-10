@@ -7,7 +7,7 @@ namespace PivotPHP\Core\Tests\Integration\Middleware;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 
 /**
  * Cobre que middlewares de rota/grupo são executados (SPEC-038).
