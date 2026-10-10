@@ -727,6 +727,22 @@ class Application implements ApplicationInterface
         $route = $this->router::identify($method, $path);
 
         if (!$route) {
+            // SPEC-072: se o path casa com outros métodos, responde 405 (ou 204 p/ OPTIONS) com Allow.
+            $allowed = $this->router::allowedMethods($path);
+
+            if ($allowed !== []) {
+                $allow = implode(', ', $allowed);
+
+                if ($method === 'OPTIONS') {
+                    return (new ExpressResponse())->noContent(204)->withHeader('Allow', $allow);
+                }
+
+                return (new ExpressResponse())
+                    ->status(405)
+                    ->header('Allow', $allow)
+                    ->json(['error' => 'Method Not Allowed']);
+            }
+
             // Buscar rotas disponíveis para suggestions
             $availableRoutes = array_map(
                 static fn ($r) => "{$r['method']} {$r['path']}",
