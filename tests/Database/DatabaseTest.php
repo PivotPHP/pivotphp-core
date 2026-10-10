@@ -61,4 +61,21 @@ class DatabaseTest extends TestCase
         $this->assertContains('a', $names);
         $this->assertContains('b', $names);
     }
+
+    public function testBindsParametersWithNativeTypes(): void
+    {
+        $db = new Database(['driver' => 'sqlite', 'database' => ':memory:']);
+        $db->exec('CREATE TABLE t (id INTEGER PRIMARY KEY); INSERT INTO t VALUES (1),(2),(3)');
+
+        // SPEC-104: integer bindings for LIMIT/OFFSET must be bound as PARAM_INT (not text),
+        // so pagination works on strict drivers (e.g. PostgreSQL).
+        $rows = $db->select('SELECT id FROM t ORDER BY id LIMIT ? OFFSET ?', [2, 1]);
+        $this->assertSame([2, 3], array_map(static fn (array $r): int => (int) $r['id'], $rows));
+
+        // Booleans and null keep their type instead of being forced to strings.
+        $probe = $db->selectOne('SELECT ? AS flag, ? AS missing', [true, null]);
+        $this->assertNotNull($probe);
+        $this->assertSame(1, (int) $probe['flag']);
+        $this->assertNull($probe['missing']);
+    }
 }

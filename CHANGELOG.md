@@ -5,6 +5,14 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.1] - 2026-10-10
+
+### Fixed
+- **`Database`: binding por tipo PDO nativo** (SPEC-104). `select/selectOne/insert/update/delete/statement`
+  ligavam todo parâmetro como `PARAM_STR`. Agora `int`/`bool`/`null` usam `PARAM_INT`/`PARAM_BOOL`/`PARAM_NULL`.
+  Isso corrige `LIMIT ?`/`OFFSET ?` em drivers estritos (o PostgreSQL rejeita `LIMIT` do tipo texto) e evita
+  que um valor fora de faixa vire um erro opaco (`SQLSTATE[HY000]: datatype mismatch`).
+
 ## [4.1.0] - 2026-10-10
 
 ### Added

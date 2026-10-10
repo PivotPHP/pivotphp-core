@@ -88,7 +88,7 @@ class Database
     public function select(string $query, array $bindings = []): array
     {
         $statement = $this->pdo->prepare($query);
-        $statement->execute($bindings);
+        $this->executeWithBindings($statement, $bindings);
         return (array) $statement->fetchAll();
     }
 
@@ -98,7 +98,7 @@ class Database
     public function selectOne(string $query, array $bindings = []): ?array
     {
         $statement = $this->pdo->prepare($query);
-        $statement->execute($bindings);
+        $this->executeWithBindings($statement, $bindings);
         $result = $statement->fetch();
 
         if ($result === false) {
@@ -114,7 +114,7 @@ class Database
     public function insert(string $query, array $bindings = []): bool
     {
         $statement = $this->pdo->prepare($query);
-        return $statement->execute($bindings);
+        return $this->executeWithBindings($statement, $bindings);
     }
 
     /**
@@ -123,7 +123,7 @@ class Database
     public function update(string $query, array $bindings = []): int
     {
         $statement = $this->pdo->prepare($query);
-        $statement->execute($bindings);
+        $this->executeWithBindings($statement, $bindings);
         return $statement->rowCount();
     }
 
@@ -133,7 +133,7 @@ class Database
     public function delete(string $query, array $bindings = []): int
     {
         $statement = $this->pdo->prepare($query);
-        $statement->execute($bindings);
+        $this->executeWithBindings($statement, $bindings);
         return $statement->rowCount();
     }
 
@@ -145,7 +145,7 @@ class Database
     public function statement(string $query, array $bindings = []): bool
     {
         $statement = $this->pdo->prepare($query);
-        return $statement->execute($bindings);
+        return $this->executeWithBindings($statement, $bindings);
     }
 
     /**
@@ -227,5 +227,28 @@ class Database
     public function getPdo(): \PDO
     {
         return $this->pdo;
+    }
+
+    /**
+     * Liga cada parâmetro com o tipo PDO nativo e executa o statement.
+     *
+     * `PDOStatement::execute($bindings)` liga todo valor como `PARAM_STR`; isso quebra
+     * `LIMIT ?`/`OFFSET ?` em drivers estritos (ex.: PostgreSQL rejeita `LIMIT` do tipo texto)
+     * e transforma um valor não inteiro-coercível em erro opaco (SPEC-104).
+     */
+    private function executeWithBindings(\PDOStatement $statement, array $bindings): bool
+    {
+        foreach ($bindings as $key => $value) {
+            $parameter = \is_int($key) ? $key + 1 : $key;
+
+            $statement->bindValue($parameter, $value, match (true) {
+                \is_int($value) => \PDO::PARAM_INT,
+                \is_bool($value) => \PDO::PARAM_BOOL,
+                $value === null => \PDO::PARAM_NULL,
+                default => \PDO::PARAM_STR,
+            });
+        }
+
+        return $statement->execute();
     }
 }
