@@ -27,24 +27,28 @@ class GlobalMiddlewareBeforeRoutingTest extends TestCase
 
         $ran = false;
 
-        $app->use(new class (function () use (&$ran): void {
+        $app->use(
+            new class (function () use (&$ran): void {
             $ran = true;
-        }) implements MiddlewareInterface {
+            }) implements MiddlewareInterface {
             /** @var \Closure */
-            private \Closure $onRun;
+                private \Closure $onRun;
 
-            public function __construct(callable $onRun)
-            {
-                $this->onRun = \Closure::fromCallable($onRun);
+                public function __construct(callable $onRun)
+                {
+                    $this->onRun = \Closure::fromCallable($onRun);
+                }
+
+                public function process(
+                    ServerRequestInterface $request,
+                    RequestHandlerInterface $handler
+                ): ResponseInterface {
+                    ($this->onRun)();
+
+                    return $handler->handle($request);
+                }
             }
-
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
-                ($this->onRun)();
-
-                return $handler->handle($request);
-            }
-        });
+        );
 
         $response = $app->handle(new ServerRequest('GET', '/does-not-exist'));
 
@@ -58,22 +62,29 @@ class GlobalMiddlewareBeforeRoutingTest extends TestCase
 
         $routeReached = false;
 
-        $app->use(new class implements MiddlewareInterface {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
-                if ($request->getMethod() === 'OPTIONS') {
-                    return new Response(204);
+        $app->use(
+            new class implements MiddlewareInterface {
+                public function process(
+                    ServerRequestInterface $request,
+                    RequestHandlerInterface $handler
+                ): ResponseInterface {
+                    if ($request->getMethod() === 'OPTIONS') {
+                        return new Response(204);
+                    }
+
+                    return $handler->handle($request);
                 }
-
-                return $handler->handle($request);
             }
-        });
+        );
 
-        $app->get('/api/status', function ($req, $res) use (&$routeReached) {
-            $routeReached = true;
+        $app->get(
+            '/api/status',
+            function ($req, $res) use (&$routeReached) {
+                $routeReached = true;
 
-            return $res->json(['ok' => true]);
-        });
+                return $res->json(['ok' => true]);
+            }
+        );
 
         $response = $app->handle(new ServerRequest('OPTIONS', '/api/status'));
 

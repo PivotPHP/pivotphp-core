@@ -1,3 +1,6 @@
-# Exceptions Customizadas
+# Erros e exceções
 
-Documentação sobre as exceptions customizadas do framework e guia de tratamento de erros nativo.
+| Página | Conteúdo |
+|---|---|
+| [ErrorHandling.md](ErrorHandling.md) | Como a aplicação transforma exceções em respostas |
+| [CustomExceptions.md](CustomExceptions.md) | `HttpException`, `ContextualException` e exceções próprias |

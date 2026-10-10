@@ -17,7 +17,7 @@ $app->post('/users', function ($req, $res) {
         'password' => 'required|min:8',
     ]);
 
-    if (!$validator->validate((array) $req->body)) {
+    if (!$validator->validate((array) $req->psr7()->getParsedBody())) {
         return $res->status(422)->json(['errors' => $validator->getErrors()]);
     }
 

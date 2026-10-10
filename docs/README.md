@@ -1,171 +1,42 @@
-# PivotPHP Core v3.0.0 Documentation
+# PivotPHP Core 4.0 — Documentation
 
-Welcome to the complete documentation for **PivotPHP Core v3.0.0** - a high-performance, lightweight PHP microframework inspired by Express.js, designed for building APIs and web applications with exceptional speed and simplicity.
+PivotPHP is an Express.js-inspired PHP microframework for APIs, built on PSR-7/PSR-15 and on three
+packages installed with the core: `pivotphp/http` (HTTP messages and the Express facade),
+`pivotphp/core-routing` (routing) and `pivotphp/security` (security middlewares).
 
-## 🚀 Quick Navigation
+## Start here
 
-### Essential Guides
-- **[Quick Start](quick-start.md)** - Get running in 5 minutes
-- **[API Reference](API_REFERENCE.md)** - Complete API documentation
-- **[Migration Guide](MIGRATION_GUIDE.md)** - Upgrading from previous versions
+- [Quick Start](quick-start.md)
+- [API Reference](API_REFERENCE.md)
+- [Migration Guide](MIGRATION_GUIDE.md) — upgrading to 4.0
+- [Examples](reference/examples.md) — runnable, verified by `tests/Integration/ExamplesTest.php`
 
-### Core Guides
-- **[Architecture Guide](guides/architecture.md)** - v1.1.3 architecture overview (historical, see banner in the doc)
-- **[Performance Guide](performance/README.md)** - Optimization and benchmarks
-- **[Testing Guides](testing/)** - Testing strategies and examples (`api_testing.md`, `integration_testing.md`, `middleware_testing.md`, `mocks_and_stubs.md`)
+## Guides
 
-### Reference Materials
-- **[Examples Catalog](reference/examples.md)** - Complete examples collection
-- **[Middleware Reference](technical/middleware/README.md)** - All available middleware
-- **[Routing Reference](technical/routing/router.md)** - Routing patterns and constraints
-- **[Application & Configuration](technical/application.md)** - Framework configuration
+| Topic | Page |
+|---|---|
+| Routing syntax | [technical/routing/SYNTAX_GUIDE.md](technical/routing/SYNTAX_GUIDE.md) |
+| Router, groups, static files | [technical/routing/router.md](technical/routing/router.md) |
+| Request / response | [technical/http/README.md](technical/http/README.md) |
+| Middleware | [technical/middleware/README.md](technical/middleware/README.md) |
+| Custom middleware | [technical/middleware/CustomMiddleware.md](technical/middleware/CustomMiddleware.md) |
+| Security (pivotphp/security) | [technical/middleware/SecurityMiddleware.md](technical/middleware/SecurityMiddleware.md) |
+| Application & configuration | [technical/application.md](technical/application.md) |
+| Providers, extensions, hooks | [technical/extensions/README.md](technical/extensions/README.md) |
+| Testing | [testing/](testing/) |
 
-## 📚 Learning Paths
+## Releases
 
-### 👶 **Beginner Path** (New to PivotPHP)
-1. [Quick Start](quick-start.md) - Basic setup and hello world
-2. [Basic Usage Examples](implementations/usage_basic.md) - Simple API creation
-3. [Routing Guide](technical/routing/SYNTAX_GUIDE.md) - URL routing patterns
-4. [Request/Response](technical/http/README.md) - Handling HTTP
+Release history: [CHANGELOG.md](../CHANGELOG.md). Historical release documents live in
+[releases/](releases/).
 
-### 🏃 **Intermediate Path** (Building Production APIs)
-1. [Middleware Usage](implementations/usage_with_middleware.md) - Security and performance middleware
-2. [Authentication](technical/authentication/README.md) - JWT and API key auth
-3. [Testing](testing/) - Unit and integration testing
-4. [Performance Optimization](performance/README.md) - Object pooling and optimization
+## Ecosystem
 
-### 🚀 **Advanced Path** (Framework Extension)
-1. [Architecture Guide](guides/architecture.md) - Framework internals
-2. [Custom Middleware](implementations/usage_with_custom_middleware.md) - Building custom components
-3. [Service Providers](technical/providers/README.md) - Dependency injection
-4. [Extensions](technical/extensions/README.md) - Framework extensions
+- [pivotphp/http](https://github.com/PivotPHP/pivotphp-http)
+- [pivotphp/core-routing](https://github.com/PivotPHP/pivotphp-core-routing)
+- [pivotphp/security](https://github.com/PivotPHP/pivotphp-security)
+- [pivotphp/cycle-orm](https://github.com/PivotPHP/pivotphp-cycle-orm) — check the supported core version
 
-## ✨ What's Current (v2.3.x)
+## Contributing
 
-### 🎯 **v3.0.0 — Major**
-- Nome de log padrão agora `pivotphp.log` (SPEC-019).
-
-### 🩹 **v2.3.3 — Patch**
-- Parâmetros de rota: `rawurldecode()` + inteiros canônicos (CEP/float/int grande viram string) (SPEC-042).
-
-### 🩹 **v2.3.2 — Patch**
-- Validação de header (rejeita CR/LF/NUL) em `Psr7\Message` (SPEC-043).
-- `Request::withHeader/withAddedHeader/withoutHeader` aplicam a mudança (SPEC-024).
-- `Response::json()` serializa `JsonSerializable`/enums e lança em falha (SPEC-039).
-
-### 🩹 **v2.3.1 — Patch**
-- Middlewares PSR-15 funcionam com `$app->use()` (SPEC-023).
-- Middlewares globais executam antes da rota; middlewares de rota/grupo executam (SPEC-040/038).
-- Controller resolvido por requisição (SPEC-041); `ApiDocumentationMiddleware` serve `/docs`/`/swagger` (SPEC-022).
-
-### 🎯 **v2.3.0 — Simplification Edition**
-- `Response::json()` usa `json_encode` direto; pooling JSON removido do caminho.
-- PSR-7 criado direto, sem pools; fim da retenção de dados de requisições anteriores.
-- Depreciação de ~15 componentes de otimização sem uso (remoção na v3.0.0).
-
-### 🩹 **v2.2.1 — Patch**
-- Fixed `Application::staticFiles()` (removed stale `$this` argument to
-  `StaticFileManager::registerDirectory()` after its decoupling into core-routing).
-- PSR-12 corrections in test files.
-
-### 🎯 **v2.2.0 — Route Syntax & DX Edition**
-- Brace-delimited route parameters (`{id}` / `{id<constraint>}`) — equivalent to `:id`.
-- Array callables `[Classe::class, 'métodoDeInstância']` resolved via the DI container.
-- New `Request::body()` method; `getBodyAsStdClass()` no longer discards `DELETE` bodies.
-- SQLite support in `Database::connect()`.
-- `PivotPHP\Core\Application` backward-compatibility alias.
-- Carries the PSR-7 2.0 compatibility fix (recorded below as `v2.1.1`, never tagged).
-
-### 🩹 **v2.1.1 — PSR-7 2.0 Compatibility Fix**
-- Fixed a real incompatibility with `psr/http-message` 2.0 that could fatal-error every
-  request when Composer resolved to that version — retyped ~46 method signatures across
-  the PSR-7 implementation to match the real PSR-7 2.0 interfaces.
-- No public-API or observable behavior change for documented usage.
-
-### 🔁 **v2.1.0 — Response Emission, Pool Safety & Deprecation Cycle**
-- `Application::run()` is now the single, guaranteed response-emission point — fixes a
-  double-emit / spurious "body already sent" warning on every request.
-- Fixed pooled-object data leaks between requests in concurrent/async runtimes (Swoole,
-  ReactPHP, FrankenPHP).
-- Started a deprecation cycle (removal planned for v3.0.0) for `Core\Container`,
-  `Middleware\LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`, and
-  `Providers\Logger`/`EventDispatcher` — see [CHANGELOG.md](../CHANGELOG.md) for the full
-  list and replacements.
-
-See the [CHANGELOG](../CHANGELOG.md) for complete release notes.
-
-## 📜 Previous Versions (Historical)
-
-The v2.2.x line above is current. Earlier releases, most recent first:
-**v2.0.0** (Legacy Cleanup Edition) → **v1.2.0** (Simplicity Edition) → **v1.1.4**
-(Developer Experience) → **v1.1.3** (Performance Breakthrough) and earlier — see the
-[CHANGELOG](../CHANGELOG.md) for the complete history.
-
-### v1.1.4 Highlights (historical, not current)
-
-<details>
-<summary>Infrastructure consolidation, automatic version management, GitHub Actions optimization</summary>
-
-**Infrastructure Consolidation** — scripts reduced from 25 to 15 (40% reduction):
-```bash
-scripts/quality/quality-check.sh    # Consolidated validation
-scripts/release/version-bump.sh     # Automatic version management
-```
-
-**Automatic Version Management** — VERSION file as single source of truth, automatic
-version detection, strict X.Y.Z validation.
-
-**GitHub Actions Optimization** — 25% workflow reduction (4 → 3), consolidated scripts,
-corrected repository URLs (from the pre-rename express-php project to pivotphp-core).
-
-**Documentation** — a 315-line versioning guide, static file managers documentation,
-complete v1.1.4 release documentation suite.
-
-</details>
-
-## 🔧 Framework Status
-
-- **Current Version**: v3.0.0 (Major)
-- **PHP Requirements**: 8.1+ with strict typing
-- **Production Ready**: Enterprise-grade quality with type safety
-- **Community**: [GitHub](https://github.com/PivotPHP)
-
-## 🧩 Ecosystem
-
-### Official Extensions
-- **[Cycle ORM Extension](https://github.com/PivotPHP/pivotphp-cycle-orm)** - Database integration
-
-### Community Resources
-- **[Benchmarks Repository](https://github.com/PivotPHP/pivotphp-benchmarks)** - Performance testing
-- **[Examples Collection](../examples/)** - Practical usage examples
-
-## 📖 Technical Documentation
-
-### Core Components
-- **[Application](technical/application.md)** - Framework bootstrap and lifecycle
-- **[HTTP Layer](technical/http/README.md)** - Request/response handling
-- **[Routing](technical/routing/README.md)** - URL routing and static file management
-- **[Static File Managers](technical/routing/STATIC_FILE_MANAGERS.md)** - Complete static file serving guide
-- **[Middleware](technical/middleware/README.md)** - Request/response pipeline
-
-### Advanced Topics
-- **[Authentication](technical/authentication/README.md)** - Multi-method authentication
-- **[Performance](technical/performance/)** - Object pooling and optimization
-- **[JSON Optimization](technical/json/README.md)** - Buffer pooling system
-- **[PSR Compatibility](technical/compatibility/)** - PSR-7/PSR-15 compliance
-
-## 🤝 Contributing
-
-Interested in contributing to PivotPHP Core? See our [Contributing Guide](contributing/README.md) for:
-- Development setup
-- Code style requirements
-- Testing procedures
-- Pull request process
-
-## 📄 License
-
-PivotPHP Core is open-source software licensed under the [MIT License](../LICENSE).
-
----
-
-*Built with ❤️ for the PHP community - Combining Express.js simplicity with PHP power*
+See [CONTRIBUTING.md](../CONTRIBUTING.md) and [contributing/](contributing/).

@@ -16,8 +16,10 @@ class MiddlewareStackTest extends TestCase
     private function passthrough(): MiddlewareInterface
     {
         return new class implements MiddlewareInterface {
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return $handler->handle($request);
             }
         };

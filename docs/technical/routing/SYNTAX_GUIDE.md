@@ -243,7 +243,7 @@ Combinando handlers com middleware:
 > `(string $path, callable|array $handler)` e retornam `Application`. `Application::middleware()`
 > é um alias de `use()` — registra middleware **global**, não escopado à rota/grupo em que foi
 > encadeado. Não existe `$app->group()`. Middleware por rota/grupo é um recurso do Router
-> subjacente (`pivotphp/core-routing`), acessível via `PivotPHP\Core\Routing\Router` (alias
+> subjacente (`pivotphp/core-routing`), acessível via `PivotPHP\Routing\Router\Router` (alias
 > estático), não via `Application`. `ValidationMiddleware`/`ApiAuthMiddleware` abaixo eram
 > exemplos fictícios — substitua por classes reais do seu projeto ou por
 > `PivotPHP\Core\Validation\Validator` (ver
@@ -252,10 +252,10 @@ Combinando handlers com middleware:
 ```php
 <?php
 
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 
 // Middleware global (aplica-se a todas as rotas registradas depois)
-$app->use(new AuthMiddleware());
+$app->use(new MyAuthMiddleware()); // seu middleware PSR-15
 
 $app->get('/admin/users', [AdminController::class, 'getUsers']);
 

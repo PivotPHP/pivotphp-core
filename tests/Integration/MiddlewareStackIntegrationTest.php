@@ -43,8 +43,10 @@ class MiddlewareStackIntegrationTest extends TestCase
                 $this->process = $process;
             }
 
-            public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-            {
+            public function process(
+                ServerRequestInterface $request,
+                RequestHandlerInterface $handler
+            ): ResponseInterface {
                 return ($this->process)($request, $handler);
             }
         };
@@ -55,18 +57,25 @@ class MiddlewareStackIntegrationTest extends TestCase
         $log = [];
 
         foreach (['auth', 'logging', 'cors'] as $name) {
-            $this->app->use($this->middleware(function ($request, $handler) use ($name, &$log) {
-                $log[] = "{$name}_start";
-                $response = $handler->handle($request);
-                $log[] = "{$name}_end";
-                return $response;
-            }));
+            $this->app->use(
+                $this->middleware(
+                    function ($request, $handler) use ($name, &$log) {
+                        $log[] = "{$name}_start";
+                        $response = $handler->handle($request);
+                        $log[] = "{$name}_end";
+                        return $response;
+                    }
+                )
+            );
         }
 
-        $this->app->get('/api/test', function ($req, $res) use (&$log) {
-            $log[] = 'route_handler';
-            return $res->json(['status' => 'success']);
-        });
+        $this->app->get(
+            '/api/test',
+            function ($req, $res) use (&$log) {
+                $log[] = 'route_handler';
+                return $res->json(['status' => 'success']);
+            }
+        );
 
         $this->app->boot();
         $response = $this->app->handle(new ServerRequest('GET', '/api/test'));
@@ -82,18 +91,30 @@ class MiddlewareStackIntegrationTest extends TestCase
     {
         $handled = false;
 
-        $this->app->use($this->middleware(function ($request, $handler) use (&$handled) {
-            try {
-                return $handler->handle($request);
-            } catch (\Exception $e) {
-                $handled = true;
-                return new Response(500, ['Content-Type' => 'application/json'], json_encode(['error' => $e->getMessage()]));
-            }
-        }));
+        $this->app->use(
+            $this->middleware(
+                function ($request, $handler) use (&$handled) {
+                    try {
+                        return $handler->handle($request);
+                    } catch (\Exception $e) {
+                        $handled = true;
+                        return new Response(
+                            500,
+                            ['Content-Type' => 'application/json'],
+                            json_encode(['error' => $e->getMessage()])
+                        );
+                    }
+                }
+            )
+        );
 
-        $this->app->use($this->middleware(static function ($request, $handler): ResponseInterface {
-            throw new \Exception('Middleware error');
-        }));
+        $this->app->use(
+            $this->middleware(
+                static function ($request, $handler): ResponseInterface {
+                    throw new \Exception('Middleware error');
+                }
+            )
+        );
 
         $this->app->get('/error', fn ($req, $res) => $res->json(['ok' => true]));
 
@@ -108,29 +129,42 @@ class MiddlewareStackIntegrationTest extends TestCase
     public function testRequestAndResponseModification(): void
     {
         // Middleware that modifies the request (PSR-7 immutable, returns new).
-        $this->app->use($this->middleware(static function ($request, $handler): ResponseInterface {
-            $request = $request
-                ->withAttribute('user_id', 123)
-                ->withAttribute('authenticated', true);
+        $this->app->use(
+            $this->middleware(
+                static function ($request, $handler): ResponseInterface {
+                    $request = $request
+                    ->withAttribute('user_id', 123)
+                    ->withAttribute('authenticated', true);
 
-            return $handler->handle($request);
-        }));
+                    return $handler->handle($request);
+                }
+            )
+        );
 
         // Middleware that modifies the response.
-        $this->app->use($this->middleware(static function ($request, $handler): ResponseInterface {
-            return $handler->handle($request)
-                ->withHeader('X-Custom-Header', 'middleware-added')
-                ->withHeader('X-Request-ID', uniqid());
-        }));
+        $this->app->use(
+            $this->middleware(
+                static function ($request, $handler): ResponseInterface {
+                    return $handler->handle($request)
+                    ->withHeader('X-Custom-Header', 'middleware-added')
+                    ->withHeader('X-Request-ID', uniqid());
+                }
+            )
+        );
 
-        $this->app->get('/modify', function ($req, $res) {
-            $psr7 = $req->psr7();
+        $this->app->get(
+            '/modify',
+            function ($req, $res) {
+                $psr7 = $req->psr7();
 
-            return $res->json([
-                'user_id' => $psr7->getAttribute('user_id'),
-                'authenticated' => $psr7->getAttribute('authenticated'),
-            ]);
-        });
+                return $res->json(
+                    [
+                        'user_id' => $psr7->getAttribute('user_id'),
+                        'authenticated' => $psr7->getAttribute('authenticated'),
+                    ]
+                );
+            }
+        );
 
         $this->app->boot();
         $response = $this->app->handle(new ServerRequest('GET', '/modify'));
@@ -148,14 +182,21 @@ class MiddlewareStackIntegrationTest extends TestCase
     {
         $routeCalled = false;
 
-        $this->app->use($this->middleware(static function ($request, $handler): ResponseInterface {
-            return new Response(403, ['Content-Type' => 'application/json'], '{"error":"forbidden"}');
-        }));
+        $this->app->use(
+            $this->middleware(
+                static function ($request, $handler): ResponseInterface {
+                    return new Response(403, ['Content-Type' => 'application/json'], '{"error":"forbidden"}');
+                }
+            )
+        );
 
-        $this->app->get('/secured', function ($req, $res) use (&$routeCalled) {
-            $routeCalled = true;
-            return $res->json(['ok' => true]);
-        });
+        $this->app->get(
+            '/secured',
+            function ($req, $res) use (&$routeCalled) {
+                $routeCalled = true;
+                return $res->json(['ok' => true]);
+            }
+        );
 
         $this->app->boot();
         $response = $this->app->handle(new ServerRequest('GET', '/secured'));
@@ -168,10 +209,14 @@ class MiddlewareStackIntegrationTest extends TestCase
     {
         $seen = [];
 
-        $this->app->use($this->middleware(function ($request, $handler) use (&$seen) {
-            $seen[] = $request->getMethod();
-            return $handler->handle($request);
-        }));
+        $this->app->use(
+            $this->middleware(
+                function ($request, $handler) use (&$seen) {
+                    $seen[] = $request->getMethod();
+                    return $handler->handle($request);
+                }
+            )
+        );
 
         $this->app->get('/m', fn ($req, $res) => $res->json(['m' => 'get']));
         $this->app->post('/m', fn ($req, $res) => $res->json(['m' => 'post']));

@@ -1,10 +1,9 @@
 <?php
 
 /**
- * 🎯 PivotPHP v1.1.3 - Array Callable Routes (NEW!)
- * 
- * Demonstrates the new array callable syntax introduced in v1.1.3
- * with full PHP 8.4+ compatibility and clean controller organization.
+ * PivotPHP — Array callable routes
+ *
+ * Controllers registered as [Controller::class, 'method'] or [$instance, 'method'].
  * 
  * 🚀 How to run:
  * php -S localhost:8000 examples/07-advanced/array-callables.php
@@ -60,9 +59,10 @@ class UserController
     
     public function store($req, $res) 
     {
-        $data = $req->getBodyAsStdClass();
-        
-        if (!isset($data->name) || !isset($data->email)) {
+        $name = $req->input('name');
+        $email = $req->input('email');
+
+        if (!is_string($name) || !is_string($email)) {
             return $res->status(400)->json([
                 'error' => 'Name and email are required'
             ]);
@@ -70,8 +70,8 @@ class UserController
         
         $newUser = [
             'id' => max(array_column($this->users, 'id')) + 1,
-            'name' => $data->name,
-            'email' => $data->email
+            'name' => $name,
+            'email' => $email
         ];
         
         $this->users[] = $newUser;
@@ -86,12 +86,10 @@ class UserController
     public function update($req, $res) 
     {
         $id = (int) $req->param('id');
-        $data = $req->getBodyAsStdClass();
-        
         foreach ($this->users as &$user) {
             if ($user['id'] === $id) {
-                $user['name'] = $data->name ?? $user['name'];
-                $user['email'] = $data->email ?? $user['email'];
+                $user['name'] = $req->input('name', $user['name']);
+                $user['email'] = $req->input('email', $user['email']);
                 
                 return $res->json([
                     'message' => 'User updated successfully',
@@ -169,8 +167,8 @@ class AdminController
     
     public static function logs($req, $res) 
     {
-        $level = $req->get('level', 'info');
-        $limit = (int) $req->get('limit', 10);
+        $level = $req->query('level', 'info');
+        $limit = (int) $req->query('limit', 10);
         
         $logs = [
             ['timestamp' => '2024-01-15 10:30:00', 'level' => 'info', 'message' => 'User login successful'],
@@ -206,7 +204,7 @@ class ProductController
     
     public static function index($req, $res) 
     {
-        $category = $req->get('category');
+        $category = $req->query('category');
         $products = self::$products;
         
         if ($category) {
@@ -244,7 +242,7 @@ $productController = new ProductController();
 // 🏠 Home route - Demonstrates available endpoints
 $app->get('/', function($req, $res) {
     return $res->json([
-        'title' => 'PivotPHP v1.1.3 - Array Callables Demo',
+        'title' => 'PivotPHP - Array Callables Demo',
         'features' => [
             'PHP 8.4+ compatibility',
             'callable|array union types',
@@ -276,7 +274,7 @@ $app->get('/', function($req, $res) {
             'Closure' => 'function($req, $res) { ... }'
         ],
         'version_info' => [
-            'framework' => 'PivotPHP Core v1.1.3',
+            'framework' => 'PivotPHP Core ' . Application::VERSION,
             'php_version' => PHP_VERSION,
             'array_callable_support' => 'YES'
         ]
@@ -302,7 +300,7 @@ $app->get('/products/featured', [$productController, 'featured']); // Instance
 // 🧪 Demonstration route - Shows all callable types
 $app->get('/demo/callables', function($req, $res) {
     return $res->json([
-        'demonstration' => 'All callable types in PivotPHP v1.1.3',
+        'demonstration' => 'All callable types supported by PivotPHP',
         'supported_formats' => [
             [
                 'type' => 'Closure',

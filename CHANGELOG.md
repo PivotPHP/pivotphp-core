@@ -5,6 +5,90 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.0.0] - 2026-10-10
+
+Release de ecossistema: o core mantém aplicação, pipeline e integração com o roteador; HTTP,
+roteamento e segurança ficam em `pivotphp/http`, `pivotphp/core-routing` e `pivotphp/security`.
+Otimizações sem efeito em PHP-FPM foram removidas. Migração: `docs/MIGRATION_GUIDE.md`.
+
+### Changed
+
+- **Camada HTTP delegada ao `pivotphp/http` (^1.0)**
+  ([SPEC-091](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-091-core-adopt-pivotphp-http.md)):
+  `Application::handle(?ServerRequestInterface): ResponseInterface`; rotas recebem
+  `ExpressRequest`/`ExpressResponse`; o corpo é parseado antes da pipeline; `run()` emite via
+  `SapiEmitter`. Middlewares são PSR-15 ou callables `fn ($req, $res, $next)` em que `$req` é a
+  requisição PSR-7.
+- **Segurança delegada ao `pivotphp/security` (^1.0)**, agora dependência direta
+  ([SPEC-092](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-092-core-delegate-security.md)).
+- **`pivotphp/core-routing` ^2.2**: `405` + `Allow` para caminho conhecido com outro método, `OPTIONS`
+  respondido com `204` + `Allow`, `HEAD` usa a rota `GET` (SPEC-072).
+- Os service providers do core (eventos, hooks, extensões, logging) são registrados no construtor:
+  listeners, hooks e extensões adicionados antes do `boot()` passam a funcionar (antes eram
+  descartados em silêncio ou lançavam exceção).
+- Os handlers de erro/exceção do PHP são instalados só por `run()` e restaurados ao final; `handle()`
+  não altera mais estado global.
+- Requisitos: `php` `^8.1`; `ext-mbstring` obrigatório (usado por `Support\Str`); `ext-pdo` sugerido
+  (`Database`).
+
+### Fixed
+
+- Middleware callable: `$next($request)` agora repassa a requisição alterada (era ignorada) e a
+  pipeline roda uma única vez quando o middleware chama `$next()` sem retornar o resultado (a rota
+  executava duas vezes).
+- Corpo JSON malformado responde `400` em vez de lançar exceção para fora de `handle()`.
+- Headers da `HttpException` (ex.: `Retry-After`) são aplicados à resposta de erro.
+- Análise estática com PHPStan 2 (nível 9): valores `mixed` de configuração/ambiente estreitados em
+  `Application::basePath()`, `Config`, `PsrLogger`, `LoggingServiceProvider` e `Arr::groupBy()`;
+  `Validator` rejeita regras que não sejam string.
+
+### Removed
+
+- **Implementação HTTP própria** (`src/Http`: classes PSR-7, `Request`/`Response` híbridos, adapters,
+  helpers PSR-15) e o legado `Middleware\Core\BaseMiddleware`/`MiddlewareInterface`.
+- **Middlewares de segurança nativos**, substituídos pelo `pivotphp/security`:
+  `Middleware\Http\CorsMiddleware`, `Middleware\Security\AuthMiddleware`, `CsrfMiddleware`,
+  `SecurityHeadersMiddleware` e `XssMiddleware` (sem substituto: escape de saída + CSP),
+  `Authentication\JWTHelper` (emissão: `Jwt\JwtIssuer`) e `Utils::csrfToken()`/`Utils::checkCsrf()`.
+  Resolvem as SPECs 054, 055, 060, 063 (preflight), 064, 065, 067, 068 e 075.
+- **`PivotPHP\Core\Middleware\RateLimiter` e o alias de middleware `'rate-limiter'`** — removidos por
+  **falha de segurança em PHP-FPM**: os contadores ficavam em memória da própria instância e a opção
+  `storage` (`redis`/`apcu`) era ignorada. Como o PHP-FPM recria o estado a cada requisição, o contador
+  zerava a cada requisição e **o limite nunca era atingido** — a aplicação ficava sem proteção contra
+  abuso/força bruta, embora o middleware estivesse registrado. Recursos removidos junto: estratégias
+  (fixed/sliding window, token/leaky bucket), `whitelist`, `blacklist`, `reject_response` e
+  `key_generator`.
+  **Migração:** use `PivotPHP\Security\RateLimit\RateLimitMiddleware` do pacote `pivotphp/security`
+  (armazenamento compartilhado + lock do `symfony/rate-limiter`), com `TrustedProxyMiddleware` para o IP
+  do cliente.
+  ([SPEC-093](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-093-core-ratelimiter-fpm-validation.md))
+- **`Middleware\Performance\CacheMiddleware`** — falhas de segurança e correção: a chave de cache
+  ignorava `Authorization`/cookies (a resposta de um usuário era servida a outro, com
+  `Cache-Control: public`), métodos inseguros e respostas de erro eram guardados, `unserialize()` lia
+  arquivos de um diretório gravável por todos, e todo acerto de cache falhava porque streams PSR-7 não
+  sobrevivem à serialização.
+- **`Middleware\Http\ErrorMiddleware`** — expunha mensagens de exceção ao cliente e sempre respondia
+  `500`; a `Application` já converte exceções (status correto, `error_id`, detalhes só em debug).
+- `src/aliases.php` (nunca era carregado: os aliases `PivotPHP\Core\Routing\*` e
+  `PivotPHP\Core\Application` não existiam em tempo de execução), `Contracts\JsonOptimizerInterface`,
+  `Cache\*` (`CacheInterface`, `FileCache`, `MemoryCache`) e `Database\PDOConnection` (duplicata sem
+  uso do `Database`).
+- Terceiro argumento `$config` de `registerExtension()` (era ignorado).
+- Requisitos `ext-session`, `psr/cache`, `psr/simple-cache`; dependências de desenvolvimento
+  `laminas/laminas-diactoros` e `httpsoft/http-message`.
+- Testes que cobriam classes do `pivotphp/core-routing` (migrados para lá), testes baseados em tempo,
+  workflow e arquivos Docker de benchmark, `debug_ttl.php`, `PERFORMANCE_RESULTS.md`, o script de
+  troca de versão PSR-7 e a documentação de funcionalidades removidas.
+
+### Tests
+
+- `tests/Integration/ExamplesTest.php` sobe cada exemplo com `php -S` e verifica suas rotas via HTTP;
+  exemplos reescritos para a API 4.0.
+- Testes de integração para `pivotphp/security`, `$next` de callables, corpo malformado, headers de
+  `HttpException`, handlers globais e registro antes do boot.
+- Suítes do PHPUnit sem sobreposição (a suíte CI excluía os testes de integração); o CI roda PHP 8.1
+  (lowest), 8.3 e 8.4 com `composer audit`; o workflow de release tem `contents: write`.
+
 ## [3.1.0] - 2026-10-10
 
 ### Changed

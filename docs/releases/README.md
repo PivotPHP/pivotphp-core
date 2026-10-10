@@ -4,28 +4,12 @@ Este diretório contém a documentação completa de todas as versões do PivotP
 
 ## 📚 Versão Atual
 
-### 🆕 v1.1.4 - Janeiro 2025
-**[FRAMEWORK_OVERVIEW_v1.1.4.md](FRAMEWORK_OVERVIEW_v1.1.4.md)**
+### 🆕 v4.0.0 - Outubro 2026
+**[FRAMEWORK_OVERVIEW_v4.0.0.md](FRAMEWORK_OVERVIEW_v4.0.0.md)** — release de ecossistema
+(`pivotphp/http`, `pivotphp/core-routing`, `pivotphp/security`). Migração:
+[MIGRATION_GUIDE.md](../MIGRATION_GUIDE.md).
 
-**Destaques:**
-- 🔧 **Script Consolidation**: 40% redução no número de scripts (25 → 15)
-- 📦 **Automatic Versioning**: Detecção automática via arquivo VERSION obrigatório
-- 🚀 **GitHub Actions Optimized**: Workflows consolidados e corrigidos
-- 📚 **Comprehensive Documentation**: Guia completo de versionamento (315 linhas)
-- ✅ **Infrastructure Excellence**: Base sólida para desenvolvimento futuro
-- ✅ **100% Backward Compatible**: Nenhuma breaking change
-
-**Novos recursos:**
-- Sistema automático de gerenciamento de versões com `version-bump.sh`
-- Biblioteca compartilhada `scripts/utils/version-utils.sh`
-- Script consolidado `quality-check.sh` para validação completa
-- Validação rigorosa do arquivo VERSION com formato X.Y.Z
-- Documentação completa de versionamento semântico
-
-**Documentação específica:**
-- [📖 Release Notes](v1.1.4/RELEASE_NOTES.md)
-- [🔄 Migration Guide](v1.1.4/MIGRATION_GUIDE.md)
-- [📝 Detailed Changelog](v1.1.4/CHANGELOG.md)
+Notas completas de todas as versões: [CHANGELOG](../../CHANGELOG.md).
 
 ## 📈 Histórico de Versões
 

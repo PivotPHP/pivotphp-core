@@ -33,9 +33,7 @@ $app->get('/', function($req, $res) {
 $app->run();
 ```
 
-> **Compatibilidade**: `PivotPHP\Core\Application` também funciona como alias de
-> `PivotPHP\Core\Core\Application` (retrocompatibilidade). O FQCN canônico é
-> `PivotPHP\Core\Core\Application`.
+> O FQCN da aplicação é `PivotPHP\Core\Core\Application`.
 
 ### Configuração Avançada
 
@@ -73,7 +71,7 @@ Registra uma rota POST.
 
 ```php
 $app->post('/users', function($req, $res) {
-    $data = $req->body();
+    $data = $req->psr7()->getParsedBody();
     $user = $userService->create($data);
     return $res->status(201)->json($user);
 });
@@ -85,7 +83,7 @@ Registra uma rota PUT para atualizações completas.
 ```php
 $app->put('/users/:id', function($req, $res) {
     $id = $req->params('id');
-    $data = $req->body();
+    $data = $req->psr7()->getParsedBody();
     $user = $userService->update($id, $data);
     return $res->json($user);
 });
@@ -97,7 +95,7 @@ Registra uma rota PATCH para atualizações parciais.
 ```php
 $app->patch('/users/:id', function($req, $res) {
     $id = $req->params('id');
-    $data = $req->body();
+    $data = $req->psr7()->getParsedBody();
     $user = $userService->partialUpdate($id, $data);
     return $res->json($user);
 });
@@ -129,9 +127,10 @@ $app->use(function($req, $res, $next) {
     return $response;
 });
 
-// Middleware de classe
-$app->use(AuthMiddleware::class);
-$app->use(new CorsMiddleware());
+// Middleware de classe (resolvido pelo container quando registrado)
+$app->use(MyAuthMiddleware::class);
+// Middleware PSR-15 instanciado (ex.: pivotphp/security)
+$app->use(new \PivotPHP\Security\Headers\SecurityHeadersMiddleware());
 ```
 
 #### `register($provider)`
@@ -251,7 +250,7 @@ $app->register(MyServiceProvider::class);
 ### 2. Definição de Rotas e Middlewares
 
 ```php
-$app->use(AuthMiddleware::class);
+$app->use(MyAuthMiddleware::class);
 $app->get('/api/users', [UserController::class, 'index']);
 ```
 
@@ -362,21 +361,23 @@ $eventDispatcher = $container->get(EventDispatcherInterface::class); // PSR-14
 ### Hooks e Eventos
 
 ```php
-// Registrar hook
-$app->hook('before_route', function($req, $res) {
-    // Lógica antes do roteamento
-});
+// Hook (ações/filtros da aplicação)
+$app->addAction('order.created', fn (array $context) => notify($context['id']));
+$app->doAction('order.created', ['id' => 42]);
 
-// Disparar evento customizado
-$app->dispatch(new UserCreated($user));
+// Evento PSR-14
+$app->on(UserCreated::class, fn (UserCreated $event) => audit($event));
+$app->dispatchEvent(new UserCreated($user));
 ```
 
 ### Extensões
 
 ```php
-// Carregar extensão
-$app->loadExtension(MyCustomExtension::class);
+$app->register(MyCustomProvider::class);                     // service provider
+$app->registerExtension('custom', MyCustomProvider::class);  // provider registrado com nome
 ```
+
+Detalhes: [extensions/README.md](extensions/README.md).
 
 ## Performance e Otimização
 

@@ -83,8 +83,7 @@ print_status "Validando estrutura principal de documentação..."
 validate_directory "docs" "Diretório principal docs/"
 validate_directory "docs/releases" "Diretório de releases"
 validate_directory "docs/technical" "Diretório técnico"
-validate_directory "docs/performance" "Diretório de performance"
-validate_directory "docs/implementations" "Diretório de implementações"
+validate_directory "docs/reference" "Diretório de referência"
 validate_directory "docs/testing" "Diretório de testes"
 validate_directory "docs/contributing" "Diretório de contribuição"
 
@@ -118,8 +117,8 @@ validate_file "docs/technical/middleware/README.md" "Índice de middlewares" 500
 validate_file "docs/technical/authentication/usage_native.md" "Autenticação nativa" 10000
 
 # Verificar documentação OpenAPI
-if [ -f "docs/technical/http/openapi_documentation.md" ]; then
-    validate_file "docs/technical/http/openapi_documentation.md" "Documentação OpenAPI" 5000
+if [ -f "docs/technical/middleware/API_DOCUMENTATION_MIDDLEWARE.md" ]; then
+    validate_file "docs/technical/middleware/API_DOCUMENTATION_MIDDLEWARE.md" "Documentação OpenAPI" 5000
 else
     print_warning "Documentação OpenAPI não encontrada (opcional)"
     ((WARNINGS++))
@@ -128,13 +127,11 @@ fi
 echo ""
 print_status "Validando documentação de implementações..."
 
-validate_file "docs/implementations/usage_basic.md" "Guia básico de uso" 5000
+validate_file "docs/reference/examples.md" "Catálogo de exemplos" 1000
 
 echo ""
 print_status "Validando documentação de performance..."
 
-validate_file "docs/performance/PerformanceMonitor.md" "Monitor de performance" 5000
-validate_file "docs/performance/benchmarks/README.md" "Documentação de benchmarks" 10000
 
 echo ""
 print_status "Validando documentação de testes..."
@@ -231,8 +228,7 @@ if [ $ERRORS -eq 0 ]; then
     echo "   • Início: docs/index.md"
     echo "   • Releases: docs/releases/"
     echo "   • Técnico: docs/technical/"
-    echo "   • Performance: docs/performance/"
-    echo "   • Implementações: docs/implementations/"
+    echo "   • Exemplos: docs/reference/examples.md"
     echo "   • Testes: docs/testing/"
     echo "   • Contribuição: docs/contributing/"
 

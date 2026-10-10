@@ -209,34 +209,6 @@ class UtilsTest extends TestCase
         $this->assertNotEquals($token1, Utils::randomToken());
     }
 
-    public function testCsrfToken(): void
-    {
-        // Test CSRF token generation
-        $token1 = Utils::csrfToken();
-        $this->assertIsString($token1);
-        $this->assertEquals(32, strlen($token1));
-
-        // Test that subsequent calls return the same token
-        $token2 = Utils::csrfToken();
-        $this->assertEquals($token1, $token2);
-    }
-
-    public function testCheckCsrf(): void
-    {
-        // Generate a CSRF token
-        $token = Utils::csrfToken();
-
-        // Test valid token
-        $this->assertTrue(Utils::checkCsrf($token));
-
-        // Test invalid token
-        $this->assertFalse(Utils::checkCsrf('invalid_token'));
-        $this->assertFalse(Utils::checkCsrf(''));
-
-        // Test with different token
-        $this->assertFalse(Utils::checkCsrf(Utils::randomToken()));
-    }
-
     public function testAdvancedSanitization(): void
     {
         // Test complex HTML sanitization - strip_tags removes all HTML tags

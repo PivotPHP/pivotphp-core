@@ -36,12 +36,10 @@ Scripts para gerenciamento de versões e releases:
 
 ### 🧪 [testing/](./testing/)
 Scripts para execução de testes especializados:
-- `run_stress_tests.sh` - Testes de stress
 - `test-all-php-versions.sh` - Testes multi-versão PHP
 
 ### 🛠️ [utils/](./utils/)
 Scripts utilitários para manutenção:
-- `switch-psr7-version.php` - Alternância de versões PSR-7
 - `version-utils.sh` - Utilitários de versão
 
 ## Fluxo de Desenvolvimento
@@ -72,8 +70,6 @@ Scripts utilitários para manutenção:
 # Validação rápida para CI
 ./scripts/quality/quality-check.sh
 
-# Testes de stress para validação completa
-./scripts/testing/run_stress_tests.sh
 ```
 
 ## Convenções

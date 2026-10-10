@@ -37,8 +37,9 @@ class LoggingServiceProvider extends ServiceProvider
     private function getLogPath(): string
     {
         // Try to get from environment or config
-        if (isset($_ENV['LOG_PATH'])) {
-            return $_ENV['LOG_PATH'];
+        $envPath = $_ENV['LOG_PATH'] ?? null;
+        if (is_string($envPath) && $envPath !== '') {
+            return $envPath;
         }
 
         // Default to logs directory in project root

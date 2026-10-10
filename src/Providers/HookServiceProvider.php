@@ -49,21 +49,10 @@ class HookServiceProvider extends ServiceProvider
         /** @var HookManager $hooks */
         $hooks = $this->app->make(HookManager::class);
 
-        // Application lifecycle hooks
+        // The only hooks fired by the core itself; applications may fire their own
+        // with doAction()/applyFilter().
         $hooks->doAction('app.registered');
         $hooks->doAction('app.booting');
-
-        // These would be triggered at appropriate points in Application class
-        // Example usage for extensions:
-
-        // $hooks->addAction('app.booted', function($context) {
-        //     // Extension initialization code
-        // });
-
-        // $hooks->addFilter('request.middleware', function($middlewares, $context) {
-        //     // Add custom middlewares
-        //     return $middlewares;
-        // });
     }
 
     /**

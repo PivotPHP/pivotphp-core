@@ -328,14 +328,18 @@ The middleware includes built-in error handling:
 The `ApiDocumentationMiddleware` works seamlessly with other PivotPHP middleware:
 
 ```php
-// Add authentication middleware
-$app->use(new AuthMiddleware());
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
+use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig};
+
+$factory = new Psr17Factory();
+
+// Security middlewares from pivotphp/security
+$app->use(new CorsMiddleware($factory, new CorsConfig(['https://app.example.com'])));
+$app->use(new JwtAuthMiddleware($factory, new JwtConfig($_ENV['JWT_SECRET'], publicPaths: ['/docs', '/swagger*'])));
 
 // Add documentation middleware (will document all routes)
 $app->use(new ApiDocumentationMiddleware());
-
-// Add CORS middleware
-$app->use(new CorsMiddleware());
 ```
 
 ## Advanced Usage

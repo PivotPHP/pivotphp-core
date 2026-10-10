@@ -192,7 +192,7 @@ class HookManager
         $listenerProvider = $this->app->make('listeners');
 
         // Remove listener antigo, se existir
-        if (isset($this->psrListeners[$hook]) && $this->psrListeners[$hook] !== null) {
+        if (isset($this->psrListeners[$hook])) {
             $listenerProvider->removeListener(Hook::class, $this->psrListeners[$hook]);
         }
 

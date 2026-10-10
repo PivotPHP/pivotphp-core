@@ -1,56 +1,39 @@
-# SecurityMiddleware (não existe mais)
+# Middlewares de segurança (removido do core na 4.0.0)
 
-> ⚠️ **Página corrigida.** Esta página documentava anteriormente uma classe `SecurityMiddleware`
-> com opções de configuração extensas (`development()`/`production()`/`strict()`,
-> `customHeaders`, `contentSecurityPolicy`, etc.) que **não existe em `src/`**. Uma classe
-> `SecurityMiddleware` chegou a existir no histórico do projeto (commit `d94de55`), mas foi
-> substituída por `SecurityHeadersMiddleware`, uma implementação bem mais simples, antes da
-> v2.0.0. O conteúdo anterior desta página não corresponde a nenhuma versão real do código —
-> foi substituído pelo conteúdo abaixo, que reflete a classe real.
+> Os middlewares de segurança nativos do core (`CorsMiddleware`, `AuthMiddleware`, `CsrfMiddleware`,
+> `SecurityHeadersMiddleware`, `XssMiddleware`), o `JWTHelper` e os helpers `Utils::csrfToken()`/
+> `Utils::checkCsrf()` foram **removidos na v4.0.0**. A segurança agora vem do pacote
+> [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security), instalado como dependência do core.
 
-## SecurityHeadersMiddleware
+## Equivalência
 
-**Localização real**: `src/Middleware/Security/SecurityHeadersMiddleware.php`
-**Namespace**: `PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware`
+| Antes (core ≤ 3.x) | Agora (`pivotphp/security`) |
+|---|---|
+| `Middleware\Http\CorsMiddleware` | `PivotPHP\Security\Cors\CorsMiddleware` + `CorsConfig` |
+| `Middleware\Security\SecurityHeadersMiddleware` | `PivotPHP\Security\Headers\SecurityHeadersMiddleware` + `SecurityHeadersConfig` |
+| `Middleware\Security\CsrfMiddleware`, `Utils::csrfToken()`/`checkCsrf()` | `PivotPHP\Security\Csrf\CsrfMiddleware` (tokens do `yiisoft/csrf`) |
+| `Middleware\Security\AuthMiddleware` (JWT) | `PivotPHP\Security\Jwt\JwtAuthMiddleware` + `JwtConfig` |
+| `Authentication\JWTHelper::encode()` | `PivotPHP\Security\Jwt\JwtIssuer::issue()` |
+| `Middleware\RateLimiter` | `PivotPHP\Security\RateLimit\RateLimitMiddleware` (+ `Proxy\TrustedProxyMiddleware`) |
+| `Middleware\Security\XssMiddleware` | sem substituto — escape a saída e use CSP (`SecurityHeadersMiddleware`) |
 
-```php
-use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
+Autenticação Basic, Bearer opaco ou API key: escreva um middleware PSR-15 próprio
+(veja [CustomMiddleware.md](CustomMiddleware.md)).
 
-$app->use(new SecurityHeadersMiddleware());
-```
-
-A classe não aceita parâmetros de configuração — `__construct()` não tem argumentos, e os
-métodos estáticos `create()`, `strict()`, `csrfOnly()`, `xssOnly()` existem apenas por
-compatibilidade e todos retornam `new self()` (nenhum aplica configuração diferente).
-
-**Headers adicionados** (fixos):
-- `X-Frame-Options: DENY`
-- `X-Content-Type-Options: nosniff`
-- `X-XSS-Protection: 1; mode=block`
-
-Não há suporte a Content-Security-Policy, HSTS, ou headers customizáveis nesta classe.
-
-## Proteções relacionadas (classes separadas)
-
-O que a documentação antiga descrevia como "opções" de `SecurityMiddleware` (CSRF, XSS) são,
-na implementação real, **middlewares independentes**:
-
-- `PivotPHP\Core\Middleware\Security\CsrfMiddleware` — proteção CSRF
-  (`src/Middleware/Security/CsrfMiddleware.php`)
-- `PivotPHP\Core\Middleware\Security\XssMiddleware` — proteção XSS
-  (`src/Middleware/Security/XssMiddleware.php`)
+## Exemplo
 
 ```php
-use PivotPHP\Core\Middleware\Security\{SecurityHeadersMiddleware, CsrfMiddleware, XssMiddleware};
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
+use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
+use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig};
+
+$factory = new Psr17Factory();
 
 $app->use(new SecurityHeadersMiddleware());
-$app->use(new CsrfMiddleware());
-$app->use(new XssMiddleware());
+$app->use(new CorsMiddleware($factory, new CorsConfig(['https://app.example.com'], allowCredentials: true)));
+$app->use(new JwtAuthMiddleware($factory, new JwtConfig($_ENV['JWT_SECRET'], publicPaths: ['/health'])));
 ```
 
-Consulte o código-fonte de cada classe para as opções de configuração reais antes de usá-las
-em produção.
-
-## Ver também
-
-- [Middlewares README](README.md) - visão geral dos middlewares do framework
+Opções, ordem recomendada e avisos de segurança: [README do pivotphp/security](https://github.com/PivotPHP/pivotphp-security#readme).
+Mudanças de comportamento em relação aos middlewares antigos: [MIGRATION_GUIDE.md](../../MIGRATION_GUIDE.md).

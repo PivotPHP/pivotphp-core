@@ -216,36 +216,6 @@ class Utils
     }
 
     /**
-     * Gera um token CSRF.
-     *
-     * @return string
-     */
-    public static function csrfToken(): string
-    {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        if (empty($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = self::randomToken(32);
-        }
-        return $_SESSION['csrf_token'];
-    }
-
-    /**
-     * Verifica um token CSRF.
-     *
-     * @param  string $token
-     * @return bool
-     */
-    public static function checkCsrf(string $token): bool
-    {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
-        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
-    }
-
-    /**
      * Converte string para camelCase.
      *
      * @param  string $string

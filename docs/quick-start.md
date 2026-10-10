@@ -40,7 +40,7 @@ $app->get('/users/:id', function($req, $res) {
 
 // JSON POST endpoint
 $app->post('/users', function($req, $res) {
-    $userData = $req->getBodyAsStdClass();
+    $userData = $req->psr7()->getParsedBody();
     return $res->status(201)->json([
         'message' => 'User created',
         'data' => $userData
@@ -105,29 +105,27 @@ $app->get('/api/data', function($req, $res) {
 
 ## 🛡️ Adding Security
 
-Add essential security middleware:
+Security middlewares come from [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security)
+(installed with the core):
 
 ```php
-use PivotPHP\Core\Middleware\Security\{CsrfMiddleware, SecurityHeadersMiddleware};
-use PivotPHP\Core\Middleware\Http\CorsMiddleware;
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
+use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
 
-// Security middleware
+$factory = new Psr17Factory();
+
 $app->use(new SecurityHeadersMiddleware());
-$app->use(new CorsMiddleware([
-    'origin' => 'https://yourfrontend.com',      // string or array of allowed origins
-    'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
-    'headers' => ['Content-Type', 'Authorization'],
-]));
-// Config keys are: origin, methods, headers, credentials, max_age, expose_headers.
-// (Keys like 'allowed_origins'/'allowed_methods' from older examples are silently
-// ignored — array_merge() doesn't validate unknown keys — so double-check spelling.)
-
-// CSRF protection for forms
-// CsrfMiddleware takes a single string $fieldName (default '_csrf_token'), not an
-// options array — there is no built-in 'exclude_paths' exclusion; checks apply to
-// every POST request. Scope it yourself (e.g. only add it inside a non-API route group).
-$app->use(new CsrfMiddleware());
+$app->use(new CorsMiddleware($factory, new CorsConfig(
+    allowedOrigins: ['https://yourfrontend.com'],
+    allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+)));
 ```
+
+Invalid settings (e.g. `'*'` with credentials) throw at boot. For CSRF (cookie-based auth), JWT,
+rate limiting and trusted proxies, see the
+[pivotphp/security README](https://github.com/PivotPHP/pivotphp-security#readme).
 
 ## 🔍 Route Patterns
 
@@ -183,24 +181,6 @@ $app->getConfig()->setConfigPath(__DIR__ . '/config')->loadAll();
 $debug = $app->getConfig()->get('app.debug');
 ```
 
-## 📊 Performance Monitoring
-
-Enable performance monitoring for production:
-
-```php
-use PivotPHP\Core\Performance\PerformanceMode;
-
-// Enable performance mode
-PerformanceMode::enable(PerformanceMode::PROFILE_PRODUCTION);
-
-// Get performance metrics
-$app->get('/metrics', function($req, $res) {
-    $monitor = PerformanceMode::getMonitor();
-    $metrics = $monitor->getPerformanceMetrics();
-    return $res->json($metrics);
-});
-```
-
 ## 🧪 Testing Your API
 
 Create `tests/BasicTest.php`:
@@ -245,11 +225,15 @@ Agora que você tem uma API básica funcionando, explore recursos para enriquece
 Para expandir suas provas de conceito:
 
 ```php
-// Adicionar autenticação JWT para demos
-$app->use(new AuthMiddleware([
-    'authMethods' => ['jwt'],
-    'jwtSecret' => 'demo_secret_key'
-]));
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
+use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
+use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig};
+
+$factory = new Psr17Factory();
+
+// Adicionar autenticação JWT (pivotphp/security); segredo com ≥ 32 bytes
+$app->use(new JwtAuthMiddleware($factory, new JwtConfig($_ENV['JWT_SECRET'])));
 
 // Documentação automática (essencial para apresentações)
 $app->use(new ApiDocumentationMiddleware([
@@ -259,7 +243,7 @@ $app->use(new ApiDocumentationMiddleware([
 
 // Middleware de segurança para protótipos profissionais
 $app->use(new SecurityHeadersMiddleware());
-$app->use(new CorsMiddleware(['allowed_origins' => ['*']]));
+$app->use(new CorsMiddleware($factory, new CorsConfig(['*'])));
 ```
 
 ## 🆘 Suporte e Aprendizado

@@ -67,8 +67,8 @@ class ApplicationTest extends TestCase
     public function testApplicationInitialization(): void
     {
         $this->assertInstanceOf(Application::class, $this->app);
-        $this->assertEquals('3.1.0', Application::VERSION);
-        $this->assertEquals('3.1.0', $this->app->version());
+        $this->assertSame(trim((string) file_get_contents(__DIR__ . '/../../VERSION')), Application::VERSION);
+        $this->assertSame(Application::VERSION, $this->app->version());
         $this->assertFalse($this->app->isBooted());
     }
 
@@ -238,7 +238,8 @@ class ApplicationTest extends TestCase
         $property->setAccessible(true);
         $aliases = $property->getValue($this->app);
 
-        $this->assertArrayHasKey('rate-limiter', $aliases);
+        // 'rate-limiter' removed in 4.0.0: the RateLimiter did not limit under PHP-FPM (SPEC-093)
+        $this->assertArrayNotHasKey('rate-limiter', $aliases);
 
         // Circuit breaker removed following ARCHITECTURAL_GUIDELINES
         $this->assertArrayNotHasKey('circuit-breaker', $aliases);

@@ -171,28 +171,6 @@ class ArrayCallableIntegrationTest extends TestCase
     /**
      * @test
      */
-    public function testArrayCallablePerformance(): void
-    {
-        $start = microtime(true);
-
-        // Make multiple requests to array callable route
-        for ($i = 0; $i < 10; $i++) {
-            $uniqueId = substr(md5(__CLASS__ . '::setupRoutes'), 0, 8);
-            $request = new ServerRequest('GET', "/health-{$uniqueId}");
-            $response = $this->app->handle($request);
-            $this->assertEquals(200, $response->getStatusCode());
-        }
-
-        $end = microtime(true);
-        $duration = ($end - $start) * 1000; // Convert to milliseconds
-
-        // Should be reasonably fast (less than 100ms for 10 requests)
-        $this->assertLessThan(100, $duration, "Array callable routing took too long: {$duration}ms");
-    }
-
-    /**
-     * @test
-     */
     public function testMultipleControllersAndMethods(): void
     {
         // Create another controller

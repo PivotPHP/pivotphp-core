@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -13,13 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.1', '8.3']
-        deps: ['lowest', 'highest']
-        exclude:
+        include:
           - php: '8.1'
-            deps: 'highest'
-          - php: '8.3'
             deps: 'lowest'
+          - php: '8.3'
+            deps: 'highest'
+          - php: '8.4'
+            deps: 'highest'
 
     steps:
     - name: Checkout
@@ -29,7 +32,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        extensions: mbstring, xml, ctype, json, session, pdo, pdo_sqlite, pdo_mysql, pdo_pgsql
+        extensions: mbstring, json, openssl, pdo, pdo_sqlite
         coverage: none
 
     - name: Cache Composer dependencies
@@ -45,14 +48,17 @@ jobs:
         if [ "${{ matrix.deps }}" = "lowest" ]; then
           composer update --prefer-lowest --prefer-stable --no-progress --no-interaction
         else
-          composer install --prefer-dist --no-progress --no-interaction
+          composer update --prefer-stable --no-progress --no-interaction
         fi
 
     - name: Validate composer.json
       run: composer validate --strict
 
-    - name: Run PHPUnit (CI suite)
-      run: vendor/bin/phpunit --testsuite=CI
+    - name: Audit dependencies
+      run: composer audit
+
+    - name: Run PHPUnit (unit + integration)
+      run: vendor/bin/phpunit
 
     - name: Run PHPStan (Level 9)
       run: vendor/bin/phpstan analyse --no-progress

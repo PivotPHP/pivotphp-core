@@ -28,7 +28,10 @@ tests/
 <?php
 // tests/TestCase.php
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
+use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
+use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig, JwtIssuer};
 use PHPUnit\Framework\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -46,7 +49,7 @@ class TestCase extends BaseTestCase
     {
         // Configuração padrão para testes
         $this->app->use(new SecurityHeadersMiddleware());
-        $this->app->use(new CorsMiddleware());
+        $this->app->use(new CorsMiddleware(new Psr17Factory(), new CorsConfig(['https://app.test'])));
     }
 
     protected function makeRequest(string $method, string $uri, array $data = []): array
@@ -94,7 +97,7 @@ class UsersApiTest extends TestCase
     public function test_pode_criar_usuario(): void
     {
         $this->app->post('/api/users', function($req, $res) {
-            $userData = $req->body;
+            $userData = $req->psr7()->getParsedBody();
 
             // Simular criação no banco
             $user = [
@@ -121,7 +124,7 @@ class UsersApiTest extends TestCase
     public function test_valida_dados_obrigatorios(): void
     {
         $this->app->post('/api/users', function($req, $res) {
-            if (empty($req->body['name'])) {
+            if (empty($req->input('name'))) {
                 $res->status(400)->json(['error' => 'Nome é obrigatório']);
                 return;
             }
@@ -143,13 +146,12 @@ class UsersApiTest extends TestCase
 ```php
 public function test_rota_protegida_requer_autenticacao(): void
 {
-    $this->app->use(new AuthMiddleware([
-        'authMethods' => ['jwt'],
-        'jwtSecret' => 'test-secret'
-    ]));
+    // pivotphp/security: segredo HS256 com ≥ 32 bytes
+    $config = new JwtConfig('a-32-bytes-long-secret-for-tests');
+    $this->app->use(new JwtAuthMiddleware(new Psr17Factory(), $config));
 
     $this->app->get('/api/protected', function($req, $res) {
-        $res->json(['message' => 'Rota protegida', 'user' => $req->user]);
+        $res->json(['message' => 'Rota protegida', 'user' => $req->psr7()->getAttribute('user')]);
     });
 
     // Sem token
@@ -157,7 +159,7 @@ public function test_rota_protegida_requer_autenticacao(): void
     $this->assertEquals(401, $response['status']);
 
     // Com token válido
-    $token = $this->generateJWT(['user_id' => 1], 'test-secret');
+    $token = (new JwtIssuer($config))->issue(['user_id' => 1], 60);
     $response = $this->makeRequestWithAuth('GET', '/api/protected', [], $token);
     $this->assertEquals(200, $response['status']);
 }
@@ -236,7 +238,7 @@ class CrudApiTest extends TestCase
 
         // POST /users - Criar
         $this->app->post('/users', function($req, $res) {
-            $data = $req->body;
+            $data = $req->psr7()->getParsedBody();
             $id = count($this->mockUsers) + 1;
             $user = array_merge(['id' => $id], $data);
             $this->mockUsers[$id] = $user;
@@ -250,7 +252,7 @@ class CrudApiTest extends TestCase
                 $res->status(404)->json(['error' => 'Usuário não encontrado']);
                 return;
             }
-            $this->mockUsers[$id] = array_merge($this->mockUsers[$id], $req->body);
+            $this->mockUsers[$id] = array_merge($this->mockUsers[$id], $req->psr7()->getParsedBody());
             $res->json(['user' => $this->mockUsers[$id]]);
         });
 

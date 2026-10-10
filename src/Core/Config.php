@@ -214,13 +214,18 @@ class Config
     {
         $result = preg_replace_callback(
             '/\$\{([^}]+)\}/',
-            function ($matches) {
-                $envVar = $matches[1];
-                $parts = explode(':', $envVar, 2);
+            static function (array $matches): string {
+                $parts = explode(':', $matches[1], 2);
                 $varName = $parts[0];
                 $defaultValue = $parts[1] ?? '';
 
-                return $_ENV[$varName] ?? getenv($varName) ?: $defaultValue;
+                if (array_key_exists($varName, $_ENV)) {
+                    return is_scalar($_ENV[$varName]) ? (string) $_ENV[$varName] : $defaultValue;
+                }
+
+                $env = getenv($varName);
+
+                return is_string($env) && $env !== '' ? $env : $defaultValue;
             },
             $value
         );

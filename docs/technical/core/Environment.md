@@ -204,29 +204,11 @@ if ($_ENV['APP_ENV'] === 'development' || $_ENV['APP_DEBUG']) {
 }
 ```
 
-### 2. Environment-Specific Features
+### 2. Environment-Specific Configuration
 
 ```php
-// Feature flags based on environment
-if (Environment::isDevelopment()) {
-    $app->enableDebugMode();
-    $app->disableCaching();
-}
-
-if (Environment::isProduction()) {
-    $app->enableOptimizations();
-    $app->disableDebugInfo();
-}
-```
-
-### 3. Testing Environment
-
-```php
-// Test-specific configuration
-if (Environment::isTesting()) {
-    $app->useInMemoryDatabase();
-    $app->disableExternalServices();
-}
+// Debug output only outside production
+$app->getConfig()->set('app.debug', Environment::isDevelopment());
 ```
 
 ## Performance Considerations

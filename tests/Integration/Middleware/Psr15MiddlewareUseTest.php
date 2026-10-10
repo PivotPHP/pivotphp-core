@@ -46,23 +46,4 @@ class Psr15MiddlewareUseTest extends TestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('yes', $response->getHeaderLine('X-Psr15'));
     }
-
-    public function testCoreCorsMiddlewareViaUse(): void
-    {
-        $app = new Application(__DIR__ . '/../../..');
-
-        $app->use(new \PivotPHP\Core\Middleware\Http\CorsMiddleware());
-
-        $app->get(
-            '/data',
-            function ($req, $res) {
-                return $res->json(['ok' => true]);
-            }
-        );
-
-        $response = $app->handle(new ServerRequest('GET', '/data'));
-
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
-    }
 }
