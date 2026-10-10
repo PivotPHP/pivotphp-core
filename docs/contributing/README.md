@@ -83,7 +83,7 @@ pivotphp-core/
 [Descrição clara e concisa do problema]
 
 ## Passos para Reproduzir
-1. Instalar PivotPHP v1.0.0
+1. Instalar PivotPHP v4.1.0
 2. Criar rota com '...'
 3. Executar '...'
 4. Ver erro
@@ -96,7 +96,7 @@ pivotphp-core/
 
 ## Ambiente
 - PHP Version: 8.1.x
-- PivotPHP Version: 1.0.0
+- PivotPHP Version: 4.1.0
 - OS: Ubuntu 22.04
 - Servidor: Apache/Nginx/Built-in
 

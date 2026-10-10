@@ -197,8 +197,8 @@ segurança nativos e as otimizações sem efeito em PHP-FPM. Veja o [CHANGELOG](
 
 ## 🧩 Extensões
 
-- [`pivotphp/cycle-orm`](https://github.com/PivotPHP/pivotphp-cycle-orm) — integração com Cycle ORM
-  (verifique a versão do core suportada no pacote).
+- [`pivotphp/cycle-orm`](https://github.com/PivotPHP/pivotphp-cycle-orm) — ⏸️ **pausado** (repositório arquivado;
+  suporta apenas o core 1.x).
 
 Extensões são service providers (`PivotPHP\Core\Providers\ServiceProvider`) registrados com
 `$app->register(MeuProvider::class)`.

@@ -11,6 +11,10 @@ X.Y.Z
 └─────── MAJOR: Mudanças incompatíveis (quebra compatibilidade)
 ```
 
+A versão atual é **4.1.0**. O arquivo `VERSION` na raiz é a fonte da verdade e deve coincidir com
+`Application::VERSION` (`src/Core/Application.php`) e com a entrada mais recente do
+[CHANGELOG](../CHANGELOG.md).
+
 ## 🔢 Quando Incrementar Cada Número
 
 ### 🚨 MAJOR (X) - Mudanças Incompatíveis
@@ -22,22 +26,24 @@ Incremente o número MAJOR quando fizer mudanças **incompatíveis** com versõe
 - **Remoção de métodos públicos**: `$app->get()`, `$req->param()`, `$res->json()`
 - **Mudança de assinatura de métodos**: Alterar parâmetros obrigatórios
 - **Mudança de comportamento esperado**: Alterar valores de retorno padrão
-- **Remoção de middleware**: `AuthMiddleware`, `CsrfMiddleware`
+- **Remoção de middleware**: `CorsMiddleware`, `SecurityHeadersMiddleware`, `CsrfMiddleware`, etc.
 - **Mudança de namespace**: `PivotPHP\Core\*` para outro namespace
 - **Alteração de estrutura de dados**: Formato de resposta JSON, estrutura de configuração
 - **Remoção de suporte PHP**: Parar de suportar PHP 8.1
+- **Extração para pacotes externos**: mover responsabilidades do core para `pivotphp/http`,
+  `pivotphp/core-routing` ou `pivotphp/security`
 - **Mudança de dependências principais**: Trocar PSR-7 por outra especificação
 
 #### 📝 Exemplos de MAJOR:
 ```
-1.1.4 → 2.0.0  # Remoção do método deprecated $req->getBody()
-2.0.0 → 3.0.0  # Mudança na interface do Container DI
-3.0.0 → 4.0.0  # Reescrita completa do sistema de roteamento
+1.1.4 → 2.0.0  # Remoção de APIs depreciadas (ex.: $req->getBody())
+2.1.0 → 3.0.0  # Remoção das APIs em ciclo de depreciação iniciado na 2.1.0
+3.0.0 → 4.0.0  # Camada HTTP, roteamento e segurança extraídos para pacotes próprios
 ```
 
 #### ⚠️ Procedimento para MAJOR:
 1. **Documentar breaking changes** detalhadamente
-2. **Criar guia de migração** (`MIGRATION_v2.0.0.md`)
+2. **Criar/atualizar o guia de migração** (`docs/MIGRATION_GUIDE.md`)
 3. **Deprecar funcionalidades** por pelo menos 1 versão MINOR antes
 4. **Avisar a comunidade** com antecedência (GitHub)
 5. **Testar intensivamente** todas as mudanças
@@ -49,21 +55,19 @@ Incremente o número MAJOR quando fizer mudanças **incompatíveis** com versõe
 Incremente o número MINOR quando **adicionar** funcionalidades mantendo compatibilidade:
 
 #### ✅ Adições que Justificam MINOR:
-- **Novas classes públicas**: `JsonResponseMiddleware`, `LoggerService`
-- **Novos métodos públicos**: `$app->patch()`, `$req->cookies()`, `$res->redirect()`
-- **Novos middleware**: `RateLimitMiddleware`, `CompressionMiddleware`
-- **Novos utilitários**: `OpenApiExporter`, `PerformanceMonitor`
+- **Novas classes públicas**: `ApiDocumentationMiddleware`, `Validator`
+- **Novos métodos públicos**: `$app->patch()`, `$req->query()`, `$res->redirect()`
+- **Novas regras/opções em componentes existentes** (ex.: regras `nullable`/`sometimes` no `Validator`)
 - **Parâmetros opcionais**: Adicionar parâmetro opcional a método existente
 - **Novas funcionalidades opt-in**: Features que não afetam comportamento padrão
 - **Melhorias de performance**: Que não alteram comportamento público
-- **Suporte a novas versões PHP**: Adicionar suporte ao PHP 8.4
+- **Suporte a novas versões PHP**: Adicionar suporte a uma nova versão do PHP
 - **Novas integrações**: Suporte a novos PSRs, bibliotecas opcionais
 
 #### 📝 Exemplos de MINOR:
 ```
-1.1.4 → 1.2.0  # Adição do OpenApiExporter
-1.2.0 → 1.3.0  # Novo sistema de eventos
-1.3.0 → 1.4.0  # Middleware de cache automático
+4.0.2 → 4.1.0  # Regras nullable/sometimes no Validator e path templating no OpenAPI
+4.1.0 → 4.2.0  # Novo endpoint ou opção pública opcional
 ```
 
 #### ⚠️ Procedimento para MINOR:
@@ -91,9 +95,9 @@ Incremente o número PATCH quando **corrigir bugs** mantendo compatibilidade:
 
 #### 📝 Exemplos de PATCH:
 ```
-1.1.4 → 1.1.5  # Correção de memory leak no pool de objetos
-1.1.5 → 1.1.6  # Fix de XSS no middleware de segurança
-1.1.6 → 1.1.7  # Otimização de performance no router
+4.0.0 → 4.0.1  # .env carregado antes dos arquivos de config/ (SPEC-101)
+4.0.1 → 4.0.2  # Rollback correto em Database::transaction() e listeners de ciclo de vida
+4.1.0 → 4.1.1  # Correção de bug pontual sem alterar API
 ```
 
 #### ⚠️ Procedimento para PATCH:
@@ -105,61 +109,85 @@ Incremente o número PATCH quando **corrigir bugs** mantendo compatibilidade:
 
 ---
 
-## 🛠️ Como Usar o Script de Versionamento
+## 🛠️ Como Usar os Scripts de Release
 
-O PivotPHP Core inclui um script automatizado para gerenciar versões:
+O PivotPHP Core inclui scripts em `scripts/release/` para gerenciar versões e releases.
 
-### Comandos Disponíveis:
+### version-bump.sh
+
+Incrementa a versão a partir do arquivo `VERSION`, cria o commit e a tag.
 
 ```bash
-# Incrementar PATCH (1.1.4 → 1.1.5)
+# Incrementar PATCH (4.1.0 → 4.1.1)
 scripts/release/version-bump.sh patch
 
-# Incrementar MINOR (1.1.4 → 1.2.0)
+# Incrementar MINOR (4.1.0 → 4.2.0)
 scripts/release/version-bump.sh minor
 
-# Incrementar MAJOR (1.1.4 → 2.0.0)
+# Incrementar MAJOR (4.1.0 → 5.0.0)
 scripts/release/version-bump.sh major
 
 # Visualizar próxima versão sem aplicar
 scripts/release/version-bump.sh minor --dry-run
 
-# Fazer bump sem criar commit/tag
+# Fazer bump sem criar commit nem tag
 scripts/release/version-bump.sh patch --no-commit
 
-# Fazer bump sem criar tag (mas com commit)
+# Fazer bump com commit, mas sem criar tag
 scripts/release/version-bump.sh minor --no-tag
 ```
 
-### O que o Script Faz Automaticamente:
-
+O script:
 1. **Lê** a versão atual do arquivo `VERSION`
 2. **Calcula** a nova versão baseada no tipo de bump
 3. **Atualiza** o arquivo `VERSION`
-4. **Atualiza** `composer.json` (se tiver campo version)
-5. **Cria commit** automático com mensagem padronizada
-6. **Cria tag Git** com a nova versão
-7. **Valida** formato semântico (X.Y.Z)
+4. **Atualiza** `composer.json` **somente se** houver um campo `version` (o core não o define, por
+   ser publicado no Packagist)
+5. **Cria commit** com mensagem padronizada (`chore: bump version to X.Y.Z`)
+6. **Cria tag Git** `vX.Y.Z`
+7. **Valida** o formato semântico (X.Y.Z)
 
-### Exemplo de Uso Completo:
+### prepare_release.sh
+
+Valida o projeto na versão atual (lida do arquivo `VERSION`) antes de publicar. **Não** altera a
+versão. Executa validações de estrutura, sintaxe PHP, testes, PHPStan, `composer validate` e os
+scripts de validação do projeto.
 
 ```bash
-# Cenário: Correção de bug de segurança
+scripts/release/prepare_release.sh          # modo interativo
+scripts/release/prepare_release.sh --ci     # modo CI (sem prompts)
+```
+
+### release.sh
+
+Cria a release depois da preparação. Exige branch limpo (sem alterações não commitadas) e recebe a
+versão como argumento.
+
+```bash
+# Criar a release com o tipo explícito
+scripts/release/release.sh 4.1.1 patch
+scripts/release/release.sh 4.2.0 minor
+scripts/release/release.sh 5.0.0 major
+```
+
+### Exemplo de Uso Completo
+
+```bash
+# Cenário: correção de bug de segurança
 $ scripts/release/version-bump.sh patch
 
-ℹ️  Versão atual: 1.1.4
-ℹ️  Nova versão: 1.1.5
+ℹ️  Versão atual: 4.1.0
+ℹ️  Nova versão: 4.1.1
 ℹ️  Tipo de bump: patch
 
-Confirma o bump de 1.1.4 para 1.1.5? (y/N): y
+Confirma o bump de 4.1.0 para 4.1.1? (y/N): y
 
-✅ VERSION file atualizado para 1.1.5
-✅ composer.json atualizado para 1.1.5
+✅ VERSION file atualizado para 4.1.1
 ✅ Commit criado
-✅ Tag v1.1.5 criada
+✅ Tag v4.1.1 criada
 
 🎉 Versão bumped com sucesso!
-  • 1.1.4 → 1.1.5
+  • 4.1.0 → 4.1.1
   • Tipo: patch
   • Commit criado: ✅
   • Tag criada: ✅
@@ -174,13 +202,14 @@ Confirma o bump de 1.1.4 para 1.1.5? (y/N): y
 ### Antes de Qualquer Release:
 
 #### ✅ Validações Obrigatórias:
+- [ ] `VERSION` atualizado e igual a `Application::VERSION`
 - [ ] Todos os testes passando (`composer test`)
 - [ ] PHPStan Level 9 sem erros (`composer phpstan`)
 - [ ] PSR-12 compliance (`composer cs:check`)
-- [ ] Cobertura de testes ≥30% (`composer test:coverage`)
-- [ ] Testes de segurança passando (`composer test:security`)
-- [ ] Performance ≥30K ops/sec (`composer benchmark`)
-- [ ] Validação completa (`scripts/quality/quality-check.sh`)
+- [ ] Validação de documentação (`composer validate:docs`)
+- [ ] Validação do projeto (`composer validate:project`)
+- [ ] `composer validate` sem erros
+- [ ] Auditoria de dependências (`composer audit`)
 
 #### ✅ Documentação:
 - [ ] CHANGELOG.md atualizado
@@ -210,15 +239,15 @@ Confirma o bump de 1.1.4 para 1.1.5? (y/N): y
 
 ## 🎯 Diretrizes Específicas do PivotPHP
 
-### Performance Benchmarks:
+### Performance:
 - **PATCH**: Melhorias de performance são PATCH se não alteram API
-- **MINOR**: Novas otimizações que adicionam funcionalidade (ex: novo modo high-performance)
+- **MINOR**: Novas otimizações que adicionam funcionalidade
 - **MAJOR**: Mudanças que quebram garantias de performance existentes
 
 ### PSR Compliance:
 - **PATCH**: Correções para melhor aderência a PSR existente
-- **MINOR**: Suporte a nova PSR (ex: PSR-18)
-- **MAJOR**: Mudança de PSR fundamental (ex: trocar PSR-7 por PSR-17)
+- **MINOR**: Suporte a nova PSR
+- **MAJOR**: Mudança de PSR fundamental (ex.: trocar PSR-7 por PSR-17)
 
 ### Middleware:
 - **PATCH**: Correções em middleware existente
@@ -249,7 +278,8 @@ git checkout main
 git merge feature/new-middleware
 
 # Execute validações
-scripts/quality/quality-check.sh
+composer quality:check
+scripts/release/prepare_release.sh
 ```
 
 ### 3. Versionamento
@@ -257,7 +287,7 @@ scripts/quality/quality-check.sh
 # Para nova funcionalidade (MINOR)
 scripts/release/version-bump.sh minor
 
-# Resultado: 1.1.4 → 1.2.0
+# Resultado: 4.1.0 → 4.2.0
 ```
 
 ### 4. Publicação
@@ -276,11 +306,12 @@ git push origin main --tags
 ### Documentação:
 - [Semantic Versioning Official](https://semver.org/)
 - [PivotPHP Changelog](../CHANGELOG.md)
-- [Contributing Guidelines](../CONTRIBUTING.md)
+- [Guia de Contribuição](contributing/README.md)
 
 ### Scripts Relacionados:
 - `scripts/release/version-bump.sh` - Gerenciamento de versões
-- `scripts/release/prepare_release.sh` - Preparação para release
+- `scripts/release/prepare_release.sh` - Validação para release
+- `scripts/release/release.sh` - Criação da release
 - `scripts/quality/quality-check.sh` - Validação de qualidade
 
 ### Comunidade:
@@ -312,4 +343,4 @@ git push origin main --tags
 
 ---
 
-*Última atualização: v1.1.4 - Documentação criada junto com consolidação de scripts*
+*Última atualização: v4.1.0 - Processo de release alinhado aos scripts atuais (`scripts/release/`)*

@@ -41,7 +41,7 @@ $app->post('/users', function($req, $res) {
 
 ### 2. Array Callable com Classe
 
-> **✅ Funcionalidade Completa**: Array callables foram aprimorados na v1.1.3 com suporte total para PHP 8.4+
+> **✅ Funcionalidade Completa**: Array callables funcionam desde o **PHP 8.1** e são totalmente suportados pelo core.
 
 Usando controladores organizados em classes - ideal para aplicações estruturadas:
 
@@ -121,7 +121,7 @@ $app->get('/health', [HealthController::class, 'healthCheck']);
 - **Reutilização**: Métodos podem ser reutilizados em diferentes contextos
 - **Dependency Injection**: Controllers podem receber dependências no construtor
 - **Performance**: Overhead mínimo (~29% comparado a closures)
-- **PHP 8.4+ Compatível**: Totalmente compatível com tipagem estrita moderna
+- **PHP 8.1+**: Totalmente compatível com tipagem estrita moderna
 
 ### 3. Função Nomeada
 
@@ -162,7 +162,7 @@ class HealthController
             'status' => 'ok',
             'timestamp' => time(),
             'memory_usage_mb' => round(memory_get_usage(true) / 1024 / 1024, 2),
-            'version' => '1.1.3'
+            'version' => '4.1.0'
         ]);
     }
 
@@ -386,4 +386,4 @@ $app->run();
 
 ---
 
-**Nota:** Esta documentação reflete o estado atual de implementação do PivotPHP Core v1.1.1. Sempre consulte a documentação oficial e testes para verificar funcionalidades suportadas.
+**Nota:** Esta documentação reflete o estado atual de implementação do PivotPHP Core v4.1.0. Sempre consulte a documentação oficial e testes para verificar funcionalidades suportadas.

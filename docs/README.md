@@ -1,4 +1,4 @@
-# PivotPHP Core 4.0 — Documentation
+# PivotPHP Core 4.1 — Documentation
 
 PivotPHP is an Express.js-inspired PHP microframework for APIs, built on PSR-7/PSR-15 and on three
 packages installed with the core: `pivotphp/http` (HTTP messages and the Express facade),
@@ -35,7 +35,7 @@ Release history: [CHANGELOG.md](../CHANGELOG.md). Historical release documents l
 - [pivotphp/http](https://github.com/PivotPHP/pivotphp-http)
 - [pivotphp/core-routing](https://github.com/PivotPHP/pivotphp-core-routing)
 - [pivotphp/security](https://github.com/PivotPHP/pivotphp-security)
-- [pivotphp/cycle-orm](https://github.com/PivotPHP/pivotphp-cycle-orm) — check the supported core version
+- [pivotphp/cycle-orm](https://github.com/PivotPHP/pivotphp-cycle-orm) — ⏸️ pausado (repositório arquivado; suporta apenas o core 1.x)
 
 ## Contributing
 

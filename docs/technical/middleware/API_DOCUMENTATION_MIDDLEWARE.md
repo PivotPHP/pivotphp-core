@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `ApiDocumentationMiddleware` is a core feature of PivotPHP Core v1.2.0+ that automatically generates OpenAPI 3.0.0 specification and serves Swagger UI for your API routes.
+The `ApiDocumentationMiddleware` is a PivotPHP Core feature that automatically generates OpenAPI 3.0.0 specification and serves Swagger UI for your API routes.
 
 ## Features
 
@@ -250,7 +250,7 @@ $app->get('/health', function($req, $res) {
     return $res->json([
         'status' => 'healthy',
         'timestamp' => date('Y-m-d H:i:s'),
-        'version' => '1.2.0'
+        'version' => '4.1.0'
     ]);
 });
 
@@ -266,7 +266,7 @@ The middleware generates OpenAPI 3.0.0 specification with:
   "openapi": "3.0.0",
   "info": {
     "title": "PivotPHP API",
-    "version": "1.2.0",
+    "version": "4.1.0",
     "description": "Auto-generated API documentation"
   },
   "servers": [
