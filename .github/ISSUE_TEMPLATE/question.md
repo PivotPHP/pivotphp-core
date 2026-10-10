@@ -22,6 +22,7 @@ Descreva as soluções que você já tentou.
 ```
 
 ## 🔗 Links Úteis
-- [Documentação](https://github.com/CAFernandes/pivotphp-core/wiki)
-- [Exemplos](https://github.com/CAFernandes/pivotphp-core/tree/main/examples)
-- [Guia de Autenticação](https://github.com/CAFernandes/pivotphp-core/blob/main/docs/pt-br/AUTH_MIDDLEWARE.md)
+- [Documentação](https://github.com/PivotPHP/pivotphp-core/tree/main/docs)
+- [Quick start](https://github.com/PivotPHP/pivotphp-core/blob/main/docs/quick-start.md)
+- [Guia de migração](https://github.com/PivotPHP/pivotphp-core/blob/main/docs/MIGRATION_GUIDE.md)
+- [Exemplos](https://github.com/PivotPHP/pivotphp-core/tree/main/examples)
