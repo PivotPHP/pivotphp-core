@@ -109,4 +109,3 @@ class ValidatorSemanticsTest extends TestCase
         new Validator(['name' => [123]]);
     }
 }
-
