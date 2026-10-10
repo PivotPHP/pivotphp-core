@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Tests\Routing;
 
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Routing\StaticFileManager;
+use PivotPHP\Routing\Router\StaticFileManager;
 use PivotPHP\Core\Http\Request;
 use PivotPHP\Core\Http\Response;
 

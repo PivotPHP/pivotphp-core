@@ -10,7 +10,6 @@ use PivotPHP\Core\Http\Contracts\AttributeInterface;
 use PivotPHP\Core\Http\Psr7\Stream;
 use PivotPHP\Core\Http\Psr7\ServerRequest;
 use PivotPHP\Core\Http\Psr7\Uri;
-use PivotPHP\Core\Contracts\Psr7PoolInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
@@ -143,18 +142,6 @@ class Request implements ServerRequestInterface, AttributeInterface
         // PSR-7 request será inicializado apenas quando necessário (lazy loading)
 
         $this->parseRoute();
-    }
-
-    /**
-     * Injetar PSR-7 Pool
-     *
-     * @param Psr7PoolInterface $pool
-     * @return self
-     * @deprecated v2.2.2 — o pool não é mais usado (SPEC-045); mantido por BC como no-op.
-     */
-    public function setPsr7Pool(Psr7PoolInterface $pool): self
-    {
-        return $this;
     }
 
     /**
@@ -1031,18 +1018,6 @@ class Request implements ServerRequestInterface, AttributeInterface
     public function getParam(string $key, mixed $default = null): mixed
     {
         return $this->params->{$key} ?? $default;
-    }
-
-    /**
-     * Get the client IP address
-     *
-     * @return string
-     * @deprecated Use ip() instead. getIp() does not validate against private/reserved ranges.
-     */
-    public function getIp(): string
-    {
-        trigger_error('Request::getIp() is deprecated. Use Request::ip() instead.', E_USER_DEPRECATED);
-        return $this->ip();
     }
 
     /**

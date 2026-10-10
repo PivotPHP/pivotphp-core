@@ -119,8 +119,6 @@ class ProjectValidator
             'docs/contributing/README.md',
             'scripts/validation/validate-docs.sh',
             'scripts/validation/validate_project.php',
-            'scripts/validation/validate_benchmarks.sh',
-            'benchmarks/run_benchmark.sh'
         ];
 
         foreach ($requiredFiles as $file) {
@@ -206,7 +204,6 @@ class ProjectValidator
             'XssMiddleware' => 'PivotPHP\\Core\\Middleware\\Security\\XssMiddleware',
             'AuthMiddleware' => 'PivotPHP\\Core\\Middleware\\Security\\AuthMiddleware',
             'CorsMiddleware' => 'PivotPHP\\Core\\Middleware\\Http\\CorsMiddleware',
-            'RateLimitMiddleware' => 'PivotPHP\\Core\\Middleware\\Performance\\RateLimitMiddleware',
         ];
 
         $securityCount = 0;

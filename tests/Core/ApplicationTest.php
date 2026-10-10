@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 use PivotPHP\Core\Http\Request;
 // Response class removed - not used in tests
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 use PivotPHP\Core\Core\Config;
 use PivotPHP\Core\Providers\Container;
 use PivotPHP\Core\Exceptions\HttpException;
@@ -67,8 +67,8 @@ class ApplicationTest extends TestCase
     public function testApplicationInitialization(): void
     {
         $this->assertInstanceOf(Application::class, $this->app);
-        $this->assertEquals('2.3.4', Application::VERSION);
-        $this->assertEquals('2.3.4', $this->app->version());
+        $this->assertEquals('3.0.0', Application::VERSION);
+        $this->assertEquals('3.0.0', $this->app->version());
         $this->assertFalse($this->app->isBooted());
     }
 
@@ -238,7 +238,6 @@ class ApplicationTest extends TestCase
         $property->setAccessible(true);
         $aliases = $property->getValue($this->app);
 
-        $this->assertArrayHasKey('load-shedder', $aliases);
         $this->assertArrayHasKey('rate-limiter', $aliases);
 
         // Circuit breaker removed following ARCHITECTURAL_GUIDELINES

@@ -75,39 +75,6 @@ class Str
     }
 
     /**
-     * Verifica se uma string começa com outra
-     *
-     * @deprecated v2.1.0 Use native str_starts_with() instead.
-     */
-    public static function startsWith(string $haystack, string $needle): bool
-    {
-        trigger_error('Str::startsWith() is deprecated. Use str_starts_with() instead.', E_USER_DEPRECATED);
-        return substr($haystack, 0, strlen($needle)) === $needle;
-    }
-
-    /**
-     * Verifica se uma string termina com outra
-     *
-     * @deprecated v2.1.0 Use native str_ends_with() instead.
-     */
-    public static function endsWith(string $haystack, string $needle): bool
-    {
-        trigger_error('Str::endsWith() is deprecated. Use str_ends_with() instead.', E_USER_DEPRECATED);
-        return substr($haystack, -strlen($needle)) === $needle;
-    }
-
-    /**
-     * Verifica se uma string contém outra
-     *
-     * @deprecated v2.1.0 Use native str_contains() instead.
-     */
-    public static function contains(string $haystack, string $needle): bool
-    {
-        trigger_error('Str::contains() is deprecated. Use str_contains() instead.', E_USER_DEPRECATED);
-        return strpos($haystack, $needle) !== false;
-    }
-
-    /**
      * Converte primeira letra para maiúscula
      */
     public static function ucfirst(string $string): string

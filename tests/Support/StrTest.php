@@ -66,24 +66,6 @@ class StrTest extends TestCase
         $this->assertNotEquals($random1, $random2);
     }
 
-    public function testStartsWith(): void
-    {
-        $this->assertTrue(Str::startsWith('PivotPHP', 'Pivot'));
-        $this->assertFalse(Str::startsWith('PivotPHP', 'PHP'));
-    }
-
-    public function testEndsWith(): void
-    {
-        $this->assertTrue(Str::endsWith('PivotPHP', 'PHP'));
-        $this->assertFalse(Str::endsWith('PivotPHP', 'Express'));
-    }
-
-    public function testContains(): void
-    {
-        $this->assertTrue(Str::contains('PivotPHP Framework', 'PHP'));
-        $this->assertFalse(Str::contains('PivotPHP Framework', 'Laravel'));
-    }
-
     public function testUcfirst(): void
     {
         $this->assertEquals('Helix', Str::ucfirst('helix'));

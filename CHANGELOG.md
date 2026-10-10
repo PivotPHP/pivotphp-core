@@ -5,7 +5,7 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-10-09
 
 ### Added
 
@@ -15,12 +15,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `src/aliases-performance-tools.php` e a entrada em `autoload.files` — a ponte de aliases
-  para o `pivotphp/performance-tools` (pacote descontinuado e nunca publicado no Packagist).
-- Entradas `suggest` de `pivotphp/performance-tools`, `pivotphp/reactphp` e `react/http`
-  (extensão ReactPHP descontinuada).
-- `docs/PERFORMANCE-TOOLS-MIGRATION.md` e a seção "ReactPHP Extension" do `README.md`.
-  ([SPEC-036](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-036-discontinue-performance-tools-reactphp.md))
+- **Código depreciado (ciclo de depreciação 2.1.0 → 3.0.0):**
+  - `PivotPHP\Core\Core\Container` (use `PivotPHP\Core\Providers\Container`).
+  - `PivotPHP\Core\Middleware\LoadShedder` e o alias `'load-shedder'` (use `Middleware\RateLimiter`).
+  - `PivotPHP\Core\Middleware\Performance\RateLimitMiddleware` (use `Middleware\RateLimiter`).
+  - `PivotPHP\Core\Providers\Logger` (use `Logging\PsrLogger`).
+  - `PivotPHP\Core\Providers\EventDispatcher` (use `Events\EventDispatcher`).
+  - `PivotPHP\Core\Providers\ListenerProvider` (use `Events\ListenerProvider`).
+  - `Request::getIp()` (use `Request::ip()`).
+  - `Str::startsWith()/endsWith()/contains()` (use as funções nativas `str_starts_with()`,
+    `str_ends_with()`, `str_contains()`).
+- **Otimização sem ganho real (SPEC-044/045/049):**
+  - JSON pooling: `JsonBufferPool`, `JsonBuffer` e adaptadores.
+  - PSR-7 pooling: `Psr7Pool`, `HeaderPool`, `ResponsePool`, `EnhancedStreamPool`,
+    `OperationsCache`, adaptadores, contratos e `HttpPoolFacade`.
+  - Código de otimização sem uso: `PerformanceMode`, `PerformanceMonitor`,
+    `OptimizedHttpFactory`, `MemoryManager`, `PoolManager` (×2), `MiddlewarePipelineCompiler`
+    (+ adaptadores) e `SerializationCache` (+ adaptador).
+  - `MiddlewareStack` simplificado (removidos compilação/cache/estatísticas de pipeline).
+- **Aliases de compatibilidade (`src/aliases.php`):**
+  - Aliases de roteamento `PivotPHP\Core\Routing\*` (use `PivotPHP\Routing\*` diretamente).
+  - Alias `PivotPHP\Core\Application` (use `PivotPHP\Core\Core\Application`).
+- **Pacotes descontinuados (SPEC-036):** `src/aliases-performance-tools.php`, entradas
+  `suggest` de `pivotphp/performance-tools`/`pivotphp/reactphp`/`react/http`,
+  `docs/PERFORMANCE-TOOLS-MIGRATION.md` e a seção "ReactPHP Extension" do `README.md`.
+
+### Changed
+
+- `Application::$middlewareAliases` agora contém apenas `rate-limiter`.
+- `Response`/`Request` não possuem mais os métodos no-op `setPsr7Pool()`/`setJsonOptimizer()`
+  (`setPsr7Pool()` removido; `setJsonOptimizer()` mantido — caminho injetável do otimizador).
 
 ## [2.3.4] - 2026-10-09
 

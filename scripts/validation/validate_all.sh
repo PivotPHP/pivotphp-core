@@ -227,7 +227,7 @@ if [ $FAILED_TESTS -eq 0 ]; then
         echo "   • Criação de release oficial"
         echo ""
         echo "🚀 Próximos passos recomendados:"
-        echo "   1. Execute benchmarks finais: ./benchmarks/run_benchmark.sh -f"
+        echo "   1. Execute testes unitários: composer test"
         echo "   2. Execute testes unitários: composer test"
         echo "   3. Crie tag de release: git tag -a v$VERSION -m 'Release v$VERSION'"
         echo "   4. Publique: git push origin main --tags"

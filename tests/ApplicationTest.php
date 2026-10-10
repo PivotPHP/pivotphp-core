@@ -4,7 +4,7 @@ namespace PivotPHP\Core\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 
 class ApplicationTest extends TestCase
 {
