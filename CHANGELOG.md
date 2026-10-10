@@ -5,7 +5,7 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [4.0.2] - 2026-10-10
 
 ### Fixed
 - **`Database::transaction()` faz rollback para qualquer `Throwable`** (SPEC-073). Antes, só `\Exception`
@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `mysql`), sem `charset` no DSN do PostgreSQL (um `charset` explícito vira `options='--client_encoding=…'`) e
   aliases `postgres`/`postgresql` → `pgsql` e `mariadb` → `mysql` (`mariadb:` não é driver PDO). Driver não
   suportado falha com `InvalidArgumentException` clara, em vez de um erro opaco do PDO.
+
+### Changed
+- Requer `pivotphp/core-routing` `^2.2.3` (SPEC-062: arquivos estáticos não expõem dotfiles nem symlinks para fora da pasta).
 
 ### CI
 - Novo job `databases`, que roda os testes de banco contra MySQL 8.4 e PostgreSQL 16 reais.

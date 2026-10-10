@@ -30,7 +30,7 @@
         "php": "^8.1",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "pivotphp/core-routing": "^2.2",
+        "pivotphp/core-routing": "^2.2.3",
         "pivotphp/http": "^1.0",
         "pivotphp/security": "^1.0",
         "psr/container": "^2.0",
