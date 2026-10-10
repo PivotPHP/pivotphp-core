@@ -5,6 +5,14 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **`Database::transaction()` faz rollback para qualquer `Throwable`** (SPEC-073). Antes, só `\Exception`
+  era tratado: um `Error` (ex.: `TypeError`) no callback deixava a transação aberta, e a próxima chamada a
+  `transaction()` falhava com "cannot start a transaction within a transaction".
+
 ## [4.0.1] - 2026-10-10
 
 ### Fixed
