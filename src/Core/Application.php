@@ -47,7 +47,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '3.0.0';
+    public const VERSION = '3.1.0';
 
     /**
      * Container de dependências PSR-11.
@@ -175,6 +175,9 @@ class Application implements ApplicationInterface
         $this->container->alias('config', Config::class);
 
         // Router
+        // O Router do core-routing usa estado estático; limpa rotas de instâncias
+        // anteriores para que cada Application comece isolada (SPEC-076).
+        Router::clear();
         $this->router = new Router();
         $this->container->instance(Router::class, $this->router);
         $this->container->alias('router', Router::class);
