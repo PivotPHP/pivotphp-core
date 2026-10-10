@@ -51,7 +51,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '4.0.0';
+    public const VERSION = '4.0.1';
 
     /**
      * Container de dependências PSR-11.
@@ -274,16 +274,17 @@ class Application implements ApplicationInterface
      */
     protected function loadConfiguration(): void
     {
+        // O .env vem primeiro: os arquivos de config/ leem $_ENV/getenv() ao serem avaliados
+        // (SPEC-101). Variáveis já definidas no ambiente real têm precedência sobre o .env.
+        $envFile = $this->basePath('.env');
+        if (file_exists($envFile)) {
+            $this->config->loadEnvironment($envFile);
+        }
+
         $configPath = $this->container->has('path.config') ? $this->container->get('path.config') : null;
 
         if (is_string($configPath) && is_dir($configPath)) {
             $this->config->setConfigPath($configPath)->loadAll();
-        }
-
-        // Carregar .env se existir
-        $envFile = $this->basePath('.env');
-        if (file_exists($envFile)) {
-            $this->config->loadEnvironment($envFile);
         }
     }
 
