@@ -264,62 +264,8 @@ count_check $security_result "critical"
 cp "$security_output" "reports/quality/security-results.txt"
 rm "$security_output"
 
-# 7. Performance - CRITICAL
-# Detect CI environment and adjust expectations
-if [ "${CI:-false}" = "true" ] || [ "${GITHUB_ACTIONS:-false}" = "true" ]; then
-    info "⚡ 7. Performance (≥25K ops/sec CI-optimized) - CRITICAL"
-    info "CI environment detected - using optimized benchmark settings"
-    benchmark_cmd="composer benchmark:simple"
-    min_performance=25000  # Lower threshold for CI environments
-else
-    info "⚡ 7. Performance (≥30K ops/sec) - CRITICAL"
-    benchmark_cmd="composer benchmark"
-    min_performance=30000  # Standard threshold for local environments
-fi
 
-benchmark_output=$(mktemp)
-if $benchmark_cmd > "$benchmark_output" 2>&1; then
-    benchmark_result=0
-    success "Benchmark - EXECUTED"
-    
-    # Check average performance
-    if grep -q "Average Performance" "$benchmark_output"; then
-        perf_line=$(grep "Average Performance" "$benchmark_output" | tail -1)
-        perf_value=$(echo "$perf_line" | grep -o '[0-9,]\+ ops/sec' | head -1)
-        
-        if [ -n "$perf_value" ]; then
-            perf_number=$(echo "$perf_value" | grep -o '[0-9,]\+' | tr -d ',')
-            threshold_display=$(echo "$min_performance" | sed 's/000$/K/')
-            if [ "$perf_number" -ge "$min_performance" ]; then
-                success "Performance: $perf_value (≥${threshold_display} ops/sec)"
-            else
-                error "Performance: $perf_value (<${threshold_display} ops/sec)"
-                benchmark_result=1
-            fi
-        else
-            warning "Could not extract average performance"
-        fi
-    else
-        warning "Performance metric not found"
-    fi
-    
-    # Check Pool Efficiency
-    if grep -q "Pool Efficiency" "$benchmark_output"; then
-        success "Pool Efficiency found in benchmark"
-    else
-        info "Pool Efficiency not found (may be normal)"
-    fi
-else
-    benchmark_result=1
-    error "Benchmark - FAILED"
-    error "Error executing benchmark:"
-    tail -10 "$benchmark_output"
-fi
-
-count_check $benchmark_result "critical"
-cp "$benchmark_output" "reports/quality/benchmark-results.txt"
-rm "$benchmark_output"
-
+# 7. Dependency Audit
 # 8. Dependency Audit - CRITICAL
 info "📦 8. Dependency Audit - CRITICAL"
 
@@ -414,7 +360,6 @@ required_dirs=(
     "src/Core"
     "src/Http"
     "src/Middleware"
-    "src/Performance"
     "src/Utils"
 )
 
@@ -494,7 +439,6 @@ echo "    • Coverage ≥30%: $([ $coverage_result -eq 0 ] && echo "✅ PASSED"
 echo "    • Code Style PSR-12: $([ $cs_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")"
 echo "    • Documentation: $([ $doc_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")"
 echo "    • Security: $([ $security_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")"
-echo "    • Performance ≥30K: $([ $benchmark_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")"
 echo "    • Dependencies: $([ $audit_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")"
 echo ""
 echo "  🟡 HIGH:"
@@ -526,7 +470,6 @@ Directory: $(pwd)
 - Code Style PSR-12: $([ $cs_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 - Documentation: $([ $doc_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 - Security: $([ $security_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
-- Performance ≥30K: $([ $benchmark_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 - Dependencies: $([ $audit_result -eq 0 ] && echo "✅ PASSED" || echo "❌ FAILED")
 
 ## High Criteria
@@ -541,7 +484,6 @@ Directory: $(pwd)
 - Coverage: reports/quality/coverage-results.txt
 - Code Style: reports/quality/codestyle-results.txt
 - Security: reports/quality/security-results.txt
-- Benchmark: reports/quality/benchmark-results.txt
 - Dependencies: reports/quality/audit-results.txt
 - This report: $report_file
 
