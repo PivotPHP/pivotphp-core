@@ -8,10 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- **PostgreSQL DSN (SPEC-074)**: `Database` builds the DSN per driver — default port 5432 for `pgsql` (3306 for `mysql`), no `charset` in the PostgreSQL DSN (an explicit `charset` becomes `options='--client_encoding=…'`), and aliases `postgres`/`postgresql` → `pgsql` and `mariadb` → `mysql` (`mariadb:` is not a PDO driver). An unsupported driver now fails with a clear `InvalidArgumentException` instead of an opaque PDO error.
+- **`Database::transaction()` faz rollback para qualquer `Throwable`** (SPEC-073). Antes, só `\Exception`
+  era tratado: um `Error` (ex.: `TypeError`) no callback deixava a transação aberta, e a próxima chamada a
+  `transaction()` falhava com "cannot start a transaction within a transaction".
+- **Listeners de ciclo de vida não derrubam a requisição** (SPEC-085). Uma exceção lançada por um listener
+  de `RequestReceived` ou `ResponseSent` não escapa mais de `Application::handle()`: é registrada no log e a
+  requisição segue. `ResponseSent` é disparado uma única vez, inclusive em respostas de erro.
+- **DSN do PostgreSQL** (SPEC-074). `Database` monta o DSN por driver: porta padrão 5432 no `pgsql` (3306 no
+  `mysql`), sem `charset` no DSN do PostgreSQL (um `charset` explícito vira `options='--client_encoding=…'`) e
+  aliases `postgres`/`postgresql` → `pgsql` e `mariadb` → `mysql` (`mariadb:` não é driver PDO). Driver não
+  suportado falha com `InvalidArgumentException` clara, em vez de um erro opaco do PDO.
 
 ### CI
-- New `databases` job running the database tests against real MySQL 8.4 and PostgreSQL 16 services.
+- Novo job `databases`, que roda os testes de banco contra MySQL 8.4 e PostgreSQL 16 reais.
 
 ## [4.0.1] - 2026-10-10
 

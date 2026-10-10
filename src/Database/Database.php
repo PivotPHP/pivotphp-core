@@ -211,8 +211,12 @@ class Database
             $result = $callback($this);
             $this->commit();
             return $result;
-        } catch (\Exception $e) {
-            $this->rollback();
+        } catch (\Throwable $e) {
+            // Any failure (Exception or Error) rolls back; the guard avoids masking the original
+            // error when the transaction is no longer active (SPEC-073).
+            if ($this->pdo->inTransaction()) {
+                $this->rollback();
+            }
             throw $e;
         }
     }
