@@ -681,7 +681,7 @@ class Application implements ApplicationInterface
         $startTime = microtime(true);
 
         // Disparar evento de requisição recebida
-        $this->dispatchEvent(new RequestReceived($request, new \DateTime()));
+        $this->dispatchLifecycleEvent(new RequestReceived($request, new \DateTime()));
 
         try {
             // Parsing do corpo dentro do try: corpo malformado (ex.: JSON inválido) vira
@@ -691,24 +691,34 @@ class Application implements ApplicationInterface
             // Executar middlewares globais ENVOLVENDO a resolução de rota, para
             // que middlewares vejam todas as requisições (incl. 404/OPTIONS) e
             // possam responder antes do roteamento (SPEC-040).
-            $finalResponse = $this->middlewares->execute(
+            $response = $this->middlewares->execute(
                 $request,
                 $this->finalHandler()
             );
-
-            // Disparar evento de resposta enviada
-            $processingTime = microtime(true) - $startTime;
-            $this->dispatchEvent(new ResponseSent($request, $finalResponse, new \DateTime(), $processingTime));
-
-            return $finalResponse;
         } catch (Throwable $e) {
-            $errorResponse = $this->handleException($e, $request);
+            $response = $this->handleException($e, $request);
+        }
 
-            // Disparar evento de resposta com erro
-            $processingTime = microtime(true) - $startTime;
-            $this->dispatchEvent(new ResponseSent($request, $errorResponse, new \DateTime(), $processingTime));
+        // Disparado uma única vez, com a resposta final (sucesso ou erro) — SPEC-085.
+        $processingTime = microtime(true) - $startTime;
+        $this->dispatchLifecycleEvent(new ResponseSent($request, $response, new \DateTime(), $processingTime));
 
-            return $errorResponse;
+        return $response;
+    }
+
+    /**
+     * Dispara um evento de ciclo de vida (RequestReceived/ResponseSent).
+     *
+     * Listeners desses eventos observam a requisição (log, métricas, auditoria); uma falha neles é
+     * registrada no log e não altera a resposta (SPEC-085). Eventos disparados pela aplicação via
+     * dispatchEvent() continuam propagando exceções.
+     */
+    private function dispatchLifecycleEvent(object $event): void
+    {
+        try {
+            $this->dispatchEvent($event);
+        } catch (Throwable $e) {
+            $this->logException($e);
         }
     }
 

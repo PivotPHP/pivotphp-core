@@ -5,6 +5,11 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Lifecycle listeners (SPEC-085)**: an exception thrown by a `RequestReceived` or `ResponseSent` listener no longer escapes `Application::handle()`; it is logged and the request continues. `ResponseSent` is dispatched exactly once, also for error responses.
+
 ## [4.0.1] - 2026-10-10
 
 ### Fixed
