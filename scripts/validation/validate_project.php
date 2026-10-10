@@ -276,8 +276,6 @@ class ProjectValidator
         $releaseDocs = [
             'docs/releases/README.md' => 'Índice de releases',
             "docs/releases/FRAMEWORK_OVERVIEW_v{$version}.md" => "Overview v{$version} (ATUAL)",
-            'docs/releases/FRAMEWORK_OVERVIEW_v1.0.0.md' => 'Overview v1.0.0',
-            'docs/releases/FRAMEWORK_OVERVIEW_v1.0.1.md' => 'Overview v1.0.1',
         ];
 
         foreach ($releaseDocs as $file => $description) {
@@ -438,9 +436,7 @@ class ProjectValidator
             // Verificar arquivos de release
             $releaseFiles = [
                 'docs/releases/README.md' => 'Índice de releases',
-                "docs/releases/FRAMEWORK_OVERVIEW_v{$version}.md" => "Overview v{$version} (ATUAL)",
-                'docs/releases/FRAMEWORK_OVERVIEW_v1.0.0.md' => 'Overview v1.0.0',
-                'docs/releases/FRAMEWORK_OVERVIEW_v1.0.1.md' => 'Overview v1.0.1'
+                "docs/releases/FRAMEWORK_OVERVIEW_v{$version}.md" => "Overview v{$version} (ATUAL)"
             ];
 
             foreach ($releaseFiles as $file => $description) {
@@ -452,11 +448,7 @@ class ProjectValidator
                         $this->warnings[] = "{$description} existe mas tem pouco conteúdo ({$size} bytes)";
                     }
                 } else {
-                    if (strpos($file, 'v1.0.0') !== false) {
-                        $this->errors[] = "{$description} não encontrado: {$file}";
-                    } else {
-                        $this->warnings[] = "{$description} não encontrado: {$file}";
-                    }
+                    $this->errors[] = "{$description} não encontrado: {$file}";
                 }
             }
 
@@ -471,22 +463,12 @@ class ProjectValidator
                 }
             }
 
-            // Verificar se ainda existem versões anteriores (para compatibilidade)
-            if (file_exists('docs/releases/FRAMEWORK_OVERVIEW_v1.0.0.md')) {
-                $this->passed[] = "FRAMEWORK_OVERVIEW_v1.0.0.md mantido para compatibilidade";
-            }
-            if (file_exists('docs/releases/FRAMEWORK_OVERVIEW_v1.0.1.md')) {
-                $this->passed[] = "FRAMEWORK_OVERVIEW_v1.0.1.md mantido para compatibilidade";
-            }
-
         } else {
             $this->errors[] = "Diretório docs/releases/ não encontrado";
         }
 
         // Verificar se arquivos foram movidos da raiz
         $movedFiles = [
-            'FRAMEWORK_OVERVIEW_v1.0.0.md',
-            'FRAMEWORK_OVERVIEW_v1.0.1.md',
             "FRAMEWORK_OVERVIEW_v{$version}.md"
         ];
 

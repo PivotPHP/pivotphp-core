@@ -1,4 +1,4 @@
-# PivotPHP Core — API Reference (4.0)
+# PivotPHP Core — API Reference (4.1)
 
 ## Quick Start
 
@@ -116,6 +116,30 @@ injected. Note: `$app->get()` registers a GET route — resolve services with `m
 
 PSR-14: `$app->on(RequestReceived::class, $listener)`; lifecycle events `ApplicationStarted`,
 `RequestReceived` and `ResponseSent` (namespace `PivotPHP\Core\Events`).
+
+## Validation
+
+`PivotPHP\Core\Validation\Validator` validates arrays with string rules
+(`'required|email|max:255'`):
+
+```php
+use PivotPHP\Core\Validation\Validator;
+
+$validator = Validator::make($req->json(), [
+    'name'  => 'required|string|max:255',
+    'email' => 'required|email',
+    'age'   => 'nullable|integer|min:18',
+]);
+
+if (!$validator->validate($req->json())) {
+    return $res->status(422)->json(['errors' => $validator->getErrors()]);
+}
+```
+
+Rules: `required`, `nullable`, `sometimes`, `string`, `numeric`, `integer`, `email`, `min:n`,
+`max:n`, `in:a,b,c`, `regex:/.../`. Since 4.1.0, fields without `required` do not fail when absent,
+`nullable` accepts `null`, and `min`/`max` are type-aware (numeric value, `mb_strlen` for strings,
+item count for arrays). Unknown rules throw `\InvalidArgumentException`.
 
 ## Version
 
