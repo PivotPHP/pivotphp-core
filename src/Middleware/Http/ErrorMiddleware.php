@@ -8,8 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use PivotPHP\Core\Http\Psr7\Response;
-use PivotPHP\Core\Http\Psr7\Stream;
+use Nyholm\Psr7\Response;
+use Nyholm\Psr7\Stream;
 use Throwable;
 
 /**
@@ -40,7 +40,7 @@ class ErrorMiddleware implements MiddlewareInterface
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
             ];
-            $stream = Stream::createFromString((string)json_encode($body, JSON_UNESCAPED_UNICODE));
+            $stream = Stream::create((string)json_encode($body, JSON_UNESCAPED_UNICODE));
             return (new Response(500))
                 ->withHeader('Content-Type', 'application/json')
                 ->withBody($stream);

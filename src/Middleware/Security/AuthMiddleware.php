@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware\Security;
 
-use PivotPHP\Core\Http\Psr15\AbstractMiddleware;
 use PivotPHP\Core\Exceptions\HttpException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * PSR-15 Authentication Middleware
  */
-class AuthMiddleware extends AbstractMiddleware
+class AuthMiddleware implements MiddlewareInterface
 {
     private array $config;
     private array $publicPaths;

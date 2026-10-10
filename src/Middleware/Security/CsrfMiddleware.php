@@ -8,8 +8,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use PivotPHP\Core\Http\Psr7\Response;
-use PivotPHP\Core\Http\Psr7\Stream;
 use PivotPHP\Core\Exceptions\HttpException;
 
 /**

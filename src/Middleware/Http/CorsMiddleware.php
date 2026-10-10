@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware\Http;
 
-use PivotPHP\Core\Http\Psr15\AbstractMiddleware;
-use PivotPHP\Core\Http\Psr7\Request;
-use PivotPHP\Core\Http\Psr7\Response;
+use Nyholm\Psr7\Response;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * PSR-15 CORS Middleware
  */
-class CorsMiddleware extends AbstractMiddleware
+class CorsMiddleware implements MiddlewareInterface
 {
     private array $config;
 
@@ -60,21 +59,9 @@ class CorsMiddleware extends AbstractMiddleware
         return $this->process($request, $handler);
     }
 
-    /**
-     * Compatibilidade com middlewares legados: handle($request, $response, $next)
-     */
-    public function handle(
-        Request $request,
-        Response $response,
-        callable $next
-    ): void {
-        throw new \BadMethodCallException('CorsMiddleware: use apenas como PSR-15 Middleware.');
-    }
-
     private function handlePreflightOptimized(ServerRequestInterface $request): ResponseInterface
     {
-        $factory = new \PivotPHP\Core\Http\Psr7\Factory\ResponseFactory();
-        $response = $factory->createResponse(200);
+        $response = new Response(200);
 
         // Métodos sem espaço após vírgula
         $methods = $this->config['methods'];

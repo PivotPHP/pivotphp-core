@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Http\ExpressResponse;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
  * Rate limiting middleware for v1.1.0
  */
-class RateLimiter
+class RateLimiter implements MiddlewareInterface
 {
     /**
      * Rate limiting strategies
@@ -64,20 +67,19 @@ class RateLimiter
 
         // Set default key generator if not provided
         if (!$this->config['key_generator']) {
-            $this->config['key_generator'] = function (Request $request) {
-                return $request->ip();
+            $this->config['key_generator'] = static function (ServerRequestInterface $request): string {
+                $ip = $request->getServerParams()['REMOTE_ADDR'] ?? '';
+
+                return is_string($ip) ? $ip : '';
             };
         }
     }
 
     /**
-     * Handle the request
+     * Process the request (PSR-15).
      */
-    public function handle(
-        Request $request,
-        Response $response,
-        callable $next
-    ): Response {
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    {
         $this->metrics['total_requests']++;
 
         // Generate rate limit key
@@ -86,13 +88,13 @@ class RateLimiter
         // Check whitelist
         if ($this->isWhitelisted($key)) {
             $this->metrics['whitelisted_requests']++;
-            return $next($request, $response);
+            return $handler->handle($request);
         }
 
         // Check blacklist
         if ($this->isBlacklisted($key)) {
             $this->metrics['blacklisted_requests']++;
-            return $this->rejectRequest($response, 'blacklisted');
+            return $this->rejectRequest('blacklisted');
         }
 
         // Apply rate limiting
@@ -106,21 +108,19 @@ class RateLimiter
 
         if (!$allowed) {
             $this->metrics['rejected_requests']++;
-            return $this->rejectRequest($response);
+            return $this->rejectRequest();
         }
 
         $this->metrics['allowed_requests']++;
 
-        // Add rate limit headers
-        $response = $this->addRateLimitHeaders($response, $key);
-
-        return $next($request, $response);
+        // Add rate limit headers to the response
+        return $this->addRateLimitHeaders($handler->handle($request), $key);
     }
 
     /**
      * Generate rate limit key
      */
-    private function generateKey(Request $request): string
+    private function generateKey(ServerRequestInterface $request): string
     {
         $generator = $this->config['key_generator'];
         return (string) $generator($request);
@@ -315,17 +315,19 @@ class RateLimiter
     /**
      * Reject request
      */
-    private function rejectRequest(Response $response, string $reason = 'rate_limit'): Response
+    private function rejectRequest(string $reason = 'rate_limit'): ResponseInterface
     {
         $config = $this->config['reject_response'];
 
-        $response = $response
-            ->status($config['status'])
+        $response = (new ExpressResponse())
+            ->status((int) $config['status'])
             ->json($config['body'])
-            ->header('X-RateLimit-Reason', $reason);
+            ->withHeader('X-RateLimit-Reason', $reason);
 
-        foreach ($config['headers'] as $name => $value) {
-            $response->header($name, (string) $value);
+        if (is_array($config['headers'])) {
+            foreach ($config['headers'] as $name => $value) {
+                $response = $response->withHeader((string) $name, (string) $value);
+            }
         }
 
         return $response;
@@ -334,16 +336,16 @@ class RateLimiter
     /**
      * Add rate limit headers
      */
-    private function addRateLimitHeaders(Response $response, string $key): Response
+    private function addRateLimitHeaders(ResponseInterface $response, string $key): ResponseInterface
     {
         $limit = $this->config['max_requests'];
         $remaining = $this->getRemainingRequests($key);
         $reset = $this->getResetTime();
 
         return $response
-            ->header('X-RateLimit-Limit', (string) $limit)
-            ->header('X-RateLimit-Remaining', (string) $remaining)
-            ->header('X-RateLimit-Reset', (string) $reset);
+            ->withHeader('X-RateLimit-Limit', (string) $limit)
+            ->withHeader('X-RateLimit-Remaining', (string) $remaining)
+            ->withHeader('X-RateLimit-Reset', (string) $reset);
     }
 
     /**

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware\Http;
 
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Http\ExpressResponse;
 use PivotPHP\Routing\Router\Router;
 use PivotPHP\Core\Core\Application;
 use Psr\Http\Message\ResponseInterface;
@@ -77,7 +77,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
         try {
             $docs = $this->generateOpenApiDocs();
 
-            return (new Response())
+            return (new ExpressResponse())
                 ->status(200)
                 ->header('Access-Control-Allow-Origin', '*')
                 ->json($docs);
@@ -136,7 +136,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
      */
     private function handleSwaggerUi(ServerRequestInterface $request): ResponseInterface
     {
-        return (new Response())
+        return (new ExpressResponse())
             ->status(200)
             ->html($this->getSwaggerUiHtml());
     }
@@ -191,7 +191,7 @@ HTML;
      */
     private function createErrorResponse(string $message, int $statusCode = 500): ResponseInterface
     {
-        return (new Response())
+        return (new ExpressResponse())
             ->status($statusCode)
             ->json(['error' => $message]);
     }
