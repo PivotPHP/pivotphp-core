@@ -6,7 +6,8 @@ namespace PivotPHP\Core\Database;
  * Conexão simples com banco de dados usando PDO.
  *
  * Drivers suportados: sqlite (via `database` = caminho ou ':memory:') e
- * mysql/mariadb/pgsql (via `host`, `port`, `database`, `username`, `password`).
+ * mysql/mariadb (porta padrão 3306, `charset` padrão utf8mb4) e pgsql/postgres/postgresql
+ * (porta padrão 5432), via `host`, `port`, `database`, `username`, `password`.
  */
 class Database
 {
@@ -42,16 +43,43 @@ class Database
             return;
         }
 
-        $host = $this->config['host'] ?? 'localhost';
-        $port = $this->config['port'] ?? 3306;
-        $database = $this->config['database'];
+        $dsn = self::buildDsn($driver, $this->config);
         $username = $this->config['username'];
         $password = $this->config['password'];
-        $charset = $this->config['charset'] ?? 'utf8mb4';
-
-        $dsn = "{$driver}:host={$host};port={$port};dbname={$database};charset={$charset}";
 
         $this->pdo = new \PDO($dsn, $username, $password, $options);
+    }
+
+    /**
+     * Monta o DSN de servidor por driver: porta padrão própria (mysql 3306, pgsql 5432),
+     * `charset` só no MySQL e aliases `mariadb` → mysql, `postgres`/`postgresql` → pgsql.
+     */
+    private static function buildDsn(string $driver, array $config): string
+    {
+        $driver = match (strtolower($driver)) {
+            'mysql', 'mariadb' => 'mysql',
+            'pgsql', 'postgres', 'postgresql' => 'pgsql',
+            default => throw new \InvalidArgumentException(
+                "Unsupported database driver '{$driver}'. Use sqlite, mysql/mariadb or pgsql/postgres."
+            ),
+        };
+
+        $host = $config['host'] ?? 'localhost';
+        $port = $config['port'] ?? ($driver === 'pgsql' ? 5432 : 3306);
+        $database = $config['database'];
+
+        $dsn = "{$driver}:host={$host};port={$port};dbname={$database}";
+
+        if ($driver === 'mysql') {
+            return $dsn . ';charset=' . ($config['charset'] ?? 'utf8mb4');
+        }
+
+        // PostgreSQL não aceita `charset` no DSN; a codificação vai como opção do cliente.
+        if (isset($config['charset'])) {
+            $dsn .= ";options='--client_encoding={$config['charset']}'";
+        }
+
+        return $dsn;
     }
 
     /**

@@ -5,6 +5,14 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **PostgreSQL DSN (SPEC-074)**: `Database` builds the DSN per driver — default port 5432 for `pgsql` (3306 for `mysql`), no `charset` in the PostgreSQL DSN (an explicit `charset` becomes `options='--client_encoding=…'`), and aliases `postgres`/`postgresql` → `pgsql` and `mariadb` → `mysql` (`mariadb:` is not a PDO driver). An unsupported driver now fails with a clear `InvalidArgumentException` instead of an opaque PDO error.
+
+### CI
+- New `databases` job running the database tests against real MySQL 8.4 and PostgreSQL 16 services.
+
 ## [4.0.1] - 2026-10-10
 
 ### Fixed
