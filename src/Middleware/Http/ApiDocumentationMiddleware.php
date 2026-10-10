@@ -100,21 +100,29 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
 
         $paths = [];
         foreach ($routes as $route) {
-            $path = $route['path'] ?? '/';
+            $rawPath = $route['path'] ?? '/';
+            $openApiPath = $this->normalizePathToOpenApi($rawPath);
             $method = strtolower($route['method'] ?? 'get');
 
-            if (!isset($paths[$path])) {
-                $paths[$path] = [];
+            if (!isset($paths[$openApiPath])) {
+                $paths[$openApiPath] = [];
             }
 
-            $paths[$path][$method] = [
-                'summary' => 'Route: ' . $method . ' ' . $path,
+            $operation = [
+                'summary' => 'Route: ' . $method . ' ' . $openApiPath,
                 'responses' => [
                     '200' => [
                         'description' => 'Successful response'
                     ]
                 ]
             ];
+
+            $parameters = $this->extractPathParameters($openApiPath);
+            if (!empty($parameters)) {
+                $operation['parameters'] = $parameters;
+            }
+
+            $paths[$openApiPath][$method] = $operation;
         }
 
         return [
@@ -129,6 +137,43 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
             ],
             'paths' => $paths
         ];
+    }
+
+    /**
+     * Normalizes route parameters (:param, :param<regex>, {param<regex>}) to OpenAPI {param}
+     */
+    private function normalizePathToOpenApi(string $path): string
+    {
+        // Converte :param<regex> e :param para {param}
+        $normalized = (string) preg_replace('/:([a-zA-Z_][a-zA-Z0-9_]*)(?:<[^>]+>)?/', '{$1}', $path);
+        // Converte {param<regex>} para {param}
+        return (string) preg_replace('/\{([a-zA-Z_][a-zA-Z0-9_]*)(?:<[^>]+>)?\}/', '{$1}', $normalized);
+    }
+
+    /**
+     * Extracts path parameter definitions for OpenAPI operation
+     *
+     * @return list<array{name: string, in: string, required: bool, schema: array{type: string}}>
+     */
+    private function extractPathParameters(string $openApiPath): array
+    {
+        preg_match_all('/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/', $openApiPath, $matches);
+
+        $parameters = [];
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $paramName) {
+                $parameters[] = [
+                    'name' => $paramName,
+                    'in' => 'path',
+                    'required' => true,
+                    'schema' => [
+                        'type' => 'string'
+                    ]
+                ];
+            }
+        }
+
+        return $parameters;
     }
 
     /**

@@ -5,6 +5,19 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-10-10
+
+### Added
+- **Regras `nullable` e `sometimes` no `Validator`** (SPEC-069). Campos ausentes que não tenham a regra `required`
+  não falham mais por padrão, e campos com `nullable` aceitam valor `null`.
+- **Validação de tipos em `min`/`max` e contagem de itens em arrays** (SPEC-069). Valores numéricos têm seu valor
+  comparado (suportando limites decimais como `9.99`), strings têm seu tamanho medido em caracteres UTF-8 (`mb_strlen`),
+  e arrays têm a quantidade de elementos validada.
+- **Suporte estrito em `in` e validação de string em `regex`** (SPEC-069).
+- **Validação de regras desconhecidas** (SPEC-069): lança `\InvalidArgumentException` para regras inexistentes ou com erro de digitação.
+- **Path Templating e Parâmetros em OpenAPI 3.0** (SPEC-056): `ApiDocumentationMiddleware` normaliza parâmetros de rotas
+  (`:param`, `:param<regex>`, `{param<regex>}`) para `{param}` e gera os respectivos objetos `parameters` (`in: path`, `required: true`).
+
 ## [4.0.2] - 2026-10-10
 
 ### Fixed
