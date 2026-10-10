@@ -1,12 +1,17 @@
 # Quick Start Guide
 
-Get up and running with PivotPHP Core v3.0.0 in under 5 minutes! This guide will walk you through installation, basic setup, and creating your first API endpoints.
+Get up and running with PivotPHP Core 4.x in under 5 minutes. This guide covers installation, a
+first API, routing, security and testing.
+
+> Prefer the fastest path? `composer create-project pivotphp/skeleton my-api` scaffolds a complete
+> project (config, routes, controllers, tests).
 
 ## 🚀 Installation
 
 ### Prerequisites
+
 - **PHP 8.1+** with extensions: `json`, `mbstring`
-- **Composer** for dependency management
+- **Composer**
 
 ### Install via Composer
 
@@ -14,9 +19,12 @@ Get up and running with PivotPHP Core v3.0.0 in under 5 minutes! This guide will
 composer require pivotphp/core
 ```
 
+This pulls the core plus its companions: `pivotphp/core-routing` (routing engine),
+`pivotphp/http` (PSR-7/PSR-17 + Express facade) and `pivotphp/security` (security middlewares).
+
 ## 🔥 Your First API
 
-Create a new file `index.php`:
+Create `index.php`:
 
 ```php
 <?php
@@ -24,40 +32,35 @@ require_once 'vendor/autoload.php';
 
 use PivotPHP\Core\Core\Application;
 
-// Create application instance
 $app = new Application();
 
 // Basic route
-$app->get('/', function($req, $res) {
-    return $res->json(['message' => 'Hello, PivotPHP!']);
+$app->get('/', fn ($req, $res) => $res->json(['message' => 'Hello, PivotPHP!']));
+
+// Route with a parameter
+$app->get('/users/:id', fn ($req, $res) => $res->json([
+    'user_id' => $req->param('id'),
+    'name' => 'John Doe',
+]));
+
+// JSON POST endpoint — handlers receive ExpressRequest/ExpressResponse
+$app->post('/users', function ($req, $res) {
+    $data = $req->json();               // decoded JSON body (array)
+    return $res->status(201)->json(['message' => 'User created', 'data' => $data]);
 });
 
-// API endpoint with parameters
-$app->get('/users/:id', function($req, $res) {
-    $userId = $req->param('id');
-    return $res->json(['user_id' => $userId, 'name' => 'John Doe']);
-});
-
-// JSON POST endpoint
-$app->post('/users', function($req, $res) {
-    $userData = $req->psr7()->getParsedBody();
-    return $res->status(201)->json([
-        'message' => 'User created',
-        'data' => $userData
-    ]);
-});
-
-// Run the application
 $app->run();
 ```
+
+Handlers receive `PivotPHP\Http\ExpressRequest`/`ExpressResponse` (the Express facade over PSR-7)
+and must return the response. Read input with `$req->param()`, `$req->query()`, `$req->input()` or
+`$req->json()`; reach the underlying PSR-7 message with `$req->psr7()`.
 
 ### Test Your API
 
 ```bash
-# Start PHP development server
 php -S localhost:8080
 
-# Test endpoints
 curl http://localhost:8080/                    # {"message":"Hello, PivotPHP!"}
 curl http://localhost:8080/users/123           # {"user_id":"123","name":"John Doe"}
 curl -X POST -H "Content-Type: application/json" \
@@ -65,48 +68,35 @@ curl -X POST -H "Content-Type: application/json" \
      http://localhost:8080/users               # {"message":"User created","data":{"name":"Alice"}}
 ```
 
-## 🎯 Array Callables & Performance (since v1.2.0)
+## 🎯 Array Callable Routes
 
-### Array Callable Routes (NEW!)
-
-Use array callables with PHP 8.4+ compatibility:
+Register controllers as array callables (`[Controller::class, 'method']`) — supported from
+**PHP 8.1**, and recommended for Symfony/container-style code. The legacy `'Controller@method'`
+string form is **not** supported (throws `TypeError`).
 
 ```php
 class UserController
 {
     public function index($req, $res)
     {
-        return $res->json(['users' => User::all()]);
+        return $res->json(['users' => []]);
     }
 
     public function show($req, $res)
     {
-        $id = $req->param('id');
-        return $res->json(['user' => User::find($id)]);
+        return $res->json(['user' => ['id' => $req->param('id')]]);
     }
 }
 
-// Register routes with array callable syntax
 $app->get('/users', [UserController::class, 'index']);
 $app->get('/users/:id', [UserController::class, 'show']);
-```
-
-### Automatic Performance Optimization
-
-Object pooling and JSON optimization work automatically:
-
-```php
-// Large JSON responses are automatically optimized
-$app->get('/api/data', function($req, $res) {
-    $largeDataset = Database::getAllRecords(); // 1000+ records
-    return $res->json($largeDataset); // Automatically uses buffer pooling!
-});
 ```
 
 ## 🛡️ Adding Security
 
 Security middlewares come from [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security)
-(installed with the core):
+(pulled in with the core). Middlewares that build responses take a PSR-17
+`ResponseFactoryInterface`:
 
 ```php
 use PivotPHP\Http\Factory\Psr17Factory;
@@ -115,7 +105,7 @@ use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
 
 $factory = new Psr17Factory();
 
-$app->use(new SecurityHeadersMiddleware());
+$app->use(new SecurityHeadersMiddleware());   // needs `composer require bepsvpt/secure-headers`
 $app->use(new CorsMiddleware($factory, new CorsConfig(
     allowedOrigins: ['https://yourfrontend.com'],
     allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -123,139 +113,86 @@ $app->use(new CorsMiddleware($factory, new CorsConfig(
 )));
 ```
 
-Invalid settings (e.g. `'*'` with credentials) throw at boot. For CSRF (cookie-based auth), JWT,
-rate limiting and trusted proxies, see the
+Recommended order: `TrustedProxy → SecurityHeaders → CORS → RateLimit → (body parsing) → CSRF → JWT
+→ routes`. Invalid settings (e.g. `'*'` with credentials) throw at boot. For CSRF, JWT, rate
+limiting and trusted proxies, see the
 [pivotphp/security README](https://github.com/PivotPHP/pivotphp-security#readme).
 
 ## 🔍 Route Patterns
 
-PivotPHP supports powerful routing patterns:
-
 ```php
-// Basic parameters
+// Parameters
 $app->get('/users/:id', $handler);
+$app->get('/files/{name}', $handler);               // { } syntax also supported
 
 // Regex constraints
-$app->get('/users/:id<\\d+>', $handler);           // Only numeric IDs
-$app->get('/posts/:slug<[a-z0-9-]+>', $handler);   // Slug format
+$app->get('/users/:id<\d+>', $handler);             // only numeric IDs
+$app->get('/posts/:slug<[a-z0-9-]+>', $handler);
 
-// Predefined patterns
-$app->get('/posts/:date<date>', $handler);          // YYYY-MM-DD format
-$app->get('/files/:uuid<uuid>', $handler);          // UUID format
+// Shortcuts
+$app->get('/posts/:date<date>', $handler);          // YYYY-MM-DD
+$app->get('/files/:uuid<uuid>', $handler);          // UUID
 
 // Multiple parameters
-$app->get('/users/:userId/posts/:postId<\\d+>', $handler);
+$app->get('/users/:userId/posts/:postId<\d+>', $handler);
 ```
+
+Optional parameters (`:param?`) are **not** supported (throws at registration).
 
 ## 🔧 Configuration
 
-Create `config/app.php` for application settings:
+`Application` reads `config/` (see the skeleton for the layout). Load it explicitly when you don't
+use the skeleton:
 
 ```php
-return [
-    'debug' => false,
-    'timezone' => 'UTC',
-    'cache' => [
-        'driver' => 'file',
-        'path' => __DIR__ . '/../storage/cache'
-    ],
-    'cors' => [
-        'enabled' => true,
-        'allowed_origins' => ['*'],
-        'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With'],
-        'max_age' => 86400
-    ]
-];
-```
-
-Load configuration in your application:
-
-```php
-// Application::__construct() only accepts an optional string $basePath — it does not
-// take a Config object. Configure via $app->getConfig() after construction instead.
 $app = new Application(__DIR__);
 $app->getConfig()->setConfigPath(__DIR__ . '/config')->loadAll();
 
-// Read a value
-$debug = $app->getConfig()->get('app.debug');
+$debug = $app->getConfig()->get('app.debug', false);
 ```
+
+With `app.debug` **off** (default), errors return a generic JSON body; with it **on**, the response
+includes the exception message, file, line and trace — never enable it in production.
 
 ## 🧪 Testing Your API
 
-Create `tests/BasicTest.php`:
+Drive the real pipeline with `$app->handle()` (a PSR-7 `ServerRequestInterface`):
 
 ```php
 <?php
+use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
 
 class BasicTest extends TestCase
 {
-    private Application $app;
-
-    protected function setUp(): void
-    {
-        $this->app = new Application();
-        $this->app->get('/test', function($req, $res) {
-            return $res->json(['status' => 'ok']);
-        });
-    }
-
     public function testBasicRoute(): void
     {
-        // Test implementation here
-        $this->assertTrue(true); // Placeholder
+        $app = new Application();
+        $app->get('/test', fn ($req, $res) => $res->json(['status' => 'ok']));
+
+        $response = $app->handle(new ServerRequest('GET', '/test'));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('{"status":"ok"}', (string) $response->getBody());
     }
 }
 ```
 
-## 🚀 Próximos Passos para Provas de Conceito
+## 🚀 Next Steps
 
-Agora que você tem uma API básica funcionando, explore recursos para enriquecer seus protótipos:
+1. **[API Reference](API_REFERENCE.md)** — methods and types
+2. **[Migration Guide](MIGRATION_GUIDE.md)** — moving from 3.x to 4.0
+3. **[pivotphp/security](https://github.com/PivotPHP/pivotphp-security)** — CORS, headers, CSRF, JWT, rate limiting
+4. **[OpenAPI/Swagger](API_REFERENCE.md)** — `ApiDocumentationMiddleware` generates a spec from your routes
+5. **[Examples](../examples/)** — runnable examples
+6. **[Skeleton](https://github.com/PivotPHP/pivotphp-skeleton)** — full project template
 
-1. **[API Reference](API_REFERENCE.md)** - Referência completa dos métodos
-2. **[Middleware Guide](technical/middleware/README.md)** - Segurança e performance para demos
-3. **[Authentication](technical/authentication/README.md)** - JWT e API key para protótipos seguros
-4. **[Documentação Automática](../examples/api_documentation_example.php)** - Swagger para apresentações
-5. **[Examples](reference/examples.md)** - Exemplos práticos e casos de uso
+## ⚠️ About the Project
 
-## 🧪 Expandindo Protótipos
-
-Para expandir suas provas de conceito:
-
-```php
-use PivotPHP\Http\Factory\Psr17Factory;
-use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
-use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
-use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig};
-
-$factory = new Psr17Factory();
-
-// Adicionar autenticação JWT (pivotphp/security); segredo com ≥ 32 bytes
-$app->use(new JwtAuthMiddleware($factory, new JwtConfig($_ENV['JWT_SECRET'])));
-
-// Documentação automática (essencial para apresentações)
-$app->use(new ApiDocumentationMiddleware([
-    'docs_path' => '/docs',
-    'swagger_path' => '/swagger'
-]));
-
-// Middleware de segurança para protótipos profissionais
-$app->use(new SecurityHeadersMiddleware());
-$app->use(new CorsMiddleware($factory, new CorsConfig(['*'])));
-```
-
-## 🆘 Suporte e Aprendizado
-
-- **[Documentação](README.md)** - Documentação completa
-- **[GitHub Issues](https://github.com/PivotPHP/pivotphp-core/issues)** - Relatar problemas e sugerir melhorias
-- **[Examples Repository](../examples/)** - Exemplos práticos para aprendizado
-
-## ⚠️ Importante: Sobre o Projeto
-
-**PivotPHP Core é mantido por apenas uma pessoa** e pode não receber atualizações constantemente. Este guia é ideal para criar protótipos e provas de conceito, mas não é recomendado para sistemas de produção críticos que exigem suporte 24/7.
+**PivotPHP Core is maintained by a single person** and may not receive frequent updates. It is ideal
+for prototypes and proofs of concept, not for critical production systems that require 24/7 support.
 
 ---
 
-**Parabéns!** Agora você tem uma base sólida para criar provas de conceito e protótipos com PivotPHP Core v3.0.0. 🎉
+**That's it!** You now have a solid base for building APIs with PivotPHP Core 4.x. 🎉
