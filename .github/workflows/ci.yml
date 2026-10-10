@@ -1,107 +1,61 @@
-name: CI/CD Pipeline v1.2.0
-
-# Optimized CI/CD using consolidated scripts with automatic version detection
-# Multi-PHP testing available locally via: ./scripts/testing/test-all-php-versions.sh
-# v1.2.0 includes Simplicity Edition with CI-optimized performance benchmarks
+name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  quality-check:
+  tests:
     runs-on: ubuntu-latest
-    name: Quality Validation (PHP 8.1) - v1.2.0
+    name: PHP ${{ matrix.php }} · ${{ matrix.deps }}
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.3']
+        deps: ['lowest', 'highest']
+        exclude:
+          - php: '8.1'
+            deps: 'highest'
+          - php: '8.3'
+            deps: 'lowest'
 
     steps:
-    - name: Checkout code
+    - name: Checkout
       uses: actions/checkout@v4
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, json, session
-        coverage: xdebug
+        php-version: ${{ matrix.php }}
+        extensions: mbstring, xml, ctype, json, session, pdo, pdo_sqlite, pdo_mysql, pdo_pgsql
+        coverage: none
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict || { echo 'Composer validation failed'; exit 1; }
-
-    - name: Cache Composer packages
-      id: composer-cache
+    - name: Cache Composer dependencies
       uses: actions/cache@v4
       with:
         path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php${{ matrix.php }}-${{ matrix.deps }}-${{ hashFiles('composer.json') }}
         restore-keys: |
-          ${{ runner.os }}-php-
+          ${{ runner.os }}-php${{ matrix.php }}-${{ matrix.deps }}-
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress || { echo 'Composer install failed'; exit 1; }
-
-    - name: Check PHP syntax
-      run: find src -name "*.php" -exec php -l {} \; || { echo 'PHP syntax check failed'; exit 1; }
-
-    - name: Run consolidated quality check
       run: |
-        echo "🔍 Running consolidated quality validation..."
-        echo "📋 Using automatic version detection from VERSION file"
-        echo "💡 Multi-PHP testing done locally via: ./scripts/testing/test-all-php-versions.sh"
-        echo "🔥 v1.2.0 includes Simplicity Edition with CI-optimized performance benchmarks"
-        scripts/quality/quality-check.sh || { echo 'Quality check failed'; exit 1; }
-        
-    - name: Run Array Callable Tests (v1.2.0)
-      run: |
-        echo "🧪 Running Array Callable specific tests..."
-        vendor/bin/phpunit tests/Unit/Routing/ArrayCallableTest.php --testdox
-        vendor/bin/phpunit tests/Integration/Routing/ArrayCallableIntegrationTest.php --testdox
-        
-    - name: Run Performance Benchmarks (v1.2.0)
-      run: |
-        echo "🚀 Running performance benchmarks..."
-        php benchmarks/QuietBenchmark.php || echo "Benchmarks completed"
+        if [ "${{ matrix.deps }}" = "lowest" ]; then
+          composer update --prefer-lowest --prefer-stable --no-progress --no-interaction
+        else
+          composer install --prefer-dist --no-progress --no-interaction
+        fi
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./reports/coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-      continue-on-error: true
+    - name: Validate composer.json
+      run: composer validate --strict
 
-    - name: CI/CD Summary
-      if: always()
-      run: |
-        echo ""
-        echo "========================================="
-        echo "   OPTIMIZED CI/CD SUMMARY - v1.2.0"
-        echo "========================================="
-        echo ""
-        echo "✅ Quality validation completed (PHP 8.1)"
-        echo "🔍 Used consolidated scripts with auto-version detection"
-        echo "🔥 Array Callable tests validated"
-        echo "🚀 Performance benchmarks executed"
-        echo ""
-        echo "📋 For comprehensive testing:"
-        echo "   • Multi-PHP: ./scripts/testing/test-all-php-versions.sh (PHP 8.1-8.4)"
-        echo "   • Full validation: ./scripts/validation/validate_all.sh"
-        echo "   • Version management: ./scripts/release/version-bump.sh"
-        echo "   • Docker tests: docker-compose -f pivotphp-benchmarks/docker-compose-v114.yml up"
-        echo ""
-        echo "🏆 v1.2.0 Simplicity Edition Features:"
-        echo "   • Simplified Architecture: Simple classes as defaults"
-        echo "   • CI-Optimized Performance: 25K+ ops/sec threshold in CI"
-        echo "   • Automatic OpenAPI/Swagger: ApiDocumentationMiddleware"
-        echo "   • Code Quality Excellence: Zero IDE warnings, PSR-12 100%"
-        echo "   • 100% Backward Compatible: Legacy namespace support"
-        echo ""
-        echo "🚀 Cross-Framework Performance (Docker Validated):"
-        echo "   • PivotPHP ReactPHP: 19,707 req/sec (🥇 1st place)"
-        echo "   • Slim 4: 6,881 req/sec (🥈 2nd place)"
-        echo "   • Lumen: 6,322 req/sec (🥉 3rd place)"
-        echo "   • PivotPHP Core: 6,227 req/sec (4th place)"
-        echo "   • Flight: 3,179 req/sec (5th place)"
-        echo ""
-        echo "🚀 CI/CD optimized for speed - extensive testing done locally"
+    - name: Run PHPUnit (CI suite)
+      run: vendor/bin/phpunit --testsuite=CI
+
+    - name: Run PHPStan (Level 9)
+      run: vendor/bin/phpstan analyse --no-progress
+
+    - name: Run PHPCS (PSR-12)
+      run: vendor/bin/phpcs --standard=phpcs.xml
