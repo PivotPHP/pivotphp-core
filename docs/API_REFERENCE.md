@@ -109,8 +109,10 @@ $mailer = $app->make('mailer');
 $app->register(MyServiceProvider::class);   // extends PivotPHP\Core\Providers\ServiceProvider
 ```
 
-Controllers used as array callables are built by the container, so constructor dependencies are
-injected. Note: `$app->get()` registers a GET route — resolve services with `make()`.
+Controllers used as array callables are resolved by the container if bound via `bind()` or `singleton()`.
+For unbound classes, the container instantiates them with `new $class()`, which requires no constructor
+arguments; constructor dependencies must be registered in the container (e.g. `$app->singleton(Ctl::class, fn () => new Ctl(...))`).
+Note: `$app->get()` registers a GET route — resolve services with `make()`.
 
 ## Events
 
