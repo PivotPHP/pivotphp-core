@@ -284,7 +284,7 @@ $securityLevel = function ($req, $res, $next) {
     return $response->withHeader('X-Security-Level', (string) ($params['level'] ?? 'unknown'));
 };
 
-Router::get('/secure/:level<(low|medium|high)>/data', function ($req, $res) {
+$app->get('/secure/:level<(low|medium|high)>/data', function ($req, $res) {
     $level = $req->param('level');
     
     $securityMeasures = [

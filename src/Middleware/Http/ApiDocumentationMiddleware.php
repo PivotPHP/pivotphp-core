@@ -33,17 +33,23 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
     private ?string $baseUrl = null;
     private string $version;
     private bool $enabled = true;
+    private ?Router $router = null;
 
     /**
      * Constructor
+     *
+     * @param array<string, mixed> $options
      */
-    public function __construct(array $options = [])
+    public function __construct(array $options = [], ?Router $router = null)
     {
-        $this->docsPath = $options['docs_path'] ?? '/docs';
-        $this->swaggerPath = $options['swagger_path'] ?? '/swagger';
-        $this->baseUrl = $options['base_url'] ?? null;
-        $this->version = $options['version'] ?? Application::VERSION;
-        $this->enabled = $options['enabled'] ?? true;
+        $this->docsPath = (string) ($options['docs_path'] ?? '/docs');
+        $this->swaggerPath = (string) ($options['swagger_path'] ?? '/swagger');
+        $this->baseUrl = isset($options['base_url']) ? (string) $options['base_url'] : null;
+        $this->version = (string) ($options['version'] ?? Application::VERSION);
+        $optionsRouter = isset($options['router']) && $options['router'] instanceof Router
+            ? $options['router']
+            : null;
+        $this->router = $router ?? $optionsRouter;
     }
 
     /**
@@ -75,7 +81,7 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
     private function handleApiDocs(ServerRequestInterface $request): ResponseInterface
     {
         try {
-            $docs = $this->generateOpenApiDocs();
+            $docs = $this->generateOpenApiDocs($request);
 
             return (new ExpressResponse())
                 ->status(200)
@@ -91,12 +97,18 @@ class ApiDocumentationMiddleware implements MiddlewareInterface
      *
      * @return array<string, mixed>
      */
-    private function generateOpenApiDocs(): array
+    private function generateOpenApiDocs(?ServerRequestInterface $request = null): array
     {
         $baseUrl = $this->baseUrl ?? 'http://localhost:8080';
 
-        // Get routes from Router (static class)
-        $routes = Router::getRoutes();
+        $router = $this->router;
+        if ($router === null && $request !== null) {
+            $attr = $request->getAttribute(Router::class);
+            if ($attr instanceof Router) {
+                $router = $attr;
+            }
+        }
+        $routes = $router !== null ? $router->getRoutes() : Router::default()->getRoutes();
 
         $paths = [];
         foreach ($routes as $route) {

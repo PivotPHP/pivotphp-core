@@ -15,16 +15,6 @@ use PivotPHP\Routing\Router\Router;
  */
 class ApiDocumentationMiddlewareTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Router::clear();
-    }
-
-    protected function tearDown(): void
-    {
-        Router::clear();
-    }
-
     public function testDocsAndSwaggerAreServed(): void
     {
         $app = new Application(__DIR__ . '/../../..');

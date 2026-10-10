@@ -5,6 +5,16 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.0.0] - 2026-10-10
+
+### Changed
+- **Router por instância e eliminação de estado estático global compartilhado** (SPEC-076):
+  - `Application` instancia e gerencia seu próprio roteador isolado (`$this->router = new Router()`).
+  - Removido `Router::clear()` do construtor de `Application`: instâncias distintas no mesmo processo (ex.: workers persistentes RoadRunner/Swoole/FrankPHP, testes de integração) não compartilham mais rotas, prefixos ou middlewares de grupo.
+  - `Application` agora expõe métodos de registro de rota com suporte a middlewares (`get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`, `match`, `group`).
+  - `Application::handle()` injeta a instância de `Router` no atributo de requisição PSR-7 (`Router::class`), permitindo que middlewares como `ApiDocumentationMiddleware` inspecionem as rotas da aplicação isoladamente.
+  - Requer `pivotphp/core-routing` `^3.0.0`.
+
 ## [4.1.1] - 2026-10-10
 
 ### Fixed

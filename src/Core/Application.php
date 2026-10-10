@@ -51,7 +51,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '4.1.1';
+    public const VERSION = '5.0.0';
 
     /**
      * Container de dependências PSR-11.
@@ -184,9 +184,7 @@ class Application implements ApplicationInterface
         $this->container->alias('config', Config::class);
 
         // Router
-        // O Router do core-routing usa estado estático; limpa rotas de instâncias
-        // anteriores para que cada Application comece isolada (SPEC-076).
-        Router::clear();
+        // Cada Application possui sua própria instância isolada de Router (SPEC-076).
         $this->router = new Router();
         $this->container->instance(Router::class, $this->router);
         $this->container->alias('router', Router::class);
@@ -580,65 +578,155 @@ class Application implements ApplicationInterface
     /**
      * Registra uma rota GET.
      *
-     * @param  string         $path    Caminho da rota
-     * @param  callable|array $handler Handler da rota
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
      * @return $this
      */
-    public function get(string $path, callable|array $handler): self
+    public function get(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
     {
-        $this->router->get($path, $this->resolveHandler($handler));
+        $this->router->get($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
         return $this;
     }
 
     /**
      * Registra uma rota POST.
      *
-     * @param  string         $path    Caminho da rota
-     * @param  callable|array $handler Handler da rota
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
      * @return $this
      */
-    public function post(string $path, callable|array $handler): self
+    public function post(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
     {
-        $this->router->post($path, $this->resolveHandler($handler));
+        $this->router->post($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
         return $this;
     }
 
     /**
      * Registra uma rota PUT.
      *
-     * @param  string         $path    Caminho da rota
-     * @param  callable|array $handler Handler da rota
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
      * @return $this
      */
-    public function put(string $path, callable|array $handler): self
+    public function put(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
     {
-        $this->router->put($path, $this->resolveHandler($handler));
+        $this->router->put($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
         return $this;
     }
 
     /**
      * Registra uma rota DELETE.
      *
-     * @param  string         $path    Caminho da rota
-     * @param  callable|array $handler Handler da rota
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
      * @return $this
      */
-    public function delete(string $path, callable|array $handler): self
+    public function delete(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
     {
-        $this->router->delete($path, $this->resolveHandler($handler));
+        $this->router->delete($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
         return $this;
     }
 
     /**
      * Registra uma rota PATCH.
      *
-     * @param  string         $path    Caminho da rota
-     * @param  callable|array $handler Handler da rota
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
      * @return $this
      */
-    public function patch(string $path, callable|array $handler): self
+    public function patch(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
     {
-        $this->router->patch($path, $this->resolveHandler($handler));
+        $this->router->patch($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
+        return $this;
+    }
+
+    /**
+     * Registra uma rota OPTIONS.
+     *
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
+     * @return $this
+     */
+    public function options(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
+    {
+        $this->router->options($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
+        return $this;
+    }
+
+    /**
+     * Registra uma rota HEAD.
+     *
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
+     * @return $this
+     */
+    public function head(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
+    {
+        $this->router->head($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
+        return $this;
+    }
+
+    /**
+     * Registra uma rota para qualquer método HTTP aceito.
+     *
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
+     * @return $this
+     */
+    public function any(string $path, callable|array $handler, array $metadata = [], callable ...$middlewares): self
+    {
+        $this->router->any($path, $this->resolveHandler($handler), $metadata, ...$middlewares);
+        return $this;
+    }
+
+    /**
+     * Registra uma rota para múltiplos métodos HTTP.
+     *
+     * @param  array<int, string>    $methods     Métodos HTTP aceitos
+     * @param  string                $path        Caminho da rota
+     * @param  callable|array        $handler     Handler da rota
+     * @param  array<string, mixed>  $metadata    Metadados da rota
+     * @param  callable              ...$middlewares Middlewares da rota
+     * @return $this
+     */
+    public function match(
+        array $methods,
+        string $path,
+        callable|array $handler,
+        array $metadata = [],
+        callable ...$middlewares
+    ): self {
+        $this->router->match($methods, $path, $this->resolveHandler($handler), $metadata, ...$middlewares);
+        return $this;
+    }
+
+    /**
+     * Registra um grupo de rotas com prefixo compartilhado e middlewares opcionais.
+     *
+     * @param  string                $prefix      Prefixo do grupo
+     * @param  callable              $callback    Callback do grupo
+     * @param  array<int, callable>  $middlewares Middlewares aplicados a todas as rotas do grupo
+     * @return $this
+     */
+    public function group(string $prefix, callable $callback, array $middlewares = []): self
+    {
+        $this->router->group($prefix, $callback, $middlewares);
         return $this;
     }
 
@@ -660,7 +748,7 @@ class Application implements ApplicationInterface
         array $options = []
     ): self {
         // Registra cada arquivo encontrado como uma rota individual
-        StaticFileManager::registerDirectory($routePrefix, $physicalPath, $options);
+        StaticFileManager::registerDirectory($routePrefix, $physicalPath, $options, $this->router);
 
         return $this;
     }
@@ -678,6 +766,7 @@ class Application implements ApplicationInterface
         }
 
         $request ??= ServerRequestFactory::fromGlobals();
+        $request = $request->withAttribute(Router::class, $this->router);
         $startTime = microtime(true);
 
         // Disparar evento de requisição recebida
@@ -757,11 +846,11 @@ class Application implements ApplicationInterface
         $path = $request->getUri()->getPath();
 
         // Encontrar rota
-        $route = $this->router::identify($method, $path);
+        $route = $this->router->identify($method, $path);
 
         if (!$route) {
             // SPEC-072: se o path casa com outros métodos, responde 405 (ou 204 p/ OPTIONS) com Allow.
-            $allowed = $this->router::allowedMethods($path);
+            $allowed = $this->router->allowedMethods($path);
 
             if ($allowed !== []) {
                 $allow = implode(', ', $allowed);
@@ -779,7 +868,7 @@ class Application implements ApplicationInterface
             // Buscar rotas disponíveis para suggestions
             $availableRoutes = array_map(
                 static fn ($r) => "{$r['method']} {$r['path']}",
-                array_slice($this->router::getRoutes(), 0, 10)
+                array_slice($this->router->getRoutes(), 0, 10)
             );
 
             throw ContextualException::routeNotFound($method, $path, $availableRoutes);

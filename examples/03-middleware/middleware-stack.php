@@ -32,8 +32,8 @@ $step = static fn (string $name) => function ($req, $res, $next) use ($name) {
 $app->use($step('global-1'));
 $app->use($step('global-2'));
 
-// Route middleware (4th argument of Router::get)
-Router::get('/', fn ($req, $res) => $res->json([
+// Route middleware (4th argument of $app->get)
+$app->get('/', fn ($req, $res) => $res->json([
     'order' => $req->psr7()->getAttribute('trace'),
 ]), [], $step('route'));
 

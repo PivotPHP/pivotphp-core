@@ -15,16 +15,6 @@ use PivotPHP\Routing\Router\Router;
  */
 class BraceParameterIntegrationTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Router::clear();
-    }
-
-    protected function tearDown(): void
-    {
-        Router::clear();
-    }
-
     public function testBraceParameterEndToEnd(): void
     {
         $app = new Application(__DIR__ . '/../../..');
