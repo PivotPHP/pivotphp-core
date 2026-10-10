@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Core;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Http\BodyParser;
+use PivotPHP\Http\Emitter\SapiEmitter;
+use PivotPHP\Http\ExpressRequest;
+use PivotPHP\Http\ExpressResponse;
+use PivotPHP\Http\Factory\ServerRequestFactory;
+use Psr\Http\Message\ServerRequestInterface;
 use PivotPHP\Routing\Router\Router;
 use PivotPHP\Routing\Router\StaticFileManager;
 use PivotPHP\Core\Utils\CallableResolver;
@@ -47,7 +51,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '3.1.0';
+    public const VERSION = '4.0.0';
 
     /**
      * Container de dependências PSR-11.
@@ -103,9 +107,7 @@ class Application implements ApplicationInterface
      *
      * @var array<string, string>
      */
-    protected array $middlewareAliases = [
-        'rate-limiter' => \PivotPHP\Core\Middleware\RateLimiter::class,
-    ];
+    protected array $middlewareAliases = [];
 
     /**
      * Indica se a aplicação foi inicializada.
@@ -146,6 +148,13 @@ class Application implements ApplicationInterface
         }
 
         $this->registerCoreServices();
+
+        // Core providers (container, events, logging, hooks, extensions, routing) are registered
+        // here so listeners, hooks and extensions can be added before boot(); boot() only boots
+        // them and registers the providers listed in configuration.
+        foreach ($this->providers as $provider) {
+            $this->register($provider);
+        }
 
         // Configurar error handling o mais cedo possível
         $this->configureBasicErrorHandling();
@@ -216,8 +225,12 @@ class Application implements ApplicationInterface
      */
     public function basePath(string $path = ''): string
     {
-        $basePath = $this->container->has('path.base') ? $this->container->get('path.base') : getcwd();
-        return $basePath . ($path ? DIRECTORY_SEPARATOR . $path : '');
+        $basePath = $this->container->has('path.base') ? $this->container->get('path.base') : null;
+        if (!is_string($basePath)) {
+            $basePath = getcwd() ?: '';
+        }
+
+        return $basePath . ($path !== '' ? DIRECTORY_SEPARATOR . $path : '');
     }
 
     /**
@@ -312,7 +325,8 @@ class Application implements ApplicationInterface
     }
 
     /**
-     * Configura tratamento básico de erros no construtor.
+     * Configura o reporte básico de erros no construtor (os handlers globais
+     * são instalados apenas em run()).
      *
      * @return void
      */
@@ -322,9 +336,6 @@ class Application implements ApplicationInterface
         error_reporting(E_ALL);
         ini_set('log_errors', '1');
         ini_set('display_errors', '0');
-
-        set_error_handler([$this, 'handleError']);
-        set_exception_handler([$this, 'handleUncaughtException']);
     }
 
     /**
@@ -345,9 +356,6 @@ class Application implements ApplicationInterface
             ini_set('display_errors', '0');
             ini_set('log_errors', '1');
         }
-
-        set_error_handler([$this, 'handleError']);
-        set_exception_handler([$this, 'handleUncaughtException']);
     }
 
     /**
@@ -360,10 +368,7 @@ class Application implements ApplicationInterface
      */
     public function handleUncaughtException(Throwable $e): void
     {
-        $response = $this->handleException($e);
-        if (!$response->isSent()) {
-            $response->emit();
-        }
+        (new SapiEmitter())->emit($this->handleException($e));
     }
 
     /**
@@ -378,7 +383,7 @@ class Application implements ApplicationInterface
         if (is_array($middlewares)) {
             foreach ($middlewares as $middleware) {
                 if (is_callable($middleware)) {
-                    $this->middlewares->add($middleware);
+                    $this->middlewares->add($this->adaptMiddleware($middleware));
                 }
             }
         }
@@ -424,7 +429,7 @@ class Application implements ApplicationInterface
      */
     public function use(mixed $middleware): self
     {
-        // Resolve alias string ('rate-limiter' → class name)
+        // Resolve alias string (alias → class name)
         if (is_string($middleware) && isset($this->middlewareAliases[$middleware])) {
             $middleware = $this->middlewareAliases[$middleware];
         }
@@ -442,55 +447,61 @@ class Application implements ApplicationInterface
     }
 
     /**
-     * Adapta um middleware (PSR-15, callable ou objeto com handle()) para a
-     * assinatura Express-style da pilha ($request, $response, $next).
+     * Adapta um middleware (PSR-15 ou callable) para PSR-15.
      *
      * @param  mixed $middleware Middleware a ser adaptado
-     * @return callable
+     * @return MiddlewareInterface
      * @throws \InvalidArgumentException Quando não é adaptável
      */
-    private function adaptMiddleware(mixed $middleware): callable
+    private function adaptMiddleware(mixed $middleware): MiddlewareInterface
     {
-        // PSR-15: detectar ANTES de is_callable() — o __invoke do objeto pode
-        // ter uma assinatura incompatível com a pilha (SPEC-023).
         if ($middleware instanceof MiddlewareInterface) {
-            return function ($request, $response, $next) use ($middleware) {
-                $handler = new class ($next, $response) implements RequestHandlerInterface {
-                    /** @var callable */
-                    private $next;
-                    private ResponseInterface $response;
-
-                    public function __construct(callable $next, ResponseInterface $response)
-                    {
-                        $this->next = $next;
-                        $this->response = $response;
-                    }
-
-                    public function handle(\Psr\Http\Message\ServerRequestInterface $request): ResponseInterface
-                    {
-                        $result = ($this->next)($request, $this->response);
-
-                        return $result instanceof ResponseInterface ? $result : $this->response;
-                    }
-                };
-
-                return $middleware->process($request, $handler);
-            };
-        }
-
-        if (is_callable($middleware)) {
             return $middleware;
         }
 
-        if (is_object($middleware) && method_exists($middleware, 'handle')) {
-            return function ($request, $response, $next) use ($middleware) {
-                return $middleware->handle($request, $response, $next);
+        if (is_callable($middleware)) {
+            return new class ($middleware) implements MiddlewareInterface {
+                /** @var callable */
+                private $next;
+
+                public function __construct(callable $next)
+                {
+                    $this->next = $next;
+                }
+
+                public function process(
+                    ServerRequestInterface $request,
+                    RequestHandlerInterface $handler
+                ): ResponseInterface {
+                    $response = new ExpressResponse();
+                    $downstream = null;
+
+                    // $next() accepts an optional (modified) request and runs the rest of the
+                    // pipeline once; its response is kept even if the middleware does not return it.
+                    $next = static function (?ServerRequestInterface $nextRequest = null) use (
+                        $handler,
+                        $request,
+                        &$downstream
+                    ): ResponseInterface {
+                        return $downstream = $handler->handle($nextRequest ?? $request);
+                    };
+
+                    $result = ($this->next)($request, $response, $next);
+
+                    if ($result instanceof ResponseInterface) {
+                        return $result;
+                    }
+
+                    if ($result instanceof ExpressResponse) {
+                        return $result->psr7();
+                    }
+
+                    return $downstream ?? $handler->handle($request);
+                }
             };
         }
 
-        throw new \InvalidArgumentException(
-            'Middleware must be callable, PSR-15, or an object with a handle() method'
-        );
+        throw new \InvalidArgumentException('Middleware must be PSR-15 or callable.');
     }
 
     /**
@@ -556,7 +567,7 @@ class Application implements ApplicationInterface
             return $handler;
         }
 
-        return function (Request $request, Response $response) use ($class, $method) {
+        return function (ExpressRequest $request, ExpressResponse $response) use ($class, $method) {
             $instance = $this->container->has($class)
                 ? $this->container->get($class)
                 : new $class();
@@ -656,35 +667,33 @@ class Application implements ApplicationInterface
     /**
      * Processa uma requisição HTTP.
      *
-     * @param  Request|null $request Requisição (se null, cria automaticamente)
-     * @return Response
+     * @param  ServerRequestInterface|null $request Requisição (se null, cria automaticamente)
+     * @return ResponseInterface
      */
-    public function handle(?Request $request = null): Response
+    public function handle(?ServerRequestInterface $request = null): ResponseInterface
     {
         if (!$this->booted) {
             $this->boot();
         }
 
-        $request = $request ?: Request::createFromGlobals();
-        $response = new Response();
+        $request ??= ServerRequestFactory::fromGlobals();
         $startTime = microtime(true);
 
         // Disparar evento de requisição recebida
         $this->dispatchEvent(new RequestReceived($request, new \DateTime()));
 
         try {
+            // Parsing do corpo dentro do try: corpo malformado (ex.: JSON inválido) vira
+            // resposta 400 via HttpExceptionInterface, em vez de escapar de handle().
+            $request = (new BodyParser())->parse($request);
+
             // Executar middlewares globais ENVOLVENDO a resolução de rota, para
             // que middlewares vejam todas as requisições (incl. 404/OPTIONS) e
             // possam responder antes do roteamento (SPEC-040).
-            $result = $this->middlewares->execute(
+            $finalResponse = $this->middlewares->execute(
                 $request,
-                $response,
-                function ($req, $res) {
-                    return $this->resolveAndExecuteRoute($req, $res);
-                }
+                $this->finalHandler()
             );
-
-            $finalResponse = $result instanceof Response ? $result : $response;
 
             // Disparar evento de resposta enviada
             $processingTime = microtime(true) - $startTime;
@@ -692,7 +701,7 @@ class Application implements ApplicationInterface
 
             return $finalResponse;
         } catch (Throwable $e) {
-            $errorResponse = $this->handleException($e, $request, $response);
+            $errorResponse = $this->handleException($e, $request);
 
             // Disparar evento de resposta com erro
             $processingTime = microtime(true) - $startTime;
@@ -703,40 +712,83 @@ class Application implements ApplicationInterface
     }
 
     /**
+     * Handler final da pipeline: identifica a rota e executa seu handler.
+     */
+    private function finalHandler(): RequestHandlerInterface
+    {
+        $final = fn (ServerRequestInterface $request): ResponseInterface => $this->resolveAndExecuteRoute($request);
+
+        return new class ($final) implements RequestHandlerInterface {
+            /** @var callable */
+            private $final;
+
+            public function __construct(callable $final)
+            {
+                $this->final = $final;
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return ($this->final)($request);
+            }
+        };
+    }
+
+    /**
      * Identifica a rota e executa seu handler.
      *
-     * @param  Request  $request  Requisição
-     * @param  Response $response Resposta
-     * @return Response
+     * @param  ServerRequestInterface $request Requisição
+     * @return ResponseInterface
      */
-    private function resolveAndExecuteRoute(Request $request, Response $response): Response
+    private function resolveAndExecuteRoute(ServerRequestInterface $request): ResponseInterface
     {
+        $method = $request->getMethod();
+        $path = $request->getUri()->getPath();
+
         // Encontrar rota
-        $route = $this->router::identify($request->getMethod(), $request->getPathCallable());
+        $route = $this->router::identify($method, $path);
 
         if (!$route) {
+            // SPEC-072: se o path casa com outros métodos, responde 405 (ou 204 p/ OPTIONS) com Allow.
+            $allowed = $this->router::allowedMethods($path);
+
+            if ($allowed !== []) {
+                $allow = implode(', ', $allowed);
+
+                if ($method === 'OPTIONS') {
+                    return (new ExpressResponse())->noContent(204)->withHeader('Allow', $allow);
+                }
+
+                return (new ExpressResponse())
+                    ->status(405)
+                    ->header('Allow', $allow)
+                    ->json(['error' => 'Method Not Allowed']);
+            }
+
             // Buscar rotas disponíveis para suggestions
             $availableRoutes = array_map(
-                fn($r) => "{$r['method']} {$r['path']}",
+                static fn ($r) => "{$r['method']} {$r['path']}",
                 array_slice($this->router::getRoutes(), 0, 10)
             );
 
-            throw ContextualException::routeNotFound(
-                $request->getMethod(),
-                $request->getPathCallable(),
-                $availableRoutes
-            );
+            throw ContextualException::routeNotFound($method, $path, $availableRoutes);
         }
 
-        // Definindo o path configurado na requisição
-        // Isso é necessário para middlewares que dependem do path para definir os parâmetros
-        $request->setPath($route['path']);
+        // Expor os parâmetros de rota como atributo; a fachada ExpressRequest os lê.
+        $matchedParams = $route['matched_params'] ?? [];
+        if (is_array($matchedParams) && $matchedParams !== []) {
+            $request = $request->withAttribute(ExpressRequest::ROUTE_PARAMS_ATTRIBUTE, $matchedParams);
+        }
+
+        $handler = $this->handlerFrom(
+            fn (ServerRequestInterface $req): ResponseInterface => $this->callRouteHandler($route, $req)
+        );
 
         // Executar middlewares da rota (os globais já rodaram), se houver.
         $routeMiddlewares = $route['middlewares'] ?? [];
 
         if (empty($routeMiddlewares)) {
-            return $this->callRouteHandler($route, $request, $response);
+            return $handler->handle($request);
         }
 
         $stack = new MiddlewareStack();
@@ -744,35 +796,48 @@ class Application implements ApplicationInterface
             $stack->add($this->adaptMiddleware($middleware));
         }
 
-        $result = $stack->execute(
-            $request,
-            $response,
-            function ($req, $res) use ($route) {
-                return $this->callRouteHandler($route, $req, $res);
-            }
-        );
+        return $stack->execute($request, $handler);
+    }
 
-        return $result instanceof Response ? $result : $response;
+    /**
+     * Envolve um callable num RequestHandlerInterface PSR-15.
+     */
+    private function handlerFrom(callable $handler): RequestHandlerInterface
+    {
+        return new class ($handler) implements RequestHandlerInterface {
+            /** @var callable */
+            private $handler;
+
+            public function __construct(callable $handler)
+            {
+                $this->handler = $handler;
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return ($this->handler)($request);
+            }
+        };
     }
 
     /**
      * Executa o handler de uma rota.
      *
-     * @param  array<string, mixed> $route    Dados da rota
-     * @param  Request              $request  Requisição
-     * @param  Response             $response Resposta
-     * @return Response
+     * @param  array<string, mixed>    $route    Dados da rota
+     * @param  ServerRequestInterface  $request  Requisição
+     * @return ResponseInterface
      */
     protected function callRouteHandler(
         array $route,
-        Request $request,
-        Response $response
-    ): Response {
+        ServerRequestInterface $request
+    ): ResponseInterface {
         $handler = $route['handler'];
+        $expressRequest = new ExpressRequest($request);
+        $expressResponse = new ExpressResponse();
 
         // Usar CallableResolver para garantir compatibilidade com array callables
         try {
-            $result = CallableResolver::call($handler, $request, $response);
+            $result = CallableResolver::call($handler, $expressRequest, $expressResponse);
         } catch (\InvalidArgumentException $e) {
             $handlerInfo = [
                 'type' => gettype($handler),
@@ -788,7 +853,16 @@ class Application implements ApplicationInterface
             );
         }
 
-        return $result instanceof Response ? $result : $response;
+        if ($result instanceof ResponseInterface) {
+            return $result;
+        }
+
+        if ($result instanceof ExpressResponse) {
+            return $result->psr7();
+        }
+
+        // Sem `return` explícito: usa o estado acumulado na fachada.
+        return $expressResponse->psr7();
     }
 
     /**
@@ -880,51 +954,76 @@ class Application implements ApplicationInterface
     /**
      * Trata exceções não capturadas.
      *
-     * @param  Throwable     $e        Exceção
-     * @param  Request|null  $request  Requisição
-     *                                 (opcional)
-     * @param  Response|null $response Resposta (opcional)
-     * @return Response
+     * @param  Throwable                    $e        Exceção
+     * @param  ServerRequestInterface|null  $request  Requisição (opcional)
+     * @return ResponseInterface
      */
     public function handleException(
         Throwable $e,
-        ?Request $request = null,
-        ?Response $response = null
-    ): Response {
-        $response = $response ?: new Response();
+        ?ServerRequestInterface $request = null
+    ): ResponseInterface {
         $debug = $this->config->get('app.debug', false);
+        $statusCode = $this->statusCodeOf($e);
+        $response = (new ExpressResponse())->status($statusCode);
 
-        // Determinar status code
-        $statusCode = $e instanceof HttpException ? $e->getStatusCode() : 500;
+        if ($e instanceof HttpException) {
+            foreach ($e->getHeaders() as $name => $value) {
+                $response->header((string) $name, (string) $value);
+            }
+        }
 
         if ($debug) {
             $this->logException($e);
-            return $response
-                ->status($statusCode)
-                ->json(
-                    [
-                        'error' => true,
-                        'message' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => $e->getTraceAsString()
-                    ]
-                );
-        } else {
-            // Em produção, gerar ID único para o erro e logar detalhes
-            $errorId = uniqid('err_', true);
-            $this->logException($e, $errorId);
 
-            return $response
-                ->status($statusCode)
-                ->json(
-                    [
-                        'error' => true,
-                        'message' => Response::defaultErrorMessage($statusCode),
-                        'error_id' => $errorId
-                    ]
-                );
+            return $response->json(
+                [
+                    'error' => true,
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                ]
+            );
         }
+
+        // Em produção, gerar ID único para o erro e logar detalhes
+        $errorId = uniqid('err_', true);
+        $this->logException($e, $errorId);
+
+        return $response->json(
+            [
+                'error' => true,
+                'message' => $this->defaultErrorMessage($statusCode),
+                'error_id' => $errorId,
+            ]
+        );
+    }
+
+    private function statusCodeOf(Throwable $e): int
+    {
+        if ($e instanceof HttpException) {
+            return $e->getStatusCode();
+        }
+
+        if ($e instanceof \PivotPHP\Http\Exception\HttpExceptionInterface) {
+            return $e->getStatusCode();
+        }
+
+        return 500;
+    }
+
+    private function defaultErrorMessage(int $statusCode): string
+    {
+        return match ($statusCode) {
+            400 => 'Bad Request',
+            401 => 'Unauthorized',
+            403 => 'Forbidden',
+            404 => 'Not Found',
+            405 => 'Method Not Allowed',
+            422 => 'Unprocessable Entity',
+            429 => 'Too Many Requests',
+            default => 'Internal Server Error',
+        };
     }
 
     /**
@@ -1098,12 +1197,16 @@ class Application implements ApplicationInterface
      */
     public function run(): void
     {
-        $response = $this->handle();
+        // Global handlers are installed only at the SAPI entry point, so handle()
+        // (tests, workers, embedding) never changes global state.
+        set_error_handler([$this, 'handleError']);
+        set_exception_handler([$this, 'handleUncaughtException']);
 
-        // Application é o único ponto de emissão do ciclo de vida da requisição.
-        // A checagem evita reemitir caso o handler já tenha chamado emit() manualmente.
-        if (!$response->isSent()) {
-            $response->emit();
+        try {
+            (new SapiEmitter())->emit($this->handle());
+        } finally {
+            restore_error_handler();
+            restore_exception_handler();
         }
     }
 
@@ -1275,13 +1378,11 @@ class Application implements ApplicationInterface
     }
 
     /**
-     * Register an extension manually
+     * Register an extension manually: $provider is a ServiceProvider class name,
+     * instantiated with the application and registered immediately.
      */
-    public function registerExtension(
-        string $name,
-        string $provider,
-        array $config = []
-    ): self {
+    public function registerExtension(string $name, string $provider): self
+    {
         $this->extensions()->registerExtension($name, $provider);
         return $this;
     }

@@ -56,13 +56,11 @@ $app->get('/users/:id', function($req, $res) {
 
 $app->post('/users', function($req, $res) {
     // Documentation is handled by the middleware automatically
-    $userData = $req->getBodyAsStdClass();
-    
     // Simulate user creation
     $newUser = [
         'id' => 3,
-        'name' => $userData->name ?? 'Unknown',
-        'email' => $userData->email ?? 'unknown@example.com'
+        'name' => $req->input('name', 'Unknown'),
+        'email' => $req->input('email', 'unknown@example.com'),
     ];
     
     return $res->status(201)->json($newUser);

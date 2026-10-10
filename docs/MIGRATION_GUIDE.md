@@ -1,82 +1,103 @@
-# PivotPHP Core - Migration Guide
+# PivotPHP Core — Migration Guide (3.x → 4.0)
 
-## 📋 Current Migration Documentation
+4.0 is a breaking release. Read the sections that apply to your application; the
+[CHANGELOG](../CHANGELOG.md) lists every change. Guides for older versions live in
+[releases/](releases/).
 
-**For detailed migration instructions, please refer to the official release documentation:**
+## 1. Dependencies
 
-### 🔄 Latest Breaking Release: v2.0.0 ⚠️
-**[Complete Migration Guide →](releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md)**
+```bash
+composer require pivotphp/core:^4.0
+```
 
-**Migration highlights:**
-- **🗑️ Legacy Cleanup**: 18% code reduction (11,871 lines removed)
-- **📦 Namespace Modernization**: 110 legacy aliases removed
-- **🚀 Performance**: 59% fewer aliases to autoload
-- **⚠️ Breaking Changes**: Required namespace updates for middleware
-- **✅ Zero Regressions**: 5,548 tests passing at the time of the v2.0.0 release (100%) — the
-  suite has changed size since; see `CHANGELOG.md` for the current count.
+`pivotphp/http`, `pivotphp/core-routing` (^2.2) and `pivotphp/security` are installed with the core.
+Install the libraries of the security adapters you use (`firebase/php-jwt`, `bepsvpt/secure-headers`,
+`yiisoft/csrf`, `symfony/rate-limiter`). `ext-mbstring` is required; `ext-session` is no longer used.
 
-### ⚠️ Current version is v2.1.1, not v2.0.0
+## 2. HTTP: request, response and middleware
 
-This guide (and the version-specific guides linked below) only covers up to v2.0.0. Two more
-releases shipped after it, **without further breaking changes** to public APIs — they don't
-have dedicated migration guides because there's nothing to migrate, but you should still be
-aware of them:
+| 3.x | 4.0 |
+|---|---|
+| `PivotPHP\Core\Http\Request` / `Response` (hybrid) | `PivotPHP\Http\ExpressRequest` / `ExpressResponse` in routes; PSR-7 elsewhere |
+| `$req->body`, `$req->body()`, `getBodyAsStdClass()` | `$req->input('field')`, `$req->psr7()->getParsedBody()` (array), `$req->json()` |
+| `$req->get('q')` | `$req->query('q')` |
+| `$req->user = $x` (dynamic properties) | `$next($req->withAttribute('user', $x))` → `$req->psr7()->getAttribute('user')` |
+| `$req->uri()`, `$req->headers()` | `$req->path()`, `$req->header('Name')`, `$req->psr7()` |
+| `$app->handle()` with no PSR-7 | `$app->handle(ServerRequestInterface $request): ResponseInterface` |
+| `BaseMiddleware` / `handle($req, $res, $next)` | PSR-15 `MiddlewareInterface`, or callable `fn ($req, $res, $next)` |
 
-- **v2.1.0** — fixed response double-emission, pooled-object data leaks in async runtimes
-  (Swoole/ReactPHP/FrankenPHP), and started a deprecation cycle (`Core\Container`,
-  `Middleware\LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`,
-  `Providers\Logger`/`EventDispatcher` — all still work via deprecation aliases, removal
-  planned for v3.0.0).
-- **v2.1.1** — fixed a real incompatibility with `psr/http-message` `^2.0` that could cause a
-  fatal error on every request if Composer resolved to that version (despite
-  `composer.json` already declaring support for it since 2.1.0).
+Callable middleware in 4.0:
 
-See [`CHANGELOG.md`](../CHANGELOG.md) for the full, authoritative list of changes in both
-releases.
+```php
+$app->use(function ($req, $res, $next) {            // $req: PSR-7 ServerRequestInterface
+    if ($req->getHeaderLine('X-Key') === '') {
+        return $res->error(401, 'Unauthorized');      // short-circuit
+    }
 
-### 📚 Version-Specific Migration Guides
+    return $next($req->withAttribute('k', 1))         // forward a modified request
+        ->withHeader('X-Handled', 'yes');             // change the returned response
+});
+```
 
-| From Version | Migration Guide | Effort Level |
-|--------------|----------------|--------------|
-| **v1.x → v2.0.0** | [v2.0.0 Migration Guide](releases/v2.0.0/MIGRATION_GUIDE_v2.0.0.md) | **Medium** ⚠️ BREAKING |
-| **v1.1.3** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Low** (mostly optional) |
-| **v1.1.2** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Low** (infrastructure only) |
-| **v1.1.1** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Low** (backward compatible) |
-| **v1.1.0** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Medium** (multiple versions) |
-| **v1.0.x** | [v1.1.4 Migration Guide](releases/v1.1.4/MIGRATION_GUIDE.md) | **Medium** (feature changes) |
+Headers set on `$res` are **not** merged into the response returned by `$next()`.
+`$app->use('/path', $middleware)` (path-scoped) does not exist: check the path inside the middleware
+or use `Router::group()`.
 
-### 🎯 Quick Migration Checklist
+Routes must **return** the response (`return $res->json(...)`).
 
-#### ⚠️ Required Actions (v2.0.0) - BREAKING CHANGES:
-- [ ] **Update PSR-15 middleware imports** (8 classes - see migration guide)
-- [ ] **Remove "Simple*" prefixes** (7 classes - PerformanceMode, LoadShedder, etc.)
-- [ ] **Replace OpenApiExporter** with ApiDocumentationMiddleware
-- [ ] **Update DynamicPoolManager** → PoolManager
-- [ ] **Run tests**: `composer test`
-- [ ] **Regenerate autoloader**: `composer dump-autoload`
+## 3. Security → `pivotphp/security`
 
-#### ✅ Recommended Actions (v2.0.0):
-- [ ] **Use migration script** (provided in v2.0.0 migration guide)
-- [ ] **Review cleanup analysis** ([docs/v2.0.0-cleanup-analysis.md](v2.0.0-cleanup-analysis.md))
-- [ ] **Update IDE configuration** for new namespaces
-- [ ] **Review updated examples** in `examples/` directory
+The core no longer ships security middlewares. `pivotphp/security` (^1.0) is installed as a core
+dependency; update imports and configuration:
 
-### 📖 Additional Resources
+| Removed from the core | Replacement in `pivotphp/security` |
+|---|---|
+| `Middleware\Http\CorsMiddleware` | `Cors\CorsMiddleware($responseFactory, new CorsConfig(...))` |
+| `Middleware\Security\SecurityHeadersMiddleware` | `Headers\SecurityHeadersMiddleware(new SecurityHeadersConfig(...))` |
+| `Middleware\Security\CsrfMiddleware`, `Utils::csrfToken()`, `Utils::checkCsrf()` | `Csrf\CsrfMiddleware($responseFactory, $token)` (tokens from `yiisoft/csrf`) |
+| `Middleware\Security\AuthMiddleware` (JWT) | `Jwt\JwtAuthMiddleware($responseFactory, new JwtConfig(...))` |
+| `Authentication\JWTHelper` | `Jwt\JwtIssuer` (issue) + `JwtAuthMiddleware` (verify) |
+| `Middleware\RateLimiter`, alias `'rate-limiter'` | `RateLimit\RateLimitMiddleware` + `Proxy\TrustedProxyMiddleware` |
+| `Middleware\Security\XssMiddleware` | none — escape output, send a CSP |
 
-- **[Versioning Guide](VERSIONING_GUIDE.md)** - Complete semantic versioning guidance
-- **[Framework Overview v1.1.4](releases/FRAMEWORK_OVERVIEW_v1.1.4.md)** - Complete release overview
-- **[Release Notes v1.1.4](releases/v1.1.4/RELEASE_NOTES.md)** - Detailed release notes
-- **[Changelog](../CHANGELOG.md)** - Complete version history
+`$responseFactory` can be `PivotPHP\Http\Factory\Psr17Factory`. The JWT adapter needs
+`firebase/php-jwt`, security headers need `bepsvpt/secure-headers`, CSRF needs `yiisoft/csrf` and rate
+limiting needs `symfony/rate-limiter` — install only what you use.
 
-### 🆘 Migration Support
+**Behaviour changes (all intentional security fixes):**
 
-If you encounter migration issues:
+- CORS: preflight returns `204` from the middleware (never reaches routes); disallowed origins get no
+  `Access-Control-Allow-Origin` (previously `null`); requests without `Origin` get no CORS headers;
+  `'*'` with credentials is rejected at boot; `Vary: Origin` is sent.
+- Security headers: `X-XSS-Protection` is no longer sent; HSTS, a restrictive CSP and
+  `Referrer-Policy` are sent by default.
+- CSRF: `PUT`, `PATCH` and `DELETE` are protected too; the token is accepted from the body field or the
+  `X-CSRF-Token` header; failures return `403` without reaching the route.
+- JWT: secrets shorter than 32 bytes (HS256) and unknown algorithms are rejected at boot; claims are in
+  the `user` request attribute; `publicPaths` is honoured; failures return `401` with `WWW-Authenticate`.
+  Basic/opaque-bearer/API-key authentication: write your own PSR-15 middleware.
+- Rate limiting: the old limiter never limited under PHP-FPM (security flaw, SPEC-093); the new one
+  needs a shared storage and a lock in production.
+- Client IP: `X-Forwarded-For` is honoured only from configured trusted proxies (`client_ip` attribute).
 
-1. **Check the specific migration guide** for your version
-2. **Review error messages** (now in Portuguese for clarity)
-3. **Consult the troubleshooting section** in the migration guide
-5. **Create GitHub issue**: https://github.com/PivotPHP/pivotphp-core/issues
+Details and options: [pivotphp/security README](https://github.com/PivotPHP/pivotphp-security#readme).
 
----
+## 4. Removed without replacement
 
-**Note**: This general migration guide has been replaced by version-specific documentation for better accuracy and detail. Please use the appropriate version-specific guide above.
+| Removed | Why / what to do |
+|---|---|
+| `Middleware\Performance\CacheMiddleware` | Served one user's response to another and failed on every cache hit; cache at the HTTP layer (reverse proxy/CDN) with proper `Vary`/`Cache-Control`. |
+| `Middleware\Http\ErrorMiddleware` | The `Application` already converts exceptions (`error_id`, details only with `app.debug`). |
+| `Middleware\RateLimiter`, alias `'rate-limiter'` | Never limited under PHP-FPM; use `RateLimitMiddleware` from `pivotphp/security`. |
+| `Middleware\Security\XssMiddleware` | Escape output; send a CSP (`SecurityHeadersMiddleware`). |
+| `Cache\*`, `Database\PDOConnection`, `Contracts\JsonOptimizerInterface` | Unused; use a PSR-16 cache library and `Database`. |
+| `PivotPHP\Core\Routing\*`, `PivotPHP\Core\Application` aliases | Never loaded; use `PivotPHP\Routing\Router\*` and `PivotPHP\Core\Core\Application`. |
+| `registerExtension($name, $provider, $config)` third argument | It was ignored. |
+
+## 5. Behaviour changes worth testing
+
+- Unknown method on a known path → `405` + `Allow` (was `404`); `OPTIONS` → `204` + `Allow`; `HEAD`
+  uses the `GET` route.
+- Malformed JSON body → `400`.
+- Hooks, listeners and extensions registered right after `new Application()` now run.
+- `handle()` no longer installs PHP error handlers; `run()` does (and restores them).

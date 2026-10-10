@@ -117,7 +117,7 @@ class HookManager
 
         $this->listeners[$hook] = array_filter(
             $this->listeners[$hook],
-            fn($listener) => is_array($listener) && $listener['callback'] !== $callback
+            fn (array $listener): bool => $listener['callback'] !== $callback
         );
 
         // Re-register with event system
@@ -192,7 +192,7 @@ class HookManager
         $listenerProvider = $this->app->make('listeners');
 
         // Remove listener antigo, se existir
-        if (isset($this->psrListeners[$hook]) && $this->psrListeners[$hook] !== null) {
+        if (isset($this->psrListeners[$hook])) {
             $listenerProvider->removeListener(Hook::class, $this->psrListeners[$hook]);
         }
 

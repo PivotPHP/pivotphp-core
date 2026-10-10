@@ -13,13 +13,14 @@
  * curl http://localhost:8000/
  * curl http://localhost:8000/users/123
  * curl http://localhost:8000/users/abc  # Deve dar 404
- * curl http://localhost:8000/posts/2024/12/25
+ * curl http://localhost:8000/posts/hello-world
  * curl http://localhost:8000/api/v2/data  # Versão não suportada
  */
 
-require_once dirname(__DIR__, 2) . '/pivotphp-core/vendor/autoload.php';
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use PivotPHP\Core\Core\Application;
+use PivotPHP\Routing\Router\Router;
 
 $app = new Application();
 
@@ -274,36 +275,22 @@ $app->get('/mobile/:platform<(ios|android|web)>/app', function ($req, $res) {
     ]);
 });
 
-// 🔐 Middleware condicional baseado em constraint
-$app->use('/secure/:level<(low|medium|high)>/*', function ($req, $res, $next) {
-    $level = $req->param('level');
-    
-    // Aplicar headers de segurança baseados no nível
-    switch ($level) {
-        case 'high':
-            $res->header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-            $res->header('Content-Security-Policy', "default-src 'self'");
-            // fallthrough
-        case 'medium':
-            $res->header('X-Content-Type-Options', 'nosniff');
-            $res->header('X-Frame-Options', 'DENY');
-            // fallthrough
-        case 'low':
-            $res->header('X-XSS-Protection', '1; mode=block');
-            break;
-    }
-    
-    $res->header('X-Security-Level', $level);
-    return $next($req, $res);
-});
+// 🔐 Route middleware (4th argument of Router::get): runs only for this route, after the
+// constraint matched, and can read the route parameters.
+$securityLevel = function ($req, $res, $next) {
+    $params = $req->getAttribute('route_params', []);
+    $response = $next();
 
-$app->get('/secure/:level<(low|medium|high)>/data', function ($req, $res) {
+    return $response->withHeader('X-Security-Level', (string) ($params['level'] ?? 'unknown'));
+};
+
+Router::get('/secure/:level<(low|medium|high)>/data', function ($req, $res) {
     $level = $req->param('level');
     
     $securityMeasures = [
-        'low' => ['XSS Protection'],
-        'medium' => ['XSS Protection', 'Content Type Protection', 'Frame Protection'],
-        'high' => ['XSS Protection', 'Content Type Protection', 'Frame Protection', 'HSTS', 'CSP']
+        'low' => ['Content Type Protection'],
+        'medium' => ['Content Type Protection', 'Frame Protection'],
+        'high' => ['Content Type Protection', 'Frame Protection', 'HSTS', 'CSP']
     ];
     
     return $res->json([
@@ -315,7 +302,7 @@ $app->get('/secure/:level<(low|medium|high)>/data', function ($req, $res) {
             'security_escalation' => 'Cada nível adiciona mais proteções'
         ]
     ]);
-});
+}, [], $securityLevel);
 
 // 🎯 Constraint complexo - Múltiplas validações
 $app->get('/products/:category<(electronics|books|clothing)>/:id<\\d+>/:action<(view|edit|delete)>', function ($req, $res) {

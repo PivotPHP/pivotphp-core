@@ -4,12 +4,6 @@ Este diretório contém scripts utilitários para manutenção e configuração 
 
 ## Scripts Disponíveis
 
-### switch-psr7-version.php
-Utilitário para alternar entre versões PSR-7 e validar compatibilidade.
-```bash
-php ./scripts/utils/switch-psr7-version.php --check
-php ./scripts/utils/switch-psr7-version.php --version=2.0
-```
 
 ### version-utils.sh
 Utilitários para manipulação de versões e metadados.
@@ -21,11 +15,6 @@ validate_version_format "1.2.3"
 
 ## Funcionalidades
 
-### switch-psr7-version.php
-- Verificação da versão PSR-7 atual
-- Alternância entre versões compatíveis
-- Validação de compatibilidade
-- Atualização automática de dependências
 
 ### version-utils.sh
 - Funções para leitura de versão
@@ -34,15 +23,6 @@ validate_version_format "1.2.3"
 - Helpers para scripts de release
 
 ## Uso em Desenvolvimento
-
-### Verificação PSR-7
-```bash
-# Verificar versão atual
-php ./scripts/utils/switch-psr7-version.php --check
-
-# Listar versões disponíveis
-php ./scripts/utils/switch-psr7-version.php --list
-```
 
 ### Funções de Versão
 ```bash

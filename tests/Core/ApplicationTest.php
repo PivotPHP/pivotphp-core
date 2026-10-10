@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Core;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 // Response class removed - not used in tests
 use PivotPHP\Routing\Router\Router;
 use PivotPHP\Core\Core\Config;
@@ -67,8 +67,8 @@ class ApplicationTest extends TestCase
     public function testApplicationInitialization(): void
     {
         $this->assertInstanceOf(Application::class, $this->app);
-        $this->assertEquals('3.1.0', Application::VERSION);
-        $this->assertEquals('3.1.0', $this->app->version());
+        $this->assertSame(trim((string) file_get_contents(__DIR__ . '/../../VERSION')), Application::VERSION);
+        $this->assertSame(Application::VERSION, $this->app->version());
         $this->assertFalse($this->app->isBooted());
     }
 
@@ -220,7 +220,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/test', '/test');
+        $request = new ServerRequest('GET', '/test');
         $response = $this->app->handle($request);
 
         $this->assertTrue($middlewareCalled);
@@ -238,7 +238,8 @@ class ApplicationTest extends TestCase
         $property->setAccessible(true);
         $aliases = $property->getValue($this->app);
 
-        $this->assertArrayHasKey('rate-limiter', $aliases);
+        // 'rate-limiter' removed in 4.0.0: the RateLimiter did not limit under PHP-FPM (SPEC-093)
+        $this->assertArrayNotHasKey('rate-limiter', $aliases);
 
         // Circuit breaker removed following ARCHITECTURAL_GUIDELINES
         $this->assertArrayNotHasKey('circuit-breaker', $aliases);
@@ -287,7 +288,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/hello/:name', '/hello/world');
+        $request = new ServerRequest('GET', '/hello/world');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -304,7 +305,7 @@ class ApplicationTest extends TestCase
     {
         $this->app->boot();
 
-        $request = new Request('GET', '/nonexistent', '/nonexistent');
+        $request = new ServerRequest('GET', '/nonexistent');
         $response = $this->app->handle($request);
 
         $this->assertEquals(404, $response->getStatusCode());
@@ -326,7 +327,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/error', '/error');
+        $request = new ServerRequest('GET', '/error');
         $response = $this->app->handle($request);
 
         $this->assertEquals(500, $response->getStatusCode());
@@ -356,7 +357,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/error', '/error');
+        $request = new ServerRequest('GET', '/error');
         $response = $this->app->handle($request);
 
         $this->assertEquals(500, $response->getStatusCode());
@@ -382,7 +383,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/forbidden', '/forbidden');
+        $request = new ServerRequest('GET', '/forbidden');
         $response = $this->app->handle($request);
 
         $this->assertEquals(403, $response->getStatusCode());
@@ -406,7 +407,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/forbidden', '/forbidden');
+        $request = new ServerRequest('GET', '/forbidden');
         $response = $this->app->handle($request);
 
         $this->assertEquals(403, $response->getStatusCode());
@@ -590,7 +591,7 @@ class ApplicationTest extends TestCase
 
         $this->app->boot();
 
-        $request = new Request('GET', '/test', '/test');
+        $request = new ServerRequest('GET', '/test');
         $this->app->handle($request);
 
         // Test that middleware was executed in some order

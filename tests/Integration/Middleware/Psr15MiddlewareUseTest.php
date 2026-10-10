@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Integration\Middleware;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -41,28 +41,9 @@ class Psr15MiddlewareUseTest extends TestCase
             }
         );
 
-        $response = $app->handle(new Request('GET', '/hello', '/hello'));
+        $response = $app->handle(new ServerRequest('GET', '/hello'));
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('yes', $response->getHeaderLine('X-Psr15'));
-    }
-
-    public function testCoreCorsMiddlewareViaUse(): void
-    {
-        $app = new Application(__DIR__ . '/../../..');
-
-        $app->use(new \PivotPHP\Core\Middleware\Http\CorsMiddleware());
-
-        $app->get(
-            '/data',
-            function ($req, $res) {
-                return $res->json(['ok' => true]);
-            }
-        );
-
-        $response = $app->handle(new Request('GET', '/data', '/data'));
-
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('*', $response->getHeaderLine('Access-Control-Allow-Origin'));
     }
 }

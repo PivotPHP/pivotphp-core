@@ -108,8 +108,8 @@ rm "$test_output"
 info "📊 3. Test Coverage (≥30%) - CRITICAL"
 
 coverage_output=$(mktemp)
-# Generate coverage report for CI tests (excludes integration/stress)
-if XDEBUG_MODE=coverage vendor/bin/phpunit --testsuite=CI --coverage-clover=reports/coverage.xml --no-progress > "$coverage_output" 2>&1; then
+# Generate coverage report for the full suite
+if XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=reports/coverage.xml --no-progress > "$coverage_output" 2>&1; then
     coverage_gen_result=0
 else
     coverage_gen_result=1
@@ -244,7 +244,7 @@ count_check $doc_result "critical"
 info "🔒 6. Security Tests - CRITICAL"
 
 security_output=$(mktemp)
-if composer test:security > "$security_output" 2>&1; then
+if vendor/bin/phpunit tests/Integration/Middleware/SecurityPackageIntegrationTest.php > "$security_output" 2>&1; then
     security_result=0
     success "Security Tests - PASSED"
     

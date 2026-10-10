@@ -31,99 +31,44 @@ composer test
 #### 🎯 Estrutura do Código
 ```
 src/
-├── Core/                    # Núcleo do framework
-│   ├── Application.php      # Classe principal da aplicação
-│   ├── Config.php           # Gerenciamento de configuração
-│   └── Container.php        # Container de injeção de dependência
-├── Http/                    # Componentes HTTP
-│   ├── Request.php          # Implementação PSR-7 Request
-│   ├── Response.php         # Implementação PSR-7 Response
-│   └── Psr15/               # Implementações PSR-15
-├── Routing/                 # Sistema de roteamento
-│   ├── Router.php           # Roteador principal
-│   └── Route.php            # Representação de rotas
-├── Middleware/              # Sistema de middlewares
-│   ├── Core/                # Middlewares principais
-│   └── MiddlewareStack.php  # Gerenciamento de middleware
-├── Providers/               # Service Providers
-├── Events/                  # Sistema de eventos PSR-14
-├── Authentication/          # Autenticação (JWT)
-└── Utils/                   # Utilitários diversos
+├── Core/          # Application, Config, Environment
+├── Database/      # Database (PDO)
+├── Events/        # Eventos PSR-14
+├── Exceptions/    # HttpException, ContextualException
+├── Logging/       # PsrLogger
+├── Middleware/    # MiddlewareStack e ApiDocumentationMiddleware
+├── Providers/     # Container, service providers, extensões
+├── Support/       # HookManager, Str
+├── Utils/         # Arr, CallableResolver, Utils
+└── Validation/    # Validator
 ```
+
+HTTP (`pivotphp/http`), roteamento (`pivotphp/core-routing`) e segurança (`pivotphp/security`) são
+pacotes separados: contribuições nessas áreas vão para os respectivos repositórios.
 
 ### 3. Desenvolvendo Middlewares
 
-#### Template de Middleware
-```php
-<?php
-namespace PivotPHP\Core\Middleware\Core;
-
-class MeuMiddleware
-{
-    private array $options;
-
-    public function __construct(array $options = [])
-    {
-        $this->options = array_merge([
-            'enabled' => true,
-            'option1' => 'default'
-        ], $options);
-    }
-
-    public function __invoke($req, $res, $next): void
-    {
-        if (!$this->options['enabled']) {
-            $next();
-            return;
-        }
-
-        // Lógica do middleware aqui
-
-        $next();
-    }
-}
-```
-
-#### Localização dos Middlewares
-- **Core**: `src/Middleware/Core/` - Funcionalidades principais
-- **Security**: `src/Middleware/Security/` - Segurança e autenticação
+Novos middlewares devem ser PSR-15 (`Psr\Http\Server\MiddlewareInterface`). Middlewares de
+segurança pertencem ao `pivotphp/security`. Veja
+[docs/technical/middleware/CustomMiddleware.md](docs/technical/middleware/CustomMiddleware.md).
 
 ### 4. Testes
 
-#### Executar Todos os Testes
 ```bash
-# Testes unitários
-composer test
-./vendor/bin/phpunit
-
-# Análise estática
-./vendor/bin/phpstan analyse
-
-# Verificação de code style
-./vendor/bin/phpcs --standard=PSR12 src/
-
-# Correção automática de style
-./vendor/bin/phpcbf --standard=PSR12 src/
+composer test                 # PHPUnit (unit + integration, inclusive os exemplos)
+composer phpstan              # PHPStan nível 9
+composer cs:check             # PHPCS (phpcs.xml)
+composer cs:fix               # correção automática
 ```
 
-#### Criar Novos Testes
+Teste comportamento pela aplicação sempre que possível:
+
 ```php
-<?php
-namespace PivotPHP\Core\Tests\Middleware\Core;
+$app = new Application(__DIR__ . '/..');
+$app->get('/x', fn ($req, $res) => $res->json(['ok' => true]));
 
-use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Middleware\Core\MeuMiddleware;
-
-class MeuMiddlewareTest extends TestCase
-{
-    public function testMiddlewareBasicFunctionality(): void
-    {
-        $middleware = new MeuMiddleware();
-
-        // Implementar testes
-        $this->assertInstanceOf(MeuMiddleware::class, $middleware);
-    }
-}
+$response = $app->handle(new \Nyholm\Psr7\ServerRequest('GET', '/x'));
+$this->assertSame(200, $response->getStatusCode());
 ```
 
 ## 📝 Tipos de Contribuição

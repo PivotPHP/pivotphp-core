@@ -183,35 +183,23 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Middleware;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 
 /**
- * Middleware de exemplo seguindo as convenções.
+ * Middleware de exemplo seguindo as convenções (PSR-15).
  */
-class ExampleMiddleware
+final class ExampleMiddleware implements MiddlewareInterface
 {
-    /**
-     * Processar requisição.
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param callable $next
-     * @return Response
-     */
-    public function __invoke(Request $request, Response $response, callable $next): Response
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        // Lógica antes da requisição
-        $start = microtime(true);
+        $start = hrtime(true);
 
-        // Processar próximo middleware
-        $response = $next($request, $response);
+        $response = $handler->handle($request);
 
-        // Lógica depois da requisição
-        $duration = microtime(true) - $start;
-        $response->header('X-Processing-Time', $duration . 'ms');
-
-        return $response;
+        return $response->withHeader('X-Processing-Time', sprintf('%.2fms', (hrtime(true) - $start) / 1e6));
     }
 }
 ```
@@ -255,7 +243,7 @@ vendor/bin/phpunit tests/Http/RequestTest.php
 composer test:coverage
 
 # Análise estática
-composer analyze
+composer phpstan
 ```
 
 #### Escrevendo Testes
@@ -263,45 +251,31 @@ composer analyze
 ```php
 <?php
 
-namespace Tests\Http;
+namespace PivotPHP\Core\Tests\Integration;
 
+use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
-use PivotPHP\Core\Http\Request;
+use PivotPHP\Core\Core\Application;
 
-class RequestTest extends TestCase
+class UserRoutesTest extends TestCase
 {
-    public function testRequestCreation(): void
+    public function testRouteParameterIsExtracted(): void
     {
-        $request = new Request('GET', '/', '/');
+        $app = new Application(__DIR__ . '/../..');
+        $app->get('/users/:id<\d+>', fn ($req, $res) => $res->json(['id' => $req->param('id')]));
 
-        $this->assertEquals('GET', $request->method);
-        $this->assertEquals('/', $request->path);
+        $response = $app->handle(new ServerRequest('GET', '/users/123'));
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('{"id":"123"}', (string) $response->getBody());
     }
 
-    public function testParameterExtraction(): void
+    public function testNonNumericIdIsNotFound(): void
     {
-        $request = new Request('GET', '/users/:id', '/users/123');
+        $app = new Application(__DIR__ . '/../..');
+        $app->get('/users/:id<\d+>', fn ($req, $res) => $res->json([]));
 
-        $this->assertEquals(123, $request->param('id'));
-        $this->assertEquals('default', $request->param('missing', 'default'));
-    }
-
-    /**
-     * @dataProvider invalidMethodProvider
-     */
-    public function testInvalidMethods(string $method): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        new Request($method, '/', '/');
-    }
-
-    public function invalidMethodProvider(): array
-    {
-        return [
-            [''],
-            ['INVALID'],
-            ['123']
-        ];
+        $this->assertSame(404, $app->handle(new ServerRequest('GET', '/users/abc'))->getStatusCode());
     }
 }
 ```
@@ -568,7 +542,7 @@ Todos os contribuidores são reconhecidos:
 
 ### Documentação Útil
 
-- [Guia de Implementação Básica](../implementations/usage_basic.md)
+- [Exemplos](../reference/examples.md)
 - [Documentação da API](../technical/application.md)
 - [Guias de Teste](../testing/api_testing.md)
 

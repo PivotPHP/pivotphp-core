@@ -106,7 +106,7 @@ minha-extensao/
 namespace Vendor\PivotPhpExtension;
 
 use PivotPHP\Core\Providers\ServiceProvider;
-use PivotPHP\Core\Routing\Router;
+use PivotPHP\Routing\Router\Router;
 
 class MyExtensionServiceProvider extends ServiceProvider
 {
@@ -392,7 +392,7 @@ class ExtensionController
      */
     public function action($req, $res)
     {
-        $data = $req->body;
+        $data = $req->psr7()->getParsedBody();
 
         // Validação básica
         if (empty($data)) {

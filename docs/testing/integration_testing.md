@@ -18,6 +18,10 @@ Testes de integração verificam se diferentes componentes da aplicação funcio
 ```php
 <?php
 // tests/IntegrationTestCase.php
+use PHPUnit\Framework\TestCase;
+use PivotPHP\Core\Core\Application;
+use PivotPHP\Routing\Router\Router;
+
 abstract class IntegrationTestCase extends TestCase
 {
     protected PDO $testDb;
@@ -141,11 +145,12 @@ abstract class IntegrationTestCase extends TestCase
             return $this->testDb;
         });
 
-        // Configurar middlewares
-        // (PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware,
-        //  PivotPHP\Core\Middleware\Http\CorsMiddleware)
-        $this->app->use(new SecurityHeadersMiddleware());
-        $this->app->use(new CorsMiddleware());
+        // Configurar middlewares (pivotphp/security)
+        $this->app->use(new \PivotPHP\Security\Headers\SecurityHeadersMiddleware());
+        $this->app->use(new \PivotPHP\Security\Cors\CorsMiddleware(
+            new \PivotPHP\Http\Factory\Psr17Factory(),
+            new \PivotPHP\Security\Cors\CorsConfig(['https://app.test'])
+        ));
 
         // Configurar rotas
         $this->setupRoutes();
@@ -158,22 +163,22 @@ abstract class IntegrationTestCase extends TestCase
         $this->app->post('/auth/logout', [AuthController::class, 'logout']);
 
         // Rotas de usuários
-        $this->app->group('/api/users', function($group) {
-            $group->get('/', [UserController::class, 'index']);
-            $group->get('/:id', [UserController::class, 'show']);
-            $group->post('/', [UserController::class, 'create']);
-            $group->put('/:id', [UserController::class, 'update']);
-            $group->delete('/:id', [UserController::class, 'delete']);
-        }, [new AuthMiddleware(['authMethods' => ['bearer']])]);
+        Router::group('/api/users', function (): void {
+            Router::get('/', [UserController::class, 'index']);
+            Router::get('/:id', [UserController::class, 'show']);
+            Router::post('/', [UserController::class, 'create']);
+            Router::put('/:id', [UserController::class, 'update']);
+            Router::delete('/:id', [UserController::class, 'delete']);
+        }, [$this->jwtAuth]); // ex.: new JwtAuthMiddleware($factory, $jwtConfig) do pivotphp/security
 
         // Rotas de posts
-        $this->app->group('/api/posts', function($group) {
-            $group->get('/', [PostController::class, 'index']);
-            $group->get('/:id', [PostController::class, 'show']);
-            $group->post('/', [PostController::class, 'create']);
-            $group->put('/:id', [PostController::class, 'update']);
-            $group->delete('/:id', [PostController::class, 'delete']);
-        }, [new AuthMiddleware(['authMethods' => ['bearer']])]);
+        Router::group('/api/posts', function (): void {
+            Router::get('/', [PostController::class, 'index']);
+            Router::get('/:id', [PostController::class, 'show']);
+            Router::post('/', [PostController::class, 'create']);
+            Router::put('/:id', [PostController::class, 'update']);
+            Router::delete('/:id', [PostController::class, 'delete']);
+        }, [$this->jwtAuth]); // ex.: new JwtAuthMiddleware($factory, $jwtConfig) do pivotphp/security
     }
 
     protected function authenticateUser(string $username): string

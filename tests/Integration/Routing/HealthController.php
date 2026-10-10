@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace PivotPHP\Core\Tests\Integration\Routing;
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Http\ExpressRequest;
+use PivotPHP\Http\ExpressResponse;
 
 /**
  * Test controller for integration tests
  */
 class HealthController
 {
-    public function healthCheck(Request $req, Response $res)
+    public function healthCheck(ExpressRequest $req, ExpressResponse $res)
     {
         return $res->json(
             [
@@ -25,7 +25,7 @@ class HealthController
         );
     }
 
-    public function getUserHealth(Request $req, Response $res)
+    public function getUserHealth(ExpressRequest $req, ExpressResponse $res)
     {
         $userId = $req->param('userId');
         return $res->json(
@@ -37,7 +37,7 @@ class HealthController
         );
     }
 
-    public static function staticHealthCheck(Request $req, Response $res)
+    public static function staticHealthCheck(ExpressRequest $req, ExpressResponse $res)
     {
         return $res->json(
             [

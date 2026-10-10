@@ -25,7 +25,11 @@ class PsrLogger extends AbstractLogger
         string $logPath = '',
         string $dateFormat = 'Y-m-d H:i:s'
     ) {
-        $this->logPath = $logPath ?: ($_ENV['LOG_PATH'] ?? sys_get_temp_dir() . '/' . self::DEFAULT_LOG_FILENAME);
+        $envPath = $_ENV['LOG_PATH'] ?? null;
+        $defaultPath = sys_get_temp_dir() . '/' . self::DEFAULT_LOG_FILENAME;
+        $this->logPath = $logPath !== ''
+            ? $logPath
+            : (is_string($envPath) && $envPath !== '' ? $envPath : $defaultPath);
         $this->dateFormat = $dateFormat;
         $this->logLevels = [
             LogLevel::EMERGENCY => 0,

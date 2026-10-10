@@ -3,705 +3,218 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 [![Latest Stable Version](https://poser.pugx.org/pivotphp/core/v/stable)](https://packagist.org/packages/pivotphp/core)
-[![Total Downloads](https://poser.pugx.org/pivotphp/core/downloads)](https://packagist.org/packages/pivotphp/core)
 [![PHPStan Level](https://img.shields.io/badge/PHPStan-Level%209-brightgreen.svg)](https://phpstan.org/)
-[![PSR-12](https://img.shields.io/badge/PSR--12%20%2F%20PSR--15-compliant-brightgreen)](https://www.php-fig.org/psr/psr-12/)
-[![GitHub Issues](https://img.shields.io/github/issues/PivotPHP/pivotphp-core)](https://github.com/PivotPHP/pivotphp-core/issues)
-[![GitHub Stars](https://img.shields.io/github/stars/PivotPHP/pivotphp-core)](https://github.com/PivotPHP/pivotphp-core/stargazers)
+[![PSR-7 / PSR-15](https://img.shields.io/badge/PSR--7%20%2F%20PSR--15-compliant-brightgreen)](https://www.php-fig.org/psr/psr-15/)
 
 ---
 
 ## 🚀 O que é o PivotPHP?
 
-**PivotPHP** é um microframework moderno, leve e seguro, inspirado no Express.js, **especialmente projetado para provas de conceito, prototipagem rápida e estudos**. Oferece uma API familiar e produtiva para validar ideias rapidamente, com arquitetura desacoplada e extensibilidade real quando necessário.
+**PivotPHP** é um microframework PHP inspirado no Express.js para construir **APIs**, pensado para
+provas de conceito, protótipos e estudos. A sintaxe é a do Express (`$app->get(...)`,
+`$req->param()`, `$res->json()`), sobre mensagens **PSR-7** e uma pipeline **PSR-15**.
 
-- **⚡ Setup Instantâneo**: API funcionando em menos de 5 minutos, perfeito para validar ideias rapidamente.
-- **🎯 Foco em Produtividade**: Sintaxe familiar (Express.js) que acelera o desenvolvimento de protótipos.
-- **📚 Documentação Automática**: Geração automática de OpenAPI/Swagger - essencial para apresentar provas de conceito.
-- **🛡️ Segurança Integrada**: Middlewares prontos para CSRF, XSS, JWT - protótipos seguros desde o início.
-- **🔧 Extensibilidade Simples**: Sistema de plugins e providers para expandir funcionalidades conforme necessário.
-- **📊 Performance Adequada**: footprint de ~1.61MB - suficiente para demonstrações. (Número histórico de microbenchmark interno da v1.1.3 — 44,092 ops/sec — reportado desde então como "mantido"; não revalidado para a série 2.x. Veja [`PERFORMANCE_RESULTS.md`](PERFORMANCE_RESULTS.md).)
-- **🎨 v2.0.0**: Legacy Cleanup Edition - 18% code reduction, modern namespaces, routing externalized, zero deprecated code.
+O core faz uma coisa: liga aplicação, roteamento e pipeline. As demais responsabilidades vivem em
+pacotes próprios, instalados junto com o core:
 
----
+| Pacote | Responsabilidade |
+|---|---|
+| [`pivotphp/http`](https://github.com/PivotPHP/pivotphp-http) | PSR-7/PSR-17 (nyholm/psr7), fachada `ExpressRequest`/`ExpressResponse`, parsing de corpo, emissor |
+| [`pivotphp/core-routing`](https://github.com/PivotPHP/pivotphp-core-routing) | Registro, compilação e casamento de rotas; grupos; arquivos estáticos |
+| [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security) | CORS, headers de segurança, CSRF, JWT, rate limiting, proxies confiáveis |
 
-## ✨ Principais Recursos
+## ✨ Recursos
 
-- 🏗️ **DI Container & Providers**
-- 🎪 **Event System**
-- 🧩 **Sistema de Extensões**
-- 🔧 **Configuração flexível**
-- 🔐 **Autenticação Multi-método**
-- 🛡️ **Segurança Avançada**
-- 📡 **Streaming & SSE**
-- 📚 **OpenAPI/Swagger Automático** (v2.0.0 Middleware)
-- 🔄 **PSR-7 Híbrido**
-- ♻️ **Object Pooling**
-- 🚀 **JSON Optimization** (Intelligent Caching)
-- 🎯 **Array Callables** (Native Support)
-- 🔍 **Enhanced Error Diagnostics**
-- ⚡ **Performance Extrema**
-- 🧪 **Qualidade e Testes**
-- 🎯 **Simplicidade sobre Otimização**
-- 🧹 **v2.0.0 Legacy Cleanup** (18% code reduction)
-- 🔌 **Modular Routing** (External package `pivotphp/core-routing`, extraído na v2.0.0)
-
----
-
-## 💡 Casos de Uso Ideais
-
-- **🔬 Provas de Conceito**: Validar ideias de API rapidamente com setup mínimo
-- **🎯 Prototipagem Rápida**: Demonstrar funcionalidades para stakeholders e clientes
-- **📚 Estudos e Aprendizado**: Compreender arquiteturas de microframework e PSR standards
-- **🧪 Testes de Integração**: Criar APIs mock para testar integrações frontend/mobile
-- **🎨 MVPs Educacionais**: Projetos acadêmicos e de portfólio com qualidade profissional
-- **🔗 APIs Bridge**: Conectar sistemas legacy com interfaces modernas
-
-**Ideal para:** Desenvolvedores que precisam validar conceitos rapidamente sem a complexidade de frameworks enterprise.
-
-Veja exemplos práticos em [`examples/`](examples/) e [documentação técnica completa](docs/).
+- 🛣️ Rotas Express (`get/post/put/patch/delete`), parâmetros `:id`/`{id}`, constraints (`:id<\d+>`, `<slug>`, `<uuid>`...), grupos e middlewares por rota
+- 🎯 Handlers como closure, função ou array callable (`[Controller::class, 'metodo']`)
+- 🧅 Pipeline PSR-15: qualquer `MiddlewareInterface` ou middleware callable `fn ($req, $res, $next)`
+- 📦 Corpo JSON/form parseado automaticamente; JSON inválido → `400`
+- 🚦 `405` com `Allow`, `OPTIONS` e `HEAD` tratados pelo core
+- 🛡️ Segurança via `pivotphp/security` (validada na configuração, *fail closed*)
+- 📚 Documentação OpenAPI 3 / Swagger UI gerada das rotas
+- 🏗️ Container PSR-11, service providers, eventos PSR-14, hooks e extensões
+- 🧪 PHPStan nível 9, PSR-12, exemplos verificados por testes
 
 ---
 
 ## 🚀 Início Rápido
 
-### Instalação
-
 ```bash
 composer require pivotphp/core
 ```
 
-### Exemplo Básico
-
 ```php
 <?php
-require_once 'vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Middleware\Security\{SecurityHeadersMiddleware, AuthMiddleware};
-use PivotPHP\Core\Middleware\Http\CorsMiddleware;
 
 $app = new Application();
 
-// Middlewares de segurança (PSR-15)
-$app->use(new SecurityHeadersMiddleware());
-$app->use(new CorsMiddleware());
-$app->use(new AuthMiddleware([
-    'authMethods' => ['jwt'],
-    'jwtSecret' => 'sua_chave_secreta'
+$app->get('/hello/:name', fn ($req, $res) => $res->json([
+    'message' => 'Hello, ' . $req->param('name') . '!',
 ]));
 
-// API RESTful
-$app->get('/api/users', function($req, $res) {
-    $res->json(['users' => $userService->getAll()]);
-});
+$app->post('/users', function ($req, $res) {
+    $name = $req->input('name');                       // JSON ou form
 
-$app->post('/api/users', function($req, $res) {
-    $user = $userService->create($req->body);
-    $res->status(201)->json(['user' => $user]);
-});
+    if (!is_string($name) || $name === '') {
+        return $res->error(422, 'The "name" field is required');
+    }
 
-// Rotas com validação regex
-$app->get('/api/users/:id<\d+>', function($req, $res) {
-    // Aceita apenas IDs numéricos
-    $res->json(['user_id' => $req->param('id')]);
-});
-
-$app->get('/posts/:year<\d{4}>/:month<\d{2}>/:slug<slug>', function($req, $res) {
-    // Validação de data e slug na rota
-    $res->json([
-        'year' => $req->param('year'),
-        'month' => $req->param('month'),
-        'slug' => $req->param('slug')
-    ]);
+    return $res->status(201)->json(['name' => $name]);
 });
 
 $app->run();
 ```
 
-### 🛣️ Sintaxes de Roteamento Suportadas
-
-O PivotPHP oferece suporte robusto para múltiplas sintaxes de roteamento:
-
-#### ✅ Sintaxes Suportadas
-
-```php
-// 1. Closure/Função Anônima (Recomendado para APIs simples)
-$app->get('/users', function($req, $res) {
-    return $res->json(['users' => User::all()]);
-});
-
-// 2. Array Callable (Recomendado para Controllers)
-$app->get('/users', [UserController::class, 'index']);           // Método estático/instância
-$app->post('/users', [$userController, 'store']);                // Instância específica
-$app->get('/users/:id<\d+>', [UserController::class, 'show']);   // Com validação regex
-
-// 3. Função nomeada (Para helpers simples)
-function getUsersHandler($req, $res) {
-    return $res->json(['users' => User::all()]);
-}
-$app->get('/users', 'getUsersHandler');
+```bash
+php -S localhost:8000 index.php
+curl http://localhost:8000/hello/PivotPHP
 ```
 
-#### ❌ Sintaxes NÃO Suportadas
+## 🛣️ Rotas
 
 ```php
-// ❌ String Controller@method - NÃO FUNCIONA!
-$app->get('/users', 'UserController@index'); // TypeError!
+// Parâmetros e constraints
+$app->get('/users/:id<\d+>', [UserController::class, 'show']);   // só dígitos
+$app->get('/articles/:slug<slug>', fn ($req, $res) => $res->json(['slug' => $req->param('slug')]));
+$app->get('/files/{name}', fn ($req, $res) => $res->json($req->params()));
 
-// ❌ Brace syntax - Use colon syntax
-$app->get('/users/{id}', [Controller::class, 'show']); // Erro - use :id
-
-// ✅ CORRETO: Use colon syntax
-$app->get('/users/:id', [Controller::class, 'show']);
-```
-
-#### 🎯 Exemplo Completo com Controller
-
-```php
-<?php
-
-namespace App\Controllers;
-
-class UserController
-{
-    // ✅ Métodos devem ser PÚBLICOS
-    public function index($req, $res)
-    {
-        $users = User::paginate($req->query('limit', 10));
-        return $res->json(['users' => $users]);
-    }
-
-    public function show($req, $res)
-    {
-        $id = $req->param('id');
-        $user = User::find($id);
-
-        if (!$user) {
-            return $res->status(404)->json(['error' => 'User not found']);
-        }
-
-        return $res->json(['user' => $user]);
-    }
-
-    public function store($req, $res)
-    {
-        $data = $req->body();
-        $user = User::create($data);
-
-        return $res->status(201)->json(['user' => $user]);
-    }
-}
-
-// ✅ Registrar rotas com array callable
+// Handlers: closure, função nomeada ou array callable (métodos públicos)
 $app->get('/users', [UserController::class, 'index']);
-$app->get('/users/:id<\d+>', [UserController::class, 'show']);    // Apenas números
-$app->post('/users', [UserController::class, 'store']);
+$app->post('/users', [$controller, 'store']);
 
-// ⚠️ Middleware: $app->middleware() é um alias de $app->use() — registra middleware
-// GLOBAL, não escopado à rota encadeada. Para middleware por rota/grupo, use o Router
-// subjacente diretamente (PivotPHP\Core\Routing\Router::group($prefix, $callback, $middlewares)).
-$app->put('/users/:id', [UserController::class, 'update']);
-$app->middleware($authMiddleware); // aplica-se a todas as rotas, não só a essa
+// Grupos e middlewares por grupo/rota (pivotphp/core-routing)
+use PivotPHP\Routing\Router\Router;
+
+Router::group('/admin', function (): void {
+    Router::get('/stats', fn ($req, $res) => $res->json(['ok' => true]));
+}, [$requireAdmin]);
 ```
 
-#### ⚡ Validação Automática
+`'Controller@method'` não é suportado (`TypeError`). Guia completo:
+[Sintaxe de rotas](docs/technical/routing/SYNTAX_GUIDE.md).
+
+## 📨 Requisição e resposta
+
+Os handlers recebem `ExpressRequest` e `ExpressResponse` (`pivotphp/http`):
 
 ```php
-// O PivotPHP valida automaticamente array callables:
-
-// ✅ Método público - ACEITO
-class PublicController {
-    public function handle($req, $res) { return $res->json(['ok' => true]); }
-}
-
-// ❌ Método privado - REJEITADO com erro descritivo
-class PrivateController {
-    private function handle($req, $res) { return $res->json(['ok' => true]); }
-}
-
-$app->get('/public', [PublicController::class, 'handle']);   // ✅ Funciona
-$app->get('/private', [PrivateController::class, 'handle']); // ❌ Erro claro
-
-// Erro: "Route handler validation failed: Method 'handle' is not accessible"
+$app->get('/inspect/:id', fn ($req, $res) => $res
+    ->status(200)
+    ->header('X-Example', 'yes')
+    ->json([
+        'id' => $req->param('id'),
+        'page' => $req->query('page', '1'),
+        'trace' => $req->header('X-Trace'),
+        'ip' => $req->ip(),
+        'psr7' => $req->psr7()->getMethod(),   // ServerRequestInterface subjacente
+    ]));
 ```
 
-📖 **Documentação completa:** [Guia de Sintaxe de Rotas](docs/technical/routing/SYNTAX_GUIDE.md)
+Respostas: `json()`, `text()`, `html()`, `redirect()`, `noContent()`, `send()`, `error()`;
+cookies com `cookie($nome, $valor, ['httpOnly' => true, 'sameSite' => 'Lax'])`.
 
-### 🔄 Suporte PSR-7 Híbrido
-
-O PivotPHP oferece **compatibilidade híbrida** com PSR-7, mantendo a facilidade da API Express.js enquanto implementa completamente as interfaces PSR-7:
+## 🧅 Middlewares
 
 ```php
-// API Express.js (familiar e produtiva)
-$app->get('/api/users', function($req, $res) {
-    $id = $req->param('id');
-    $name = $req->input('name');
-    return $res->json(['user' => $userService->find($id)]);
+use Psr\Http\Server\MiddlewareInterface;
+
+// PSR-15
+$app->use(new TimingMiddleware());
+
+// Callable: $req é o ServerRequestInterface; altere a resposta devolvida por $next()
+$app->use(function ($req, $res, $next) {
+    $response = $next($req->withAttribute('request_id', bin2hex(random_bytes(8))));
+
+    return $response->withHeader('X-Powered-By', 'PivotPHP');
 });
 
-// PSR-7 nativo (para middleware PSR-15)
-$app->use(function(ServerRequestInterface $request, ResponseInterface $response, $next) {
-    $method = $request->getMethod();
-    $uri = $request->getUri();
-    $newRequest = $request->withAttribute('processed', true);
-    return $next($newRequest, $response);
-});
-
-// Lazy loading e Object Pooling automático
-use PivotPHP\Core\Http\Factory\OptimizedHttpFactory;
-
-OptimizedHttpFactory::initialize([
-    'enable_pooling' => true,
-    'warm_up_pools' => true,
-    'max_pool_size' => 100,
-]);
-
-// Objetos PSR-7 são reutilizados automaticamente
-$request = OptimizedHttpFactory::createRequest('GET', '/api/users', '/api/users');
-$response = OptimizedHttpFactory::createResponse();
+// Curto-circuito: responda sem chamar $next()
+$app->use(fn ($req, $res, $next) => $req->getHeaderLine('X-Block') !== ''
+    ? $res->error(403, 'Blocked')
+    : $next());
 ```
 
-**Benefícios da Implementação Híbrida:**
-- ✅ **100% compatível** com middleware PSR-15
-- ✅ **Imutabilidade** respeitada nos métodos `with*()`
-- ✅ **Lazy loading** - objetos PSR-7 criados apenas quando necessário
-- ✅ **Object pooling** - reutilização inteligente para melhor performance
-- ✅ **API Express.js** mantida para produtividade
-- ✅ **Zero breaking changes** - código existente funciona sem alterações
+Middlewares globais rodam em ordem de registro, antes do roteamento (inclusive para 404/OPTIONS).
 
-### 🚀 JSON Optimization (Intelligent System)
-
-O PivotPHP usa thresholds automáticos por tipo de dado no sistema de otimização JSON, eliminando overhead para payloads pequenos (`JsonBufferPool::shouldUsePooling()`, ver `src/Json/Pool/JsonBufferPool.php`):
-
-- Arrays com **10+ elementos** (`POOLING_ARRAY_THRESHOLD`) — ou qualquer array com estrutura aninhada (array/objeto dentro)
-- Objetos com **5+ propriedades públicas** (`POOLING_OBJECT_THRESHOLD`)
-- Strings com **1024+ bytes** (`POOLING_STRING_THRESHOLD`)
-
-Abaixo desses limites, o sistema usa `json_encode()` direto.
-
-#### ⚡ Sistema Inteligente Automático
+## 🛡️ Segurança
 
 ```php
-// ✅ OTIMIZAÇÃO AUTOMÁTICA - Zero configuração necessária
-$app->get('/api/users', function($req, $res) {
-    $users = User::all();
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Cors\{CorsConfig, CorsMiddleware};
+use PivotPHP\Security\Headers\SecurityHeadersMiddleware;
+use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig, JwtIssuer};
 
-    // Sistema decide automaticamente com base no tipo/tamanho dos dados
-    // (array com 10+ itens, objeto com 5+ propriedades, string com 1KB+)
-    return $res->json($users); // Sempre otimizado!
-});
+$factory = new Psr17Factory();
+$jwt = new JwtConfig($_ENV['JWT_SECRET'], publicPaths: ['/login', '/health']); // HS256: ≥ 32 bytes
+
+$app->use(new SecurityHeadersMiddleware());
+$app->use(new CorsMiddleware($factory, new CorsConfig(['https://app.example.com'], allowCredentials: true)));
+$app->use(new JwtAuthMiddleware($factory, $jwt));
+
+$app->post('/login', fn ($req, $res) => $res->json([
+    'token' => (new JwtIssuer($jwt))->issue(['sub' => '42'], ttl: 3600),
+]));
+$app->get('/me', fn ($req, $res) => $res->json($req->psr7()->getAttribute('user')));
 ```
 
-#### 🔧 Configuração Avançada (Opcional)
+JWT precisa de `firebase/php-jwt`; headers, CSRF e rate limit têm adapters próprios — veja o
+[README do pivotphp/security](https://github.com/PivotPHP/pivotphp-security#readme).
 
-```php
-use PivotPHP\Core\Json\Pool\JsonBufferPool;
-
-// Chaves aceitas por configure(): max_pool_size, default_capacity, size_categories
-// (não existe opção para customizar os thresholds de pooling em si)
-JsonBufferPool::configure([
-    'max_pool_size' => 200,        // Máximo 200 buffers
-    'default_capacity' => 8192,    // Buffers de 8KB
-]);
-
-// Verificar se o pooling será aplicado para um dado específico
-if (JsonBufferPool::shouldUsePooling($data)) {
-    echo "Pool será usado\n";
-} else {
-    echo "json_encode() direto\n";
-}
-
-// Monitoramento em tempo real
-$stats = JsonBufferPool::getStatistics();
-echo "Taxa de reuso: {$stats['reuse_rate']}%\n";
-echo "Operações: {$stats['total_operations']}\n";
-```
-
-#### ✨ Características
-
-- ✅ **Thresholds automáticos por tipo** - array/objeto/string, sem overhead para dados pequenos
-- ✅ **Detecção Automática** - Sistema decide quando usar pooling
-- ✅ **Zero Configuração** - Funciona perfeitamente out-of-the-box
-- ✅ **Monitoramento Integrado** - Estatísticas em tempo real via `getStatistics()`
-- ✅ **Compatibilidade Total** - Drop-in replacement transparente
-
-### 🔍 Enhanced Error Diagnostics
-
-PivotPHP v2.0.0 mantém **ContextualException** para diagnósticos avançados de erros:
-
-#### ⚡ Sistema de Erro Inteligente
-
-```php
-use PivotPHP\Core\Exceptions\Enhanced\ContextualException;
-
-// Captura automática de contexto e sugestões
-try {
-    $app->get('/users/:id', [Controller::class, 'privateMethod']);
-} catch (ContextualException $e) {
-    echo "Erro: " . $e->getMessage() . "\n";
-    echo "Contexto: " . json_encode($e->getContext()) . "\n";
-    echo "Sugestão: " . $e->getSuggestion() . "\n";
-    echo "Categoria: " . $e->getCategory() . "\n";
-}
-
-// Output example:
-// Erro: Route handler validation failed
-// Contexto: {"method":"privateMethod","class":"Controller","visibility":"private"}
-// Sugestão: Make the method public or use a public method instead
-// Categoria: ROUTING
-```
-
-#### 🎯 Categorias de Erro Disponíveis
-
-```php
-// Automaticamente detectadas pelo sistema
-ContextualException::CATEGORY_ROUTING      // Problemas de roteamento
-ContextualException::CATEGORY_PARAMETER    // Validação de parâmetros
-ContextualException::CATEGORY_VALIDATION   // Validação de dados
-ContextualException::CATEGORY_MIDDLEWARE   // Problemas de middleware
-ContextualException::CATEGORY_HTTP         // Erros HTTP
-ContextualException::CATEGORY_SECURITY     // Questões de segurança
-ContextualException::CATEGORY_PERFORMANCE  // Problemas de performance
-```
-
-#### 🔧 Configuração de Ambiente
-
-```php
-// Desenvolvimento - máximo de informações
-ContextualException::setEnvironment('development');
-
-// Produção - informações limitadas por segurança
-ContextualException::setEnvironment('production');
-
-// Personalizada
-ContextualException::configure([
-    'show_suggestions' => true,
-    'show_context' => false,
-    'log_errors' => true,
-    'max_context_size' => 1024
-]);
-```
-
-#### ✨ Recursos v2.0.0
-
-- ✅ **Erro IDs Únicos** - Rastreamento facilitado para debugging
-- ✅ **Sugestões Inteligentes** - Orientações específicas para resolver problemas
-- ✅ **Contexto Rico** - Informações detalhadas sobre o estado quando o erro ocorreu
-- ✅ **Categorização Automática** - Classificação inteligente do tipo de erro
-- ✅ **Segurança por Ambiente** - Detalhes reduzidos em produção
-- ✅ **Logging Integrado** - Registro automático para análise posterior
-
-📖 **Documentação completa:**
-- [Guia de Sintaxe de Rotas](docs/technical/routing/SYNTAX_GUIDE.md)
-- [JsonBufferPool Optimization Guide](docs/technical/json/BUFFER_POOL_OPTIMIZATION.md)
-- [Custom Exceptions (inclui ContextualException)](docs/technical/exceptions/CustomExceptions.md)
-
-### 📖 Documentação OpenAPI/Swagger Automática (v2.0.0+)
-
-O PivotPHP v2.0.0+ inclui **middleware automático** para geração de documentação OpenAPI/Swagger:
+## 📖 OpenAPI / Swagger
 
 ```php
 use PivotPHP\Core\Middleware\Http\ApiDocumentationMiddleware;
 
-// v2.0.0: Documentação automática em 3 linhas!
-$app = new Application();
-
-// Adicionar middleware de documentação automática
 $app->use(new ApiDocumentationMiddleware([
-    'docs_path' => '/docs',        // Endpoint JSON OpenAPI
-    'swagger_path' => '/swagger',  // Interface Swagger UI
-    'base_url' => 'http://localhost:8080'
+    'docs_path' => '/docs',        // JSON OpenAPI 3.0
+    'swagger_path' => '/swagger',  // Swagger UI
 ]));
-
-// Registrar rotas normalmente
-$app->get('/users', function($req, $res) {
-    return $res->json(['users' => User::all()]);
-});
-
-$app->get('/users/:id', function($req, $res) {
-    $userId = $req->param('id');
-    return $res->json(['user' => User::find($userId)]);
-});
-
-// Pronto! Acesse:
-// http://localhost:8080/swagger - Interface Swagger UI completa
-// http://localhost:8080/docs    - JSON OpenAPI 3.0.0
 ```
 
-#### 🎯 Recursos do Middleware de Documentação
+Gera método + caminho de cada rota registrada; descrições e esquemas não são inferidos.
 
-- ✅ **Geração automática** de OpenAPI 3.0.0 de todas as rotas registradas
-- ✅ **Interface Swagger UI** integrada (zero configuração)
-- ✅ **Endpoints automáticos** `/docs` e `/swagger`
-- ✅ **Configuração flexível** de paths e URLs
-- ✅ **Zero dependências** externas
-- ✅ **Compatibilidade total** com todas as rotas
+## 🔍 Erros
 
-> **Nota**: O middleware gera paths básicos (método HTTP + caminho) a partir das rotas registradas. Metadados adicionais (descrições, tags, parâmetros) devem ser configurados manualmente no objeto OpenAPI retornado, ou via extensão futura.
+Erros viram respostas JSON (`{"error": true, "message": ..., "error_id": ...}`); com
+`app.debug` ligado, a resposta inclui detalhes da exceção. Exceções que implementam
+`PivotPHP\Http\Exception\HttpExceptionInterface` definem o status (ex.: JSON inválido → `400`).
+Falhas de configuração de rota lançam `ContextualException` com contexto e sugestões
+(`getContext()`, `getSuggestions()`, `getCategory()`).
 
-#### 📝 Exemplo Completo
+## 📚 Exemplos e documentação
 
-Veja o exemplo funcional em [`examples/api_documentation_example.php`](examples/api_documentation_example.php):
+- [`examples/`](examples/) — cada exemplo roda com `php -S` e é verificado por `tests/Integration/ExamplesTest.php`
+- [Índice da documentação](docs/index.md) · [Referência da API](docs/API_REFERENCE.md) · [Guia de migração](docs/MIGRATION_GUIDE.md)
 
-```bash
-# Rodar o exemplo
-php examples/api_documentation_example.php
+## 🔄 Migração para a 4.0
 
-# Acessar documentação
-open http://localhost:8080/swagger
-```
+A 4.0 adota `pivotphp/http` e `pivotphp/security`, remove a camada HTTP própria, os middlewares de
+segurança nativos e as otimizações sem efeito em PHP-FPM. Veja o [CHANGELOG](CHANGELOG.md) e o
+[guia de migração](docs/MIGRATION_GUIDE.md).
+
+## 🧩 Extensões
+
+- [`pivotphp/cycle-orm`](https://github.com/PivotPHP/pivotphp-cycle-orm) — integração com Cycle ORM
+  (verifique a versão do core suportada no pacote).
+
+Extensões são service providers (`PivotPHP\Core\Providers\ServiceProvider`) registrados com
+`$app->register(MeuProvider::class)`.
 
 ---
 
-## 📚 Documentação Completa
+## ⚠️ Manutenção do Projeto
 
-Acesse o [Índice da Documentação](docs/index.md) para navegar por todos os guias técnicos, exemplos, referências de API, middlewares, autenticação, performance e mais.
+**PivotPHP é mantido por uma pessoa** e é indicado para provas de conceito, protótipos, estudos e
+projetos educacionais. Para sistemas críticos com suporte dedicado, considere Laravel, Symfony ou
+Slim.
 
-Principais links:
-- [Guia de Implementação Básica](docs/implementations/usage_basic.md)
-- [Guia com Middlewares Prontos](docs/implementations/usage_with_middleware.md)
-- [Guia de Middleware Customizado](docs/implementations/usage_with_custom_middleware.md)
-- [Referência Técnica](docs/technical/application.md)
-- [Performance e Benchmarks](docs/performance/benchmarks/)
+## 🤝 Contribuindo
 
----
-
-## 🧩 Extensões Oficiais
-
-O PivotPHP possui um ecossistema rico de extensões que adicionam funcionalidades poderosas ao framework:
-
-### 🗄️ Cycle ORM Extension
-```bash
-composer require pivotphp/cycle-orm
-```
-
-Integração completa com Cycle ORM para gerenciamento de banco de dados:
-- Migrações automáticas
-- Repositórios com query builder
-- Relacionamentos (HasOne, HasMany, BelongsTo, ManyToMany)
-- Suporte a transações
-- Múltiplas conexões de banco
-
-```php
-use PivotPHP\CycleORM\CycleServiceProvider;
-
-$app->register(new CycleServiceProvider([
-    'dbal' => [
-        'databases' => [
-            'default' => ['connection' => 'mysql://user:pass@localhost/db']
-        ]
-    ]
-]));
-
-// Usar em rotas
-$app->get('/users', function($req, $res) use ($container) {
-    $users = $container->get('orm')
-        ->getRepository(User::class)
-        ->findAll();
-    $res->json($users);
-});
-```
-
-### 🌐 Extensões da Comunidade
-
-A comunidade PivotPHP está crescendo! Estamos animados para ver as extensões que serão criadas.
-
-### 🔧 Criando Sua Própria Extensão
-
-```php
-namespace MeuProjeto\Providers;
-
-use PivotPHP\Core\Providers\ServiceProvider;
-
-class MinhaExtensaoServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        // Registrar serviços
-        $this->container->singleton('meu.servico', function() {
-            return new MeuServico();
-        });
-    }
-
-    public function boot(): void
-    {
-        // Lógica de inicialização
-        $this->app->get('/minha-rota', function($req, $res) {
-            $res->json(['extensao' => 'ativa']);
-        });
-    }
-}
-```
-
-**Diretrizes para Extensões:**
-1. Seguir convenção de nome: `pivotphp-{nome}`
-2. Fornecer ServiceProvider estendendo `ServiceProvider`
-3. Incluir testes de integração
-4. Documentar no `/docs/extensions/`
-5. Publicar no Packagist com tag `pivotphp-extension`
-
----
-
-## 🔄 Compatibilidade PSR-7
-
-O PivotPHP oferece suporte duplo para PSR-7, permitindo uso com projetos modernos (v2.x) e legados (v1.x).
-
-> **v2.1.1:** o suporte a `psr/http-message` `^1.1` e `^2.0` funciona nativamente, sem
-> necessidade de rodar o script abaixo — ele corrige uma regressão introduzida na v2.1.0 em
-> que a instalação da v2.0 (permitida pelo próprio `composer.json`) quebrava a aplicação com
-> erro fatal em toda rota. Veja o [changelog da v2.1.1](CHANGELOG.md#211---2026-07-15---psr-7-20-compatibility-fix).
-> O script `switch-psr7-version.php` abaixo permanece disponível, mas não é mais um
-> pré-requisito para compatibilidade básica com as duas versões.
-
-### Verificar versão atual
-```bash
-php scripts/utils/switch-psr7-version.php --check
-```
-
-### Alternar entre versões
-```bash
-# Mudar para PSR-7 v1.x (legado)
-php scripts/utils/switch-psr7-version.php 1
-
-# Mudar para PSR-7 v2.x (padrão moderno)
-php scripts/utils/switch-psr7-version.php 2
-```
-
-### Após alternar versões
-```bash
-# Atualizar dependências
-composer update
-
-# Validar o projeto
-./scripts/validation/validate_all.sh
-```
-
-Veja a [documentação completa sobre PSR-7](docs/technical/compatibility/psr7-dual-support.md) para mais detalhes.
-
----
-
-## 🏗️ Arquitetura v2.0.0 (Legacy Cleanup Edition)
-
-O PivotPHP v2.0.0 simplifica a arquitetura seguindo o princípio "Simplicidade sobre Otimização Prematura", **priorizando facilidade de uso para provas de conceito**:
-
-> **Nota:** a estrutura descrita abaixo (namespaces de middleware, array callables, JsonBufferPool,
-> ContextualException) segue válida na v2.1.1. As versões 2.1.0 e 2.1.1 não mudaram essa
-> arquitetura — trouxeram correções pontuais (emissão única de resposta em `Application::run()`,
-> vazamento de dados em objetos pooled, compatibilidade real com `psr/http-message` `^2.0`) e um
-> ciclo de depreciação (`Core\Container`, `LoadShedder`/`RateLimitMiddleware`, `Request::getIp()`,
-> `Providers\Logger`/`EventDispatcher` — remoção prevista para v3.0.0). Veja o
-> [CHANGELOG](CHANGELOG.md) para o histórico completo.
-
-### 🎯 Recursos v2.0.0
-
-#### 🚀 Array Callables Nativos
-```php
-// Suporte nativo a array callables
-$app->get('/users', [UserController::class, 'index']);
-$app->post('/users', [$userController, 'store']);
-
-// Validação automática de métodos
-// Se método for privado/protegido, erro claro com sugestão
-
-// Integração total com IDE
-// Autocomplete, refactoring, jump-to-definition
-```
-
-#### 🧠 JsonBufferPool Inteligente
-```php
-// Sistema com threshold de 256 bytes
-// Dados pequenos: json_encode() direto (performance máxima)
-// Dados grandes: pooling automático (otimização máxima)
-
-$response = $res->json($anyData); // Sempre otimizado!
-```
-
-#### 🔍 Enhanced Error Diagnostics
-```php
-// ContextualException com sugestões inteligentes
-// Contexto rico, categorização automática, logging integrado
-
-try {
-    $app->get('/route', [Controller::class, 'privateMethod']);
-} catch (ContextualException $e) {
-    // Erro específico com sugestão clara de como resolver
-}
-```
-
-### 🎯 Estrutura de Middlewares Organizada
-```
-src/Middleware/
-├── Security/              # Middlewares de segurança
-│   ├── AuthMiddleware.php
-│   ├── CsrfMiddleware.php
-│   ├── SecurityHeadersMiddleware.php
-│   └── XssMiddleware.php
-├── Performance/           # Middlewares de performance
-│   ├── CacheMiddleware.php
-│   └── RateLimitMiddleware.php
-└── Http/                 # Middlewares HTTP
-    ├── CorsMiddleware.php
-    └── ErrorMiddleware.php
-```
-
-### ✅ Melhorias da v2.0.0 (Legacy Cleanup)
-- **🧹 18% code reduction** - 11,871 linhas removidas, código limpo e direto
-- **🎯 Orientado a Protótipos** - Arquitetura simplificada para desenvolvimento rápido
-- **🔧 Setup Mínimo** - Configuração zero para começar imediatamente
-- **💡 Conceitos Claros** - Estrutura lógica e intuitiva para estudos
-- **🛡️ Qualidade** - PHPStan Level 9, PSR-12 100%, todos os testes passando
-
-### 🔄 Migração para v2.0.0
-```php
-// Imports v1.x (não funcionam mais — aliases removidos na v2.0.0)
-use PivotPHP\Core\Http\Psr15\Middleware\CorsMiddleware; // REMOVIDO
-
-// Imports corretos (namespace atual)
-use PivotPHP\Core\Middleware\Http\CorsMiddleware;
-use PivotPHP\Core\Utils\Arr;
-```
-
-Veja o [Overview Estrutural v2.0.0](docs/releases/FRAMEWORK_OVERVIEW_v2.0.0.md) para detalhes completos.
-
----
-
-## ⚠️ Importante: Manutenção do Projeto
-
-**PivotPHP Core é mantido por apenas uma pessoa** e pode não receber atualizações constantemente. Este projeto é ideal para:
-
-- 🔬 **Provas de conceito** e protótipos
-- 📚 **Estudos** e aprendizado de arquitetura
-- 🧪 **Testes** e validação de ideias
-- 🎓 **Projetos educacionais** e acadêmicos
-
-**Não recomendado para:**
-- 🏢 Aplicações enterprise críticas
-- 📈 Sistemas de produção que exigem suporte 24/7
-- 🔄 Projetos que precisam de atualizações frequentes
-
-Se você precisa de um framework com equipe dedicada e suporte empresarial, considere alternativas como Laravel, Symfony ou Slim 4.
-
----
-
-## 🤝 Comunidade
-
-Junte-se à nossa comunidade crescente de desenvolvedores:
-
-- **GitHub Discussions**: [Inicie uma discussão](https://github.com/PivotPHP/pivotphp-core/discussions) - Compartilhe feedback e ideias
-
-## 🤝 Como Contribuir
-
-Quer ajudar a evoluir o PivotPHP? Veja o [Guia de Contribuição](CONTRIBUTING.md) ou acesse [`docs/contributing/`](docs/contributing/) para saber como abrir issues, enviar PRs ou criar extensões.
-
-**Contribuições são especialmente bem-vindas!** Por ser mantido por uma pessoa, o projeto se beneficia muito da colaboração da comunidade.
-
----
+Veja o [Guia de Contribuição](CONTRIBUTING.md). Issues e PRs são bem-vindos.
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
-
----
-
-*Desenvolvido com ❤️ para a comunidade PHP*
+MIT — veja [LICENSE](LICENSE).

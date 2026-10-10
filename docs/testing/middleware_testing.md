@@ -8,7 +8,7 @@ Guia prático para testar middlewares no PivotPHP.
 ```php
 <?php
 // tests/Unit/MiddlewareTest.php
-use PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware;
+use PivotPHP\Security\Headers\SecurityHeadersMiddleware; // pivotphp/security
 use PHPUnit\Framework\TestCase;
 
 class SecurityHeadersMiddlewareTest extends TestCase
@@ -35,166 +35,41 @@ class SecurityHeadersMiddlewareTest extends TestCase
         $this->assertTrue($response->hasHeader('X-Frame-Options'));
         $this->assertEquals('DENY', $response->getHeaderLine('X-Frame-Options'));
 
-        $this->assertTrue($response->hasHeader('X-XSS-Protection'));
-        $this->assertEquals('1; mode=block', $response->getHeaderLine('X-XSS-Protection'));
+        // X-XSS-Protection (obsoleto) não é enviado
+        $this->assertFalse($response->hasHeader('X-XSS-Protection'));
     }
 }
 ```
 
-## 🔐 Testando AuthMiddleware
+## 🔐 Testando autenticação e CORS
 
-### Teste de JWT
-```php
-<?php
-class AuthMiddlewareTest extends TestCase
-{
-    private AuthMiddleware $middleware;
-    private string $secret = 'test-secret-key';
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->middleware = new AuthMiddleware([
-            'authMethods' => ['jwt'],
-            'jwtSecret' => $this->secret
-        ]);
-    }
-
-    public function test_permite_requisicao_com_jwt_valido(): void
-    {
-        $token = $this->generateValidJWT();
-        $request = $this->createMockRequest()
-            ->withHeader('Authorization', "Bearer {$token}");
-
-        $handler = $this->createMockHandler();
-
-        $response = $this->middleware->process($request, $handler);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        // Verificar se o usuário foi anexado ao request
-        $this->assertNotNull($request->getAttribute('user'));
-    }
-
-    public function test_rejeita_requisicao_sem_token(): void
-    {
-        $request = $this->createMockRequest(); // Sem Authorization header
-        $handler = $this->createMockHandler();
-
-        $response = $this->middleware->process($request, $handler);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $body = json_decode($response->getBody()->getContents(), true);
-        $this->assertEquals('Authentication required', $body['error']);
-    }
-
-    public function test_rejeita_token_invalido(): void
-    {
-        $request = $this->createMockRequest()
-            ->withHeader('Authorization', 'Bearer token-invalido');
-
-        $handler = $this->createMockHandler();
-
-        $response = $this->middleware->process($request, $handler);
-
-        $this->assertEquals(401, $response->getStatusCode());
-    }
-
-    public function test_rejeita_token_expirado(): void
-    {
-        $expiredToken = $this->generateExpiredJWT();
-        $request = $this->createMockRequest()
-            ->withHeader('Authorization', "Bearer {$expiredToken}");
-
-        $handler = $this->createMockHandler();
-
-        $response = $this->middleware->process($request, $handler);
-
-        $this->assertEquals(401, $response->getStatusCode());
-    }
-
-    private function generateValidJWT(): string
-    {
-        $payload = [
-            'user_id' => 123,
-            'username' => 'testuser',
-            'exp' => time() + 3600 // 1 hora
-        ];
-
-        return $this->encodeJWT($payload, $this->secret);
-    }
-
-    private function generateExpiredJWT(): string
-    {
-        $payload = [
-            'user_id' => 123,
-            'username' => 'testuser',
-            'exp' => time() - 3600 // Expirado há 1 hora
-        ];
-
-        return $this->encodeJWT($payload, $this->secret);
-    }
-}
-```
-
-## 🚦 Testando RateLimitMiddleware
-
-> ⚠️ `RateLimitMiddleware` está depreciado desde v2.1.0 (usa `$_SESSION`) — prefira testar
-> `PivotPHP\Core\Middleware\RateLimiter` em código novo. As chaves de configuração reais de
-> `RateLimitMiddleware` são `windowMs` (milissegundos) e `max` — não `limit`/`window` como em
-> versões anteriores deste exemplo.
+`AuthMiddleware` e `CorsMiddleware` do core foram removidos na v4.0.0. Os middlewares equivalentes
+(`JwtAuthMiddleware`, `CorsMiddleware`, `CsrfMiddleware`...) vivem no pacote `pivotphp/security`, que
+mantém os próprios testes unitários. Na aplicação, teste a **integração** — a pipeline com as suas
+rotas:
 
 ```php
-<?php
-use PivotPHP\Core\Middleware\Performance\RateLimitMiddleware;
+use Nyholm\Psr7\ServerRequest;
+use PivotPHP\Http\Factory\Psr17Factory;
+use PivotPHP\Security\Jwt\{JwtAuthMiddleware, JwtConfig, JwtIssuer};
 
-class RateLimitMiddlewareTest extends TestCase
-{
-    public function test_permite_requisicoes_dentro_do_limite(): void
-    {
-        $middleware = new RateLimitMiddleware([
-            'max' => 5,
-            'windowMs' => 60000,
-        ]);
+$config = new JwtConfig($_ENV['JWT_SECRET'], publicPaths: ['/health']);
+$app->use(new JwtAuthMiddleware(new Psr17Factory(), $config));
 
-        $request = $this->createMockRequest();
-        $handler = $this->createMockHandler();
+$token = (new JwtIssuer($config))->issue(['sub' => 'u1'], 60);
 
-        // Fazer 5 requisições (dentro do limite)
-        for ($i = 0; $i < 5; $i++) {
-            $response = $middleware->process($request, $handler);
-            $this->assertEquals(200, $response->getStatusCode());
-        }
-    }
+$ok = $app->handle(new ServerRequest('GET', '/me', ['Authorization' => "Bearer {$token}"]));
+$this->assertSame(200, $ok->getStatusCode());
 
-    public function test_bloqueia_requisicoes_acima_do_limite(): void
-    {
-        $middleware = new RateLimitMiddleware([
-            'max' => 3,
-            'windowMs' => 60000,
-        ]);
-
-        $request = $this->createMockRequest();
-        $handler = $this->createMockHandler();
-
-        // Fazer 3 requisições (limite)
-        for ($i = 0; $i < 3; $i++) {
-            $response = $middleware->process($request, $handler);
-            $this->assertEquals(200, $response->getStatusCode());
-        }
-
-        // 4ª requisição deve ser bloqueada
-        $response = $middleware->process($request, $handler);
-        $this->assertEquals(429, $response->getStatusCode());
-
-        $body = json_decode($response->getBody()->getContents(), true);
-        $this->assertStringContainsString('Too many requests', $body['error']);
-    }
-}
+$denied = $app->handle(new ServerRequest('GET', '/me'));
+$this->assertSame(401, $denied->getStatusCode());
 ```
 
-> O exemplo de headers `X-RateLimit-*` foi removido — confirme em
-> `src/Middleware/Performance/RateLimitMiddleware.php` quais headers a versão instalada
-> realmente emite antes de testar contra eles.
+## 🚦 Rate limiting
+
+O core não inclui mais middleware de rate limiting (removido na v4.0.0 por falha de segurança em
+PHP-FPM — veja [RateLimitMiddleware.md](../technical/middleware/RateLimitMiddleware.md)). Os testes do
+`RateLimitMiddleware` ficam no pacote `pivotphp/security`.
 
 ## ✅ Testando validação de dados (`Validator`)
 
@@ -238,70 +113,6 @@ class ValidatorTest extends TestCase
         $errors = $validator->getErrors();
         $this->assertArrayHasKey('name', $errors);
         $this->assertArrayHasKey('email', $errors);
-    }
-}
-```
-
-## 🌐 Testando CorsMiddleware
-
-```php
-<?php
-class CorsMiddlewareTest extends TestCase
-{
-    public function test_adiciona_headers_cors(): void
-    {
-        $middleware = new CorsMiddleware([
-            'origins' => ['https://example.com'],
-            'methods' => ['GET', 'POST', 'PUT', 'DELETE'],
-            'headers' => ['Content-Type', 'Authorization']
-        ]);
-
-        $request = $this->createMockRequest()
-            ->withHeader('Origin', 'https://example.com');
-
-        $handler = $this->createMockHandler();
-
-        $response = $middleware->process($request, $handler);
-
-        $this->assertTrue($response->hasHeader('Access-Control-Allow-Origin'));
-        $this->assertEquals('https://example.com', $response->getHeaderLine('Access-Control-Allow-Origin'));
-
-        $this->assertTrue($response->hasHeader('Access-Control-Allow-Methods'));
-        $this->assertTrue($response->hasHeader('Access-Control-Allow-Headers'));
-    }
-
-    public function test_rejeita_origem_nao_permitida(): void
-    {
-        $middleware = new CorsMiddleware([
-            'origins' => ['https://allowed.com']
-        ]);
-
-        $request = $this->createMockRequest()
-            ->withHeader('Origin', 'https://blocked.com');
-
-        $handler = $this->createMockHandler();
-
-        $response = $middleware->process($request, $handler);
-
-        $this->assertEquals(403, $response->getStatusCode());
-    }
-
-    public function test_preflight_request(): void
-    {
-        $middleware = new CorsMiddleware();
-
-        $request = $this->createMockRequest('OPTIONS', '/test')
-            ->withHeader('Origin', 'https://example.com')
-            ->withHeader('Access-Control-Request-Method', 'POST')
-            ->withHeader('Access-Control-Request-Headers', 'Content-Type');
-
-        $handler = $this->createMockHandler();
-
-        $response = $middleware->process($request, $handler);
-
-        $this->assertEquals(204, $response->getStatusCode());
-        $this->assertTrue($response->hasHeader('Access-Control-Allow-Origin'));
-        $this->assertTrue($response->hasHeader('Access-Control-Allow-Methods'));
     }
 }
 ```

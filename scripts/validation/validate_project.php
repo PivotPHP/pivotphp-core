@@ -59,7 +59,6 @@ class ProjectValidator
         $this->validateTests();
         $this->validateDocumentation();
         $this->validateReleases();
-        // $this->validateBenchmarks(); // Benchmarks movidos para outro projeto
 
         // Testes funcionais
         $this->validateAuthentication();
@@ -77,13 +76,10 @@ class ProjectValidator
         $requiredDirs = [
             'src/',
             'src/Middleware/',
-            'src/Authentication/',
             'tests/',
             'docs/',
             'docs/releases/',
             'docs/technical/',
-            'docs/performance/',
-            'docs/implementations/',
             'docs/testing/',
             'docs/contributing/'
             // 'benchmarks/',  // Benchmarks movidos para outro projeto
@@ -99,22 +95,17 @@ class ProjectValidator
         }
 
         $requiredFiles = [
-            'src/Middleware/Security/SecurityHeadersMiddleware.php',
-            'src/Authentication/JWTHelper.php',
             'composer.json',
             'README.md',
             'docs/index.md',
             'docs/releases/README.md',
             "docs/releases/FRAMEWORK_OVERVIEW_v{$version}.md",
-            'docs/implementations/usage_basic.md',
             'docs/technical/application.md',
             'docs/technical/http/request.md',
             'docs/technical/http/response.md',
             'docs/technical/routing/router.md',
             'docs/technical/middleware/README.md',
-            'docs/technical/authentication/usage_native.md',
-            'docs/performance/PerformanceMonitor.md',
-            // 'docs/performance/benchmarks/README.md',  // Benchmarks movidos para outro projeto
+            'docs/reference/examples.md',
             'docs/testing/api_testing.md',
             'docs/contributing/README.md',
             'scripts/validation/validate-docs.sh',
@@ -177,68 +168,25 @@ class ProjectValidator
 
     private function validateMiddlewares()
     {
-        echo "🛡️ Validando middlewares...\n";
+        echo "🛡️ Validando middlewares de segurança (pivotphp/security)...\n";
 
-        // Verificar SecurityHeadersMiddleware (nova estrutura)
-        if (class_exists('PivotPHP\\Core\\Middleware\\Security\\SecurityHeadersMiddleware')) {
-            $this->passed[] = "SecurityHeadersMiddleware carregado";
-
-            try {
-                $security = new \PivotPHP\Core\Middleware\Security\SecurityHeadersMiddleware();
-                $this->passed[] = "SecurityHeadersMiddleware pode ser instanciado";
-            } catch (Exception $e) {
-                $this->errors[] = "Erro ao instanciar SecurityHeadersMiddleware: " . $e->getMessage();
-            }
-        } else {
-            // Verificar se ainda existe via alias de compatibilidade
-            if (class_exists('PivotPHP\\Core\\Http\\Psr15\\Middleware\\SecurityHeadersMiddleware')) {
-                $this->passed[] = "SecurityHeadersMiddleware carregado via alias (compatibilidade)";
-            } else {
-                $this->errors[] = "SecurityHeadersMiddleware não encontrado";
-            }
-        }
-
-        // Verificar outros middlewares de segurança
+        // Desde a 4.0.0 a segurança vem do pacote pivotphp/security (dependência do core).
         $securityMiddlewares = [
-            'CsrfMiddleware' => 'PivotPHP\\Core\\Middleware\\Security\\CsrfMiddleware',
-            'XssMiddleware' => 'PivotPHP\\Core\\Middleware\\Security\\XssMiddleware',
-            'AuthMiddleware' => 'PivotPHP\\Core\\Middleware\\Security\\AuthMiddleware',
-            'CorsMiddleware' => 'PivotPHP\\Core\\Middleware\\Http\\CorsMiddleware',
+            'CorsMiddleware' => 'PivotPHP\\Security\\Cors\\CorsMiddleware',
+            'SecurityHeadersMiddleware' => 'PivotPHP\\Security\\Headers\\SecurityHeadersMiddleware',
+            'CsrfMiddleware' => 'PivotPHP\\Security\\Csrf\\CsrfMiddleware',
+            'JwtAuthMiddleware' => 'PivotPHP\\Security\\Jwt\\JwtAuthMiddleware',
+            'JwtIssuer' => 'PivotPHP\\Security\\Jwt\\JwtIssuer',
+            'RateLimitMiddleware' => 'PivotPHP\\Security\\RateLimit\\RateLimitMiddleware',
+            'TrustedProxyMiddleware' => 'PivotPHP\\Security\\Proxy\\TrustedProxyMiddleware',
         ];
 
-        $securityCount = 0;
         foreach ($securityMiddlewares as $name => $class) {
             if (class_exists($class)) {
-                $this->passed[] = "{$name} carregado";
-                $securityCount++;
+                $this->passed[] = "{$name} disponível (pivotphp/security)";
             } else {
-                $this->warnings[] = "{$name} não encontrado";
+                $this->errors[] = "{$name} não encontrado — pivotphp/security instalado?";
             }
-        }
-
-        if ($securityCount >= 4) {
-            $this->passed[] = "Middlewares de segurança suficientes encontrados ({$securityCount}/5)";
-        } else {
-            $this->warnings[] = "Poucos middlewares de segurança encontrados ({$securityCount}/5)";
-        }
-
-        // Verificar JWTHelper
-        if (class_exists('PivotPHP\\Core\\Authentication\\JWTHelper')) {
-            $this->passed[] = "JWTHelper carregado";
-
-            // Testar geração de token
-            try {
-                $token = PivotPHP\Core\Authentication\JWTHelper::encode(['user_id' => 1], 'test_secret');
-                if ($token) {
-                    $this->passed[] = "JWTHelper pode gerar tokens";
-                } else {
-                    $this->errors[] = "JWTHelper não conseguiu gerar token";
-                }
-            } catch (Exception $e) {
-                $this->errors[] = "Erro ao gerar JWT: " . $e->getMessage();
-            }
-        } else {
-            $this->warnings[] = "JWTHelper não encontrado";
         }
 
         echo "✅ Middlewares validados\n\n";
@@ -247,18 +195,23 @@ class ProjectValidator
     private function validateExamples()
     {
         echo "📖 Validando exemplos...\n";
-        $this->warnings[] = "Os exemplos práticos agora estão totalmente contidos e atualizados na documentação oficial (docs/). Não é mais necessário manter exemplos em examples/.";
-        echo "ℹ️  Exemplos práticos disponíveis apenas na documentação oficial.\n\n";
+
+        if (file_exists('tests/Integration/ExamplesTest.php')) {
+            $this->passed[] = "Exemplos cobertos por tests/Integration/ExamplesTest.php";
+        } else {
+            $this->errors[] = "tests/Integration/ExamplesTest.php não encontrado — exemplos sem verificação";
+        }
+
+        echo "✅ Exemplos validados\n\n";
     }
 
     private function validateTests()
     {
         echo "🧪 Validando testes...\n";
 
-        // v2.0.0: AuthMiddleware tests removed in cleanup
-        // Only validate JWTHelper test as critical authentication component
+        // Integração crítica: pipeline do core com o pivotphp/security
         $testFiles = [
-            'tests/Helpers/JWTHelperTest.php',
+            'tests/Integration/Middleware/SecurityPackageIntegrationTest.php',
         ];
 
         foreach ($testFiles as $testFile) {
@@ -343,15 +296,12 @@ class ProjectValidator
         // Documentação técnica principal
         $technicalDocs = [
             'docs/index.md' => 'Índice principal da documentação',
-            'docs/implementations/usage_basic.md' => 'Guia básico de uso',
             'docs/technical/application.md' => 'Documentação da Application',
             'docs/technical/http/request.md' => 'Documentação de Request',
             'docs/technical/http/response.md' => 'Documentação de Response',
             'docs/technical/routing/router.md' => 'Documentação do Router',
             'docs/technical/middleware/README.md' => 'Índice de middlewares',
-            'docs/technical/authentication/usage_native.md' => 'Autenticação nativa',
-            'docs/performance/PerformanceMonitor.md' => 'Monitor de performance',
-            'docs/performance/benchmarks/README.md' => 'Documentação de benchmarks',
+            'docs/reference/examples.md' => 'Catálogo de exemplos',
             'docs/testing/api_testing.md' => 'Testes de API',
             'docs/contributing/README.md' => 'Guia de contribuição',
         ];
@@ -376,25 +326,17 @@ class ProjectValidator
     {
         echo "🔐 Validando sistema de autenticação...\n";
 
-        try {
-            // Simular requisição com JWT
-            $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer test.token.here';
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-            $_SERVER['REQUEST_URI'] = '/api/test';
+        if (!class_exists('Firebase\\JWT\\JWT')) {
+            $this->warnings[] = "firebase/php-jwt não instalado — JWT do pivotphp/security indisponível";
+            echo "✅ Autenticação validada\n\n";
+            return;
+        }
 
-            // Validação básica de autenticação sem instanciar classes específicas
-            if (class_exists('PivotPHP\\Core\\Authentication\\JWTHelper')) {
-                // Testar JWT Helper básico
-                $jwt = PivotPHP\Core\Authentication\JWTHelper::encode(['test' => true], 'secret');
-                if ($jwt) {
-                    $this->passed[] = "Sistema de autenticação funcional";
-                } else {
-                    $this->errors[] = "Sistema de autenticação não funcional";
-                }
-            } else {
-                $this->warnings[] = "Sistema de autenticação não disponível";
-            }
-        } catch (Exception $e) {
+        try {
+            $config = new \PivotPHP\Security\Jwt\JwtConfig(str_repeat('k', 32));
+            $token = (new \PivotPHP\Security\Jwt\JwtIssuer($config))->issue(['sub' => 'validate'], 60);
+            $this->passed[] = "JwtIssuer emite tokens (" . strlen($token) . " bytes)";
+        } catch (Throwable $e) {
             $this->errors[] = "Erro no sistema de autenticação: " . $e->getMessage();
         }
 
@@ -440,12 +382,12 @@ class ProjectValidator
             $this->warnings[] = "Arquivo .env.example não encontrado - recomendado para projetos";
         }
 
-        // Verificar configurações de segurança no código
-        $securityFiles = glob('src/Middleware/Security/*.php');
-        if (count($securityFiles) >= 3) {
-            $this->passed[] = "Múltiplos middlewares de segurança implementados (" . count($securityFiles) . " arquivos)";
+        // A segurança é fornecida pelo pivotphp/security (dependência obrigatória)
+        $composer = json_decode((string) file_get_contents('composer.json'), true);
+        if (isset($composer['require']['pivotphp/security'])) {
+            $this->passed[] = "pivotphp/security declarado em require";
         } else {
-            $this->warnings[] = "Poucos middlewares de segurança encontrados (" . count($securityFiles) . " arquivos)";
+            $this->errors[] = "pivotphp/security ausente de require no composer.json";
         }
 
         echo "✅ Segurança validada\n\n";
@@ -557,78 +499,6 @@ class ProjectValidator
         }
 
         echo "✅ Releases validadas\n\n";
-    }
-
-    private function validateBenchmarks()
-    {
-        echo "🏃‍♂️ Validando estrutura de benchmarks...\n";
-
-        // Verificar diretórios de benchmark
-        if (is_dir('benchmarks')) {
-            $this->passed[] = "Diretório benchmarks/ existe";
-
-            if (is_dir('benchmarks/reports')) {
-                $this->passed[] = "Diretório benchmarks/reports/ existe";
-
-                // Contar arquivos de relatório
-                $reportCount = count(glob('benchmarks/reports/*.json')) + count(glob('benchmarks/reports/*.md'));
-                if ($reportCount > 0) {
-                    $this->passed[] = "Encontrados {$reportCount} relatórios de benchmark";
-                } else {
-                    $this->warnings[] = "Nenhum relatório de benchmark encontrado";
-                }
-            } else {
-                $this->errors[] = "Diretório benchmarks/reports/ não encontrado";
-            }
-        } else {
-            $this->errors[] = "Diretório benchmarks/ não encontrado";
-        }
-
-        // Verificar scripts de benchmark
-        $benchmarkScripts = [
-            'benchmarks/run_benchmark.sh' => 'Script de execução de benchmarks',
-            'benchmarks/ExpressPhpBenchmark.php' => 'Benchmark principal',
-            'benchmarks/ComprehensivePerformanceAnalysis.php' => 'Análise de performance',
-            'benchmarks/EnhancedAdvancedOptimizationsBenchmark.php' => 'Benchmark de otimizações',
-            'benchmarks/generate_comprehensive_report.php' => 'Gerador de relatórios'
-        ];
-
-        foreach ($benchmarkScripts as $script => $description) {
-            if (file_exists($script)) {
-                $this->passed[] = "{$description} existe";
-
-                // Verificar se é executável (para .sh)
-                if (pathinfo($script, PATHINFO_EXTENSION) === 'sh' && !is_executable($script)) {
-                    $this->warnings[] = "{$description} não é executável";
-                }
-            } else {
-                $this->errors[] = "{$description} não encontrado: {$script}";
-            }
-        }
-
-        // Verificar documentação de benchmarks
-        if (file_exists('docs/performance/benchmarks/README.md')) {
-            $size = filesize('docs/performance/benchmarks/README.md');
-            if ($size > 2000) {
-                $this->passed[] = "Documentação de benchmarks existe e tem conteúdo adequado ({$size} bytes)";
-
-                // Verificar se contém dados v1.0.0
-                $content = file_get_contents('docs/performance/benchmarks/README.md');
-                if (strpos($content, '02/07/2025') !== false &&
-                    strpos($content, '2.69M') !== false &&
-                    strpos($content, 'PHP 8.4.8') !== false) {
-                    $this->passed[] = "Documentação de benchmarks atualizada com dados v1.0.0";
-                } else {
-                    $this->warnings[] = "Documentação de benchmarks pode não estar atualizada para v1.0.0";
-                }
-            } else {
-                $this->warnings[] = "Documentação de benchmarks tem pouco conteúdo ({$size} bytes)";
-            }
-        } else {
-            $this->warnings[] = "Documentação de benchmarks não encontrada: docs/performance/benchmarks/README.md";
-        }
-
-        echo "✅ Benchmarks validados\n\n";
     }
 
     private function generateReport()

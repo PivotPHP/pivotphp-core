@@ -1,55 +1,33 @@
-# RateLimitMiddleware
+# Rate limiting (removido do core)
 
-> ⚠️ **Depreciado desde v2.1.0.** `RateLimitMiddleware` usa `$_SESSION`, o que viola o
-> princípio stateless do HTTP e é problemático em runtimes assíncronos/concorrentes (Swoole,
-> ReactPHP, FrankenPHP). Construí-lo dispara um `E_USER_DEPRECATED`. Use
-> [`PivotPHP\Core\Middleware\RateLimiter`](#substituto-recomendado-ratelimiter) no lugar.
-> Remoção planejada para v3.0.0 (ver `CHANGELOG.md`, seção `[2.1.0]`).
+> ⚠️ **Removido na v4.0.0 por falha de segurança em PHP-FPM.** O `RateLimiter` do core guardava os
+> contadores na memória da própria instância (a opção `storage` era ignorada). Como o PHP-FPM recria o
+> estado a cada requisição, o contador zerava e **o limite nunca era atingido**. Use o
+> `RateLimitMiddleware` do pacote [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security),
+> que usa armazenamento compartilhado e lock ([SPEC-093](https://github.com/PivotPHP/pivotphp-specs/blob/main/SPECS/SPEC-093-core-ratelimiter-fpm-validation.md)).
 
-Middleware (PSR-15) para controle de taxa de requisições (Rate Limiting).
+## Histórico
 
-**Localização real**: `src/Middleware/Performance/RateLimitMiddleware.php`
-(namespace `PivotPHP\Core\Middleware\Performance`)
+- `Middleware\Performance\RateLimitMiddleware` e `Middleware\LoadShedder`: removidos na v3.0.0
+  (ciclo de depreciação 2.1.0 → 3.0.0; o primeiro usava `$_SESSION`).
+- `Middleware\RateLimiter` e o alias `'rate-limiter'`: removidos na v4.0.0 pela falha descrita acima.
+  Junto saíram as estratégias, `whitelist`, `blacklist`, `reject_response` e `key_generator`.
 
-## Uso
-
-```php
-use PivotPHP\Core\Middleware\Performance\RateLimitMiddleware;
-
-$app->use(new RateLimitMiddleware([
-    'windowMs' => 900000,  // janela em milissegundos (padrão: 15 minutos)
-    'max' => 100,          // número máximo de requisições na janela
-]));
-```
-
-## Configurações Disponíveis
-
-- `windowMs` (int): janela de tempo **em milissegundos** (padrão: `900000` = 15 min)
-- `max` (int): número máximo de requisições por janela (padrão: `100`)
-- `message` (string): mensagem retornada ao exceder o limite
-- `statusCode` (int): código HTTP retornado (padrão: `429`)
-- `keyGenerator` (callable|null): função para gerar a chave de rate limit (padrão: por IP)
-
-## Substituto recomendado: `RateLimiter`
+## Migração
 
 ```php
-use PivotPHP\Core\Middleware\RateLimiter;
+use PivotPHP\Security\Proxy\TrustedProxyConfig;
+use PivotPHP\Security\Proxy\TrustedProxyMiddleware;
+use PivotPHP\Security\RateLimit\RateLimitMiddleware;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 
-$app->use(new RateLimiter([
-    'strategy' => RateLimiter::STRATEGY_SLIDING_WINDOW, // fixed_window|sliding_window|token_bucket|leaky_bucket
-    'max_requests' => 100,
-    'window_size' => 60,      // segundos
-    'burst_size' => 10,
-    'storage' => 'memory',    // memory, redis, apcu
-    'whitelist' => [],
-    'blacklist' => [],
-]));
+$app->use(new TrustedProxyMiddleware(new TrustedProxyConfig(['10.0.0.0/8'])));
+$app->use(new RateLimitMiddleware($responseFactory, new RateLimiterFactory(
+    ['id' => 'api', 'policy' => 'sliding_window', 'limit' => 1000, 'interval' => '1 hour'],
+    $storage,      // armazenamento compartilhado entre workers (ex.: CacheStorage sobre Redis)
+    $lockFactory,  // symfony/lock — contagem correta sob concorrência
+)));
 ```
 
-`RateLimiter` não usa `$_SESSION` e suporta múltiplas estratégias (sliding window, token
-bucket, leaky bucket) e armazenamento pluggable. Ver `src/Middleware/RateLimiter.php`.
-
-## Boas Práticas
-
-- Prefira `RateLimiter` em vez de `RateLimitMiddleware` em código novo.
-- Ajuste os limites conforme o perfil da aplicação.
+Veja o README do [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security#rate-limiting)
+para todas as opções.

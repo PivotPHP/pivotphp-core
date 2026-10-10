@@ -1,19 +1,19 @@
 <?php
 
 /**
- * 🛣️ PivotPHP - Rotas Básicas
- * 
- * Demonstra todos os métodos HTTP básicos no estilo Express.js
- * 
- * 🚀 Como executar:
- * php -S localhost:8000 examples/01-basics/basic-routes.php
- * 
- * 🧪 Como testar:
- * curl http://localhost:8000/
- * curl -X POST http://localhost:8000/users -H "Content-Type: application/json" -d '{"name":"John"}'
- * curl -X PUT http://localhost:8000/users/1 -H "Content-Type: application/json" -d '{"name":"Jane"}'
- * curl -X DELETE http://localhost:8000/users/1
+ * PivotPHP — Basic routes (in-memory CRUD)
+ *
+ * Run:   php -S localhost:8000 examples/01-basics/basic-routes.php
+ * Try:   curl http://localhost:8000/users
+ *        curl http://localhost:8000/users/1
+ *        curl -X POST http://localhost:8000/users -H 'Content-Type: application/json' -d '{"name":"Ana"}'
+ *        curl -X PUT http://localhost:8000/users/1 -H 'Content-Type: application/json' -d '{"name":"Bia"}'
+ *        curl -X DELETE http://localhost:8000/users/1
+ *
+ * Data lives in memory: every request starts again from the initial list (PHP is per-request).
  */
+
+declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
@@ -21,124 +21,47 @@ use PivotPHP\Core\Core\Application;
 
 $app = new Application();
 
-// Simulação de banco de dados em memória
 $users = [
-    1 => ['id' => 1, 'name' => 'Alice', 'email' => 'alice@example.com'],
-    2 => ['id' => 2, 'name' => 'Bob', 'email' => 'bob@example.com'],
+    1 => ['id' => 1, 'name' => 'Alice'],
+    2 => ['id' => 2, 'name' => 'Bob'],
 ];
-$nextId = 3;
 
-// 📋 GET - Listar todos os usuários
-$app->get('/', function ($req, $res) use (&$users) {
-    return $res->json([
-        'users' => array_values($users),
-        'total' => count($users),
-        'endpoints' => [
-            'GET /' => 'Listar usuários',
-            'GET /users/:id' => 'Obter usuário específico',
-            'POST /users' => 'Criar usuário',
-            'PUT /users/:id' => 'Atualizar usuário',
-            'DELETE /users/:id' => 'Deletar usuário'
-        ]
-    ]);
-});
+$app->get('/users', fn ($req, $res) => $res->json(array_values($users)));
 
-// 👤 GET - Obter usuário específico
-$app->get('/users/:id', function ($req, $res) use (&$users) {
+$app->get('/users/:id<\d+>', function ($req, $res) use ($users) {
     $id = (int) $req->param('id');
-    
-    if (!isset($users[$id])) {
-        return $res->status(404)->json(['error' => 'Usuário não encontrado']);
-    }
-    
-    return $res->json(['user' => $users[$id]]);
+
+    return isset($users[$id])
+        ? $res->json($users[$id])
+        : $res->error(404, 'User not found');
 });
 
-// ➕ POST - Criar novo usuário
-$app->post('/users', function ($req, $res) use (&$users, &$nextId) {
-    $body = $req->getBodyAsStdClass();
-    
-    // Validação básica
-    if (empty($body->name)) {
-        return $res->status(400)->json(['error' => 'Nome é obrigatório']);
+$app->post('/users', function ($req, $res) {
+    // JSON and form bodies are parsed by the core; read fields with $req->input()
+    $name = $req->input('name');
+
+    if (!is_string($name) || trim($name) === '') {
+        return $res->error(422, 'The "name" field is required');
     }
-    
-    $user = [
-        'id' => $nextId++,
-        'name' => $body->name,
-        'email' => $body->email ?? null,
-        'created_at' => date('Y-m-d H:i:s')
-    ];
-    
-    $users[$user['id']] = $user;
-    
-    return $res->status(201)->json([
-        'message' => 'Usuário criado com sucesso',
-        'user' => $user
-    ]);
+
+    return $res->status(201)->json(['id' => 3, 'name' => trim($name)]);
 });
 
-// ✏️ PUT - Atualizar usuário
-$app->put('/users/:id', function ($req, $res) use (&$users) {
+$app->put('/users/:id<\d+>', function ($req, $res) use ($users) {
     $id = (int) $req->param('id');
-    
     if (!isset($users[$id])) {
-        return $res->status(404)->json(['error' => 'Usuário não encontrado']);
+        return $res->error(404, 'User not found');
     }
-    
-    $body = $req->getBodyAsStdClass();
-    
-    // Atualizar campos fornecidos
-    if (isset($body->name)) {
-        $users[$id]['name'] = $body->name;
-    }
-    if (isset($body->email)) {
-        $users[$id]['email'] = $body->email;
-    }
-    
-    $users[$id]['updated_at'] = date('Y-m-d H:i:s');
-    
-    return $res->json([
-        'message' => 'Usuário atualizado com sucesso',
-        'user' => $users[$id]
-    ]);
+
+    $name = $req->input('name', $users[$id]['name']);
+
+    return $res->json(['id' => $id, 'name' => is_string($name) ? $name : $users[$id]['name']]);
 });
 
-// 🗑️ DELETE - Deletar usuário
-$app->delete('/users/:id', function ($req, $res) use (&$users) {
+$app->delete('/users/:id<\d+>', function ($req, $res) use ($users) {
     $id = (int) $req->param('id');
-    
-    if (!isset($users[$id])) {
-        return $res->status(404)->json(['error' => 'Usuário não encontrado']);
-    }
-    
-    $deletedUser = $users[$id];
-    unset($users[$id]);
-    
-    return $res->json([
-        'message' => 'Usuário deletado com sucesso',
-        'deleted_user' => $deletedUser
-    ]);
-});
 
-// 🔍 GET - Buscar usuários
-$app->get('/search', function ($req, $res) use (&$users) {
-    $query = $req->get('q', '');
-    
-    if (empty($query)) {
-        return $res->status(400)->json(['error' => 'Parâmetro q é obrigatório']);
-    }
-    
-    $results = array_filter($users, function ($user) use ($query) {
-        return stripos($user['name'], $query) !== false || 
-               stripos($user['email'] ?? '', $query) !== false;
-    });
-    
-    return $res->json([
-        'query' => $query,
-        'results' => array_values($results),
-        'count' => count($results)
-    ]);
+    return isset($users[$id]) ? $res->noContent() : $res->error(404, 'User not found');
 });
 
 $app->run();

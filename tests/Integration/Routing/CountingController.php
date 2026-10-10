@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace PivotPHP\Core\Tests\Integration\Routing;
 
-use PivotPHP\Core\Http\Request;
-use PivotPHP\Core\Http\Response;
+use PivotPHP\Http\ExpressRequest;
+use PivotPHP\Http\ExpressResponse;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Controller com dependência de construtor e contador de instâncias, para
@@ -28,7 +29,7 @@ final class CountingController
         self::$instances = 0;
     }
 
-    public function id(Request $req, Response $res): Response
+    public function id(ExpressRequest $req, ExpressResponse $res): ResponseInterface
     {
         return $res->json(['id' => $this->id, 'prefix' => $this->prefix]);
     }

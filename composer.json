@@ -1,28 +1,18 @@
 {
     "name": "pivotphp/core",
-    "description": "PivotPHP Core v2.0.0 - Modular high-performance microframework with pluggable routing system, automatic OpenAPI/Swagger documentation, PSR-7 hybrid support, and Express.js-inspired API",
+    "description": "PivotPHP Core - Express.js-inspired PHP microframework for APIs on PSR-7/PSR-15, built on pivotphp/http, pivotphp/core-routing and pivotphp/security",
     "type": "library",
     "keywords": [
         "php",
         "microframework",
         "api",
-        "web",
         "express",
         "middleware",
         "router",
-        "security",
-        "csrf",
-        "xss",
-        "cors",
+        "psr-7",
+        "psr-15",
         "openapi",
-        "swagger",
-        "authentication",
-        "jwt",
-        "auth",
-        "json",
-        "pooling",
-        "performance",
-        "optimization"
+        "swagger"
     ],
     "homepage": "https://github.com/PivotPHP/pivotphp-core",
     "license": "MIT",
@@ -37,35 +27,30 @@
         }
     ],
     "require": {
-        "php": ">=8.1.0",
+        "php": "^8.1",
         "ext-json": "*",
-        "ext-session": "*",
+        "ext-mbstring": "*",
+        "pivotphp/core-routing": "^2.2",
+        "pivotphp/http": "^1.0",
+        "pivotphp/security": "^1.0",
         "psr/container": "^2.0",
         "psr/event-dispatcher": "^1.0",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^1.1|^2.0",
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
-        "psr/log": "^3.0",
-        "psr/cache": "^2.0|^3.0",
-        "psr/simple-cache": "^2.0|^3.0",
-        "pivotphp/core-routing": "^2.0"
+        "psr/log": "^3.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.0|^10.0",
-        "phpstan/phpstan": "^1.0",
-        "squizlabs/php_codesniffer": "^3.0",
+        "bepsvpt/secure-headers": "^9.1",
+        "firebase/php-jwt": "^7.1.1",
         "nyholm/psr7": "^1.8",
-        "httpsoft/http-message": "^1.0",
-        "laminas/laminas-diactoros": "^3.0"
+        "phpstan/phpstan": "^2.0",
+        "phpunit/phpunit": "^10.5.62|^11.5.50",
+        "squizlabs/php_codesniffer": "^3.13.6"
     },
     "suggest": {
-        "firebase/php-jwt": "Required for JWT authentication middleware",
-        "ext-openssl": "Required for secure token generation",
-        "ext-mbstring": "Required for proper string handling",
-        "ext-fileinfo": "Required for file upload validation",
-        "ext-apcu": "For caching middleware and performance optimization",
-        "pivotphp/cycle-orm": "Database ORM integration for PivotPHP"
+        "ext-pdo": "Required by PivotPHP\\Core\\Database\\Database"
     },
     "autoload": {
         "psr-4": {
@@ -77,23 +62,16 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "PivotPHP\\Core\\Tests\\": "tests/",
-            "Tests\\Security\\": "tests/Security/"
+            "PivotPHP\\Core\\Tests\\": "tests/"
         }
     },
     "scripts": {
         "test": "phpunit",
-        "test:ci": "vendor/bin/phpunit --testsuite=CI",
-        "test:fast": "vendor/bin/phpunit --testsuite=Fast",
+        "test:ci": "vendor/bin/phpunit",
         "test:unit": "vendor/bin/phpunit --testsuite=Unit",
         "test:integration": "vendor/bin/phpunit --testsuite=Integration",
-        "test:security": "vendor/bin/phpunit --testsuite=Security",
-        "test:core": "vendor/bin/phpunit --testsuite=Core",
         "test:coverage": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html reports/coverage",
-        "test:no-stress": "vendor/bin/phpunit --exclude-group=stress,slow",
-        "test:auth": "php test/auth_test.php",
         "phpstan": "phpstan analyse",
-        "phpstan:strict": "phpstan analyse -c phpstan-strict.neon",
         "cs:check": "phpcs --standard=phpcs.xml --report=full",
         "cs:check:summary": "phpcs --standard=phpcs.xml --report=summary",
         "cs:check:diff": "phpcs --standard=phpcs.xml --report=diff",
@@ -115,7 +93,7 @@
         ],
         "quality:check": [
             "@phpstan",
-            "@test:ci",
+            "@test",
             "@cs:check"
         ],
         "quality:check:full": [
@@ -125,7 +103,7 @@
         ],
         "quality:ci": [
             "@phpstan",
-            "@test:ci",
+            "@test",
             "@cs:check:summary"
         ],
         "quality:fix": [
@@ -133,7 +111,6 @@
             "@phpstan",
             "@test"
         ],
-        "precommit:install": "./scripts/utils/setup-precommit.sh",
         "precommit:test": "./scripts/pre-commit",
         "prepush:validate": [
             "@phpstan",
@@ -152,7 +129,6 @@
         "examples:basic-routes": "php -S localhost:8000 examples/01-basics/basic-routes.php",
         "examples:request-response": "php -S localhost:8000 examples/01-basics/request-response.php",
         "examples:json-api": "php -S localhost:8000 examples/01-basics/json-api.php",
-        "examples:performance": "php -S localhost:8000 examples/05-performance/high-performance.php",
         "examples:jwt-auth": "php -S localhost:8000 examples/06-security/jwt-auth.php",
         "examples:array-callables": "php -S localhost:8000 examples/07-advanced/array-callables.php",
         "examples:regex-routing": "php -S localhost:8000 examples/02-routing/regex-routing.php",

@@ -208,13 +208,13 @@ class UserController
 
     public function store($req, $res)
     {
-        $errors = $this->validator->validate($req->body);
+        $errors = $this->validator->validate($req->psr7()->getParsedBody());
 
         if (!empty($errors)) {
             return $res->status(422)->json(['errors' => $errors]);
         }
 
-        $user = $this->userService->createUser($req->body);
+        $user = $this->userService->createUser($req->psr7()->getParsedBody());
         return $res->status(201)->json($user);
     }
 }
@@ -504,9 +504,8 @@ class UserServiceTest extends TestCase
 $app->get('/debug/services', function($req, $res) use ($app) {
     $container = $app->getContainer();
 
-    // Não há método público para listar, mas podemos criar um debug helper
+    // Não há método público para listar providers; verifique os serviços diretamente
     return $res->json([
-        'registered_providers' => $app->getRegisteredProviders(),
         'sample_services' => [
             'database' => $container->has('database'),
             'logger' => $container->has('logger'),

@@ -43,7 +43,7 @@ $app->get('/users/:id', function($req, $res) {
 $app->staticFiles('/assets', 'public/assets');
 
 // Advanced approach (best for larger projects)
-use PivotPHP\Core\Routing\StaticFileManager;
+use PivotPHP\Routing\Router\StaticFileManager;
 
 StaticFileManager::configure([
     'enable_cache' => true,
@@ -126,15 +126,16 @@ $app->get('/archive/:year<\\d{4}>/:month<\\d{2}>', [ArchiveController::class, 's
 
 ### Middleware Integration
 ```php
-// Route-specific middleware
-$app->get('/admin/*', [AuthMiddleware::class], [AdminController::class, 'dashboard']);
+use PivotPHP\Routing\Router\Router;
+
+// Route-specific middleware (4th argument)
+Router::get('/admin/dashboard', [AdminController::class, 'dashboard'], [], $requireAdmin);
 
 // Group middleware
-$app->group('/api', function($group) {
-    $group->middleware([RateLimitMiddleware::class]);
-    $group->get('/users', [UserController::class, 'index']);
-    $group->post('/users', [UserController::class, 'store']);
-});
+Router::group('/api', function (): void {
+    Router::get('/users', [UserController::class, 'index']);
+    Router::post('/users', [UserController::class, 'store']);
+}, [$rateLimit]);
 ```
 
 ## 🔧 Troubleshooting
@@ -171,7 +172,6 @@ print_r($stats);
 
 - **[Core Framework Documentation](../../README.md)** - Main documentation
 - **[Middleware Guide](../middleware/README.md)** - Middleware system
-- **[Performance Optimization](../performance/README.md)** - Performance tips
 - **[API Reference](../../API_REFERENCE.md)** - Complete API documentation
 
 ---

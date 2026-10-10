@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Integration\Routing;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 use PivotPHP\Core\Tests\Integration\Routing\ExampleController;
 
 /**
@@ -43,7 +43,7 @@ class ArrayCallableExampleTest extends TestCase
      */
     public function testHealthCheckArrayCallable(): void
     {
-        $request = new Request('GET', '/health', '/health');
+        $request = new ServerRequest('GET', '/health');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -61,7 +61,7 @@ class ArrayCallableExampleTest extends TestCase
      */
     public function testStaticMethodArrayCallable(): void
     {
-        $request = new Request('GET', '/api/info', '/api/info');
+        $request = new ServerRequest('GET', '/api/info');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -79,7 +79,7 @@ class ArrayCallableExampleTest extends TestCase
      */
     public function testParameterizedArrayCallable(): void
     {
-        $request = new Request('GET', '/users/:id', '/users/12345');
+        $request = new ServerRequest('GET', '/users/12345');
         $response = $this->app->handle($request);
 
         $this->assertEquals(200, $response->getStatusCode());
@@ -95,57 +95,4 @@ class ArrayCallableExampleTest extends TestCase
      * @test
      * Performance comparison: closure vs array callable
      */
-    /**
-     * @group performance
-     */
-    public function testPerformanceComparison(): void
-    {
-        // Add closure route for comparison
-        $this->app->get(
-            '/closure-perf',
-            function ($req, $res) {
-                return $res->json(['type' => 'closure']);
-            }
-        );
-
-        $iterations = 50;
-
-        // Test array callable performance
-        $start = microtime(true);
-        for ($i = 0; $i < $iterations; $i++) {
-            $request = new Request('GET', '/health', '/health');
-            $response = $this->app->handle($request);
-            $this->assertEquals(200, $response->getStatusCode());
-        }
-        $arrayCallableTime = (microtime(true) - $start) * 1000;
-
-        // Test closure performance
-        $start = microtime(true);
-        for ($i = 0; $i < $iterations; $i++) {
-            $request = new Request('GET', '/closure-perf', '/closure-perf');
-            $response = $this->app->handle($request);
-            $this->assertEquals(200, $response->getStatusCode());
-        }
-        $closureTime = (microtime(true) - $start) * 1000;
-
-        // Performance difference should be reasonable
-        // Note: Array callables can have higher overhead due to reflection, but should be manageable
-        $overhead = (($arrayCallableTime - $closureTime) / $closureTime) * 100;
-
-        // Allow higher overhead for array callables due to reflection overhead in testing environment
-        // In production, this overhead is typically much lower due to opcode caching
-        $maxOverhead = 1000; // 10x max overhead for testing environment
-
-        $this->assertLessThan(
-            $maxOverhead,
-            $overhead,
-            "Array callable overhead too high: {$overhead}% " .
-            "(Array: {$arrayCallableTime}ms, Closure: {$closureTime}ms). " .
-            "Note: High overhead in testing is normal due to reflection costs without opcode caching."
-        );
-
-        // Performance metrics stored in assertion message for CI/CD visibility
-        // Results: Array Callable: {$arrayCallableTime}ms, Closure: {$closureTime}ms, Overhead: {$overhead}%
-        $this->addToAssertionCount(1); // Mark test as having completed performance analysis
-    }
 }

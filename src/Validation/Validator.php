@@ -54,16 +54,21 @@ class Validator
     {
         $this->errors = [];
 
-        if (!is_array($this->rules)) {
-            return true;
-        }
-
         foreach ($this->rules as $field => $rules) {
             $value = $data[$field] ?? null;
             $fieldRules = is_string($rules) ? explode('|', $rules) : $rules;
 
             if (is_array($fieldRules)) {
                 foreach ($fieldRules as $rule) {
+                    if (!is_string($rule)) {
+                        throw new \InvalidArgumentException(
+                            sprintf(
+                                'Validation rule for "%s" must be a string, %s given.',
+                                $field,
+                                get_debug_type($rule)
+                            )
+                        );
+                    }
                     if (!$this->validateRule($field, $value, $rule)) {
                         break; // Para no primeiro erro
                     }

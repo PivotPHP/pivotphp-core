@@ -6,7 +6,7 @@ namespace PivotPHP\Core\Tests\Integration\Routing;
 
 use PHPUnit\Framework\TestCase;
 use PivotPHP\Core\Core\Application;
-use PivotPHP\Core\Http\Request;
+use Nyholm\Psr7\ServerRequest;
 use PivotPHP\Routing\Router\Router;
 
 /**
@@ -37,11 +37,11 @@ class BraceParameterIntegrationTest extends TestCase
         );
 
         // Request construído com o path real (como Request::createFromGlobals()).
-        $response = $app->handle(new Request('GET', '/users/123', '/users/123'));
+        $response = $app->handle(new ServerRequest('GET', '/users/123'));
 
         $this->assertSame(200, $response->getStatusCode());
 
-        $body = json_decode($response->getBodyAsString(), true);
-        $this->assertSame(123, $body['id']);
+        $body = json_decode((string) $response->getBody(), true);
+        $this->assertSame('123', $body['id']);
     }
 }
