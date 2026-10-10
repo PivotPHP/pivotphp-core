@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-
 - **`Database::transaction()` faz rollback para qualquer `Throwable`** (SPEC-073). Antes, só `\Exception`
   era tratado: um `Error` (ex.: `TypeError`) no callback deixava a transação aberta, e a próxima chamada a
   `transaction()` falhava com "cannot start a transaction within a transaction".
+- **Listeners de ciclo de vida não derrubam a requisição** (SPEC-085). Uma exceção lançada por um listener
+  de `RequestReceived` ou `ResponseSent` não escapa mais de `Application::handle()`: é registrada no log e a
+  requisição segue. `ResponseSent` é disparado uma única vez, inclusive em respostas de erro.
 
 ## [4.0.1] - 2026-10-10
 
