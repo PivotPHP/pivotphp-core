@@ -49,10 +49,12 @@ class PsrLogger extends AbstractLogger
      * {@inheritdoc}
      *
      * @param string|\Stringable $level
+     * @param string|\Stringable $message
+     * @param array<string, mixed> $context
      */
     public function log(
         $level,
-        string|\Stringable $message,
+        $message,
         array $context = []
     ): void {
         $levelString = (string)$level;

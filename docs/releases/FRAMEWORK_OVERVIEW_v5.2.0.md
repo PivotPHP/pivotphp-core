@@ -29,3 +29,4 @@ Release minor focada no desacoplamento da camada de logging do núcleo do framew
    - Todas as regras de estilo de código (PHP-CS-Fixer) aplicadas e verificadas.
 
 Consulte o [CHANGELOG](../../CHANGELOG.md) para detalhes completos de cada commit.
+
