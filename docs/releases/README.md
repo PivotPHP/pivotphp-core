@@ -7,7 +7,8 @@ release das linhas 1.x, 2.x e 3.x foram removidos por estarem obsoletos.
 
 ## Versão Atual
 
-- **[FRAMEWORK_OVERVIEW_v5.0.0.md](FRAMEWORK_OVERVIEW_v5.0.0.md)** — versão atual (router por `Application`, SPEC-076).
+- **[FRAMEWORK_OVERVIEW_v5.1.0.md](FRAMEWORK_OVERVIEW_v5.1.0.md)** — versão atual (resolução de rotas tipada e pipeline pré-compilado, SPEC-114).
+- **[FRAMEWORK_OVERVIEW_v5.0.0.md](FRAMEWORK_OVERVIEW_v5.0.0.md)** — router por `Application` (SPEC-076).
 - **[FRAMEWORK_OVERVIEW_v4.1.1.md](FRAMEWORK_OVERVIEW_v4.1.1.md)** — binding tipado no `Database`.
 - **[FRAMEWORK_OVERVIEW_v4.1.0.md](FRAMEWORK_OVERVIEW_v4.1.0.md)** — `nullable`/`sometimes` no `Validator`, OpenAPI path templating.
 - **[FRAMEWORK_OVERVIEW_v4.0.2.md](FRAMEWORK_OVERVIEW_v4.0.2.md)** — patch (transações, listeners, DSN).
@@ -23,7 +24,8 @@ Notas completas de todas as versões: [CHANGELOG](../../CHANGELOG.md).
 ```
 docs/releases/
 ├── README.md                        # Este arquivo (índice)
-├── FRAMEWORK_OVERVIEW_v5.0.0.md     # Overview v5.0.0 (atual)
+├── FRAMEWORK_OVERVIEW_v5.1.0.md     # Overview v5.1.0 (atual)
+├── FRAMEWORK_OVERVIEW_v5.0.0.md     # Overview v5.0.0
 ├── FRAMEWORK_OVERVIEW_v4.1.1.md     # Overview v4.1.1
 ├── FRAMEWORK_OVERVIEW_v4.1.0.md     # Overview v4.1.0
 ├── FRAMEWORK_OVERVIEW_v4.0.2.md     # Overview v4.0.2
