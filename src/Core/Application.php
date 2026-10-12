@@ -13,7 +13,12 @@ use Psr\Http\Message\ServerRequestInterface;
 use PivotPHP\Routing\Router\Router;
 use PivotPHP\Routing\Router\StaticFileManager;
 use PivotPHP\Core\Utils\CallableResolver;
+use PivotPHP\Core\Middleware\ExpressMiddlewareAdapter;
 use PivotPHP\Core\Middleware\MiddlewareStack;
+use PivotPHP\Core\Middleware\PrecompiledPipeline;
+use PivotPHP\Routing\Router\Resolution\MethodNotAllowed;
+use PivotPHP\Routing\Router\Resolution\RouteMatched;
+use PivotPHP\Routing\Router\Resolution\RouteNotFound;
 use PivotPHP\Core\Exceptions\HttpException;
 use PivotPHP\Core\Exceptions\Enhanced\ContextualException;
 use PivotPHP\Core\Providers\Container;
@@ -459,45 +464,7 @@ class Application implements ApplicationInterface
         }
 
         if (is_callable($middleware)) {
-            return new class ($middleware) implements MiddlewareInterface {
-                /** @var callable */
-                private $next;
-
-                public function __construct(callable $next)
-                {
-                    $this->next = $next;
-                }
-
-                public function process(
-                    ServerRequestInterface $request,
-                    RequestHandlerInterface $handler
-                ): ResponseInterface {
-                    $response = new ExpressResponse();
-                    $downstream = null;
-
-                    // $next() accepts an optional (modified) request and runs the rest of the
-                    // pipeline once; its response is kept even if the middleware does not return it.
-                    $next = static function (?ServerRequestInterface $nextRequest = null) use (
-                        $handler,
-                        $request,
-                        &$downstream
-                    ): ResponseInterface {
-                        return $downstream = $handler->handle($nextRequest ?? $request);
-                    };
-
-                    $result = ($this->next)($request, $response, $next);
-
-                    if ($result instanceof ResponseInterface) {
-                        return $result;
-                    }
-
-                    if ($result instanceof ExpressResponse) {
-                        return $result->psr7();
-                    }
-
-                    return $downstream ?? $handler->handle($request);
-                }
-            };
+            return new ExpressMiddlewareAdapter($middleware);
         }
 
         throw new \InvalidArgumentException('Middleware must be PSR-15 or callable.');
@@ -845,26 +812,23 @@ class Application implements ApplicationInterface
         $method = $request->getMethod();
         $path = $request->getUri()->getPath();
 
-        // Encontrar rota
-        $route = $this->router->identify($method, $path);
+        // Encontrar rota via resultado tipado (SPEC-114)
+        $resolution = $this->router->resolve($method, $path);
 
-        if (!$route) {
-            // SPEC-072: se o path casa com outros métodos, responde 405 (ou 204 p/ OPTIONS) com Allow.
-            $allowed = $this->router->allowedMethods($path);
+        if ($resolution instanceof MethodNotAllowed) {
+            $allow = $resolution->getAllowHeader();
 
-            if ($allowed !== []) {
-                $allow = implode(', ', $allowed);
-
-                if ($method === 'OPTIONS') {
-                    return (new ExpressResponse())->noContent(204)->withHeader('Allow', $allow);
-                }
-
-                return (new ExpressResponse())
-                    ->status(405)
-                    ->header('Allow', $allow)
-                    ->json(['error' => 'Method Not Allowed']);
+            if ($method === 'OPTIONS') {
+                return (new ExpressResponse())->noContent(204)->withHeader('Allow', $allow);
             }
 
+            return (new ExpressResponse())
+                ->status(405)
+                ->header('Allow', $allow)
+                ->json(['error' => 'Method Not Allowed']);
+        }
+
+        if ($resolution instanceof RouteNotFound || !$resolution instanceof RouteMatched) {
             // Buscar rotas disponíveis para suggestions
             $availableRoutes = array_map(
                 static fn ($r) => "{$r['method']} {$r['path']}",
@@ -874,9 +838,11 @@ class Application implements ApplicationInterface
             throw ContextualException::routeNotFound($method, $path, $availableRoutes);
         }
 
+        $route = $resolution->getRoute();
+
         // Expor os parâmetros de rota como atributo; a fachada ExpressRequest os lê.
-        $matchedParams = $route['matched_params'] ?? [];
-        if (is_array($matchedParams) && $matchedParams !== []) {
+        $matchedParams = $resolution->getParams();
+        if ($matchedParams !== []) {
             $request = $request->withAttribute(ExpressRequest::ROUTE_PARAMS_ATTRIBUTE, $matchedParams);
         }
 
@@ -885,18 +851,20 @@ class Application implements ApplicationInterface
         );
 
         // Executar middlewares da rota (os globais já rodaram), se houver.
-        $routeMiddlewares = $route['middlewares'] ?? [];
+        $routeMiddlewares = $resolution->getMiddlewares();
 
-        if (empty($routeMiddlewares)) {
+        if ($routeMiddlewares === []) {
             return $handler->handle($request);
         }
 
-        $stack = new MiddlewareStack();
+        $adaptedMiddlewares = [];
         foreach ($routeMiddlewares as $middleware) {
-            $stack->add($this->adaptMiddleware($middleware));
+            $adaptedMiddlewares[] = $this->adaptMiddleware($middleware);
         }
 
-        return $stack->execute($request, $handler);
+        $pipeline = new PrecompiledPipeline($adaptedMiddlewares, $handler);
+
+        return $pipeline->handle($request);
     }
 
     /**

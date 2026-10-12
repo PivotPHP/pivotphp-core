@@ -164,12 +164,19 @@ class ExpressRoutingCharacterizationTest extends TestCase
             return $next($req, $res);
         };
 
-        $app->group('/v1', function ($group) use (&$order) {
-            $group->get('/test', function ($req, $res) use (&$order) {
-                $order[] = 'action';
-                return $res->json(['order' => $order]);
-            });
-        }, [$groupMw]);
+        $app->group(
+            '/v1',
+            function ($group) use (&$order) {
+                $group->get(
+                    '/test',
+                    function ($req, $res) use (&$order) {
+                        $order[] = 'action';
+                        return $res->json(['order' => $order]);
+                    }
+                );
+            },
+            [$groupMw]
+        );
 
         $response = $app->handle(new ServerRequest('GET', '/v1/test'));
 
