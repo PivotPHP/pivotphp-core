@@ -32,7 +32,12 @@ class LifecycleListenerIsolationTest extends TestCase
             /** @var list<string> */
             public array $messages = [];
 
-            public function log($level, string|Stringable $message, array $context = []): void
+            /**
+             * @param mixed $level
+             * @param string|\Stringable $message
+             * @param array<string, mixed> $context
+             */
+            public function log($level, $message, array $context = []): void
             {
                 $detail = is_string($context['message'] ?? null) ? $context['message'] : '';
                 $this->messages[] = (string) $message . ' ' . $detail;
