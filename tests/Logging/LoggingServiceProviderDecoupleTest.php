@@ -84,9 +84,14 @@ class LoggingServiceProviderDecoupleTest extends TestCase
     {
         $app = new Application();
 
-        // Register a broken logger that throws on error()
+        // Register a broken logger that throws on log()
         $brokenLogger = new class () extends NullLogger {
-            public function error(string|\Stringable $message, array $context = []): void
+            /**
+             * @param mixed $level
+             * @param mixed $message
+             * @param array<string, mixed> $context
+             */
+            public function log($level, $message, array $context = []): void
             {
                 throw new RuntimeException('Disk full or connection broken');
             }
