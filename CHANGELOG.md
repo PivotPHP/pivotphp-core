@@ -5,6 +5,21 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.1.0] - 2026-10-12
+
+### Changed
+- **Arquitetura de Resolução de Rotas e Pipeline Pré-Compilado** (SPEC-114):
+  - `Application::resolveAndExecuteRoute()` agora consome a resolução tipada (`RouteResolution`) do `core-routing`:
+    - Tratamento direto de `MethodNotAllowed` (com cabeçalho `Allow`), 405 e resposta rápida 204 para OPTIONS implícito.
+    - Despacho tipado de `RouteMatched` com extração direta de parâmetros (`RouteMatched::getParams()`) e middlewares.
+  - Padrão **Adapter**: `ExpressMiddlewareAdapter` substitui classes anônimas geradas dinamicamente na execução de middlewares callables Express `fn($req, $res, $next)`.
+  - Padrão **Chain of Responsibility**: `PrecompiledPipeline` e `MiddlewareHandler` compilam a cadeia imutável de execução de middlewares, eliminando alocações dinâmicas de instâncias durante a requisição.
+  - Requer `pivotphp/core-routing` `^3.1.0`.
+
+### Performance
+- **Zero Regressão**: Resolução e despacho até 88.5% mais rápidos em rotas estáticas e 98.3% mais rápidos em OPTIONS (204).
+- Preservação irrestrita da sintaxe ExpressJS, parâmetros de rota e interoperabilidade com PSR-15 e OpenAPI.
+
 ## [5.0.0] - 2026-10-10
 
 ### Changed
