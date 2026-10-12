@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repository Overview
 
 PivotPHP Core is a PHP microframework inspired by Express.js, designed for building APIs. Current
-version: **5.0.0** (router state per `Application` — SPEC-076). It targets PHP 8.1+ and is
+version: **5.1.0** (routing resolution architecture and precompiled pipeline — SPEC-114). It targets PHP 8.1+ and is
 strict PSR-7 (HTTP messages), PSR-15 (middleware) and PSR-12 (style) compliant.
 
 Since the 4.0 line the core does one thing: it wires together the application, the routing engine and
@@ -204,11 +204,11 @@ src/
 
 ## Current Version Status
 
-- **Current version**: 5.0.0
+- **Current version**: 5.1.0
 - **Code quality**: PHPStan Level 9, PSR-12 compliant
 - **Architecture**: application + pipeline + router integration; HTTP, routing and security are
   delegated to `pivotphp/http`, `pivotphp/core-routing` and `pivotphp/security`
-- **Companions**: `pivotphp/core-routing` `^3.0`, `pivotphp/http` `^1.0`, `pivotphp/security` `^1.0`
+- **Companions**: `pivotphp/core-routing` `^3.1.0`, `pivotphp/http` `^1.0`, `pivotphp/security` `^1.0`
 - **Extensions**: `pivotphp/cycle-orm` is **paused** and only targets core 1.x — do not treat it as
   an active integration
 
