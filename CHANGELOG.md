@@ -5,6 +5,20 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.2.0] - 2026-10-12
+
+### Changed
+- **Desacoplamento do Logging** (SPEC-112):
+  - `LoggingServiceProvider` refatorado para não criar diretórios em disco (`mkdir`) nem abrir arquivos no boot da aplicação.
+  - Fallback seguro para `Psr\Log\NullLogger` por padrão em ausência de configuração específica ou pacote dedicado.
+  - Suporte e delegação automática para `PivotPHP\Logger\LoggerFactory` quando o pacote complementar `pivotphp/logger` estiver instalado.
+  - Suporte a `$_ENV['LOG_PATH']` e `logging.path` mantido para compatibilidade retroativa com criação sob demanda.
+  - Dependência `psr/log` flexibilizada no `composer.json` para `^1.1|^2.0|^3.0`.
+  - Sugestão adicionada em `composer.json`: `"pivotphp/logger": "^0.1"`.
+
+### Deprecated
+- `PivotPHP\Core\Logging\PsrLogger`: marcada como depreciada (`@deprecated since 5.2.0, will be removed in 6.0.0`). Recomenda-se utilizar `pivotphp/logger` ou qualquer implementação PSR-3.
+
 ## [5.1.0] - 2026-10-12
 
 ### Changed

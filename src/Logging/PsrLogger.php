@@ -8,7 +8,9 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
 /**
- * Simple PSR-3 compliant logger implementation
+ * Simple PSR-3 compliant logger implementation.
+ *
+ * @deprecated since 5.2.0, will be removed in 6.0.0. Use the companion package pivotphp/logger instead.
  */
 class PsrLogger extends AbstractLogger
 {
