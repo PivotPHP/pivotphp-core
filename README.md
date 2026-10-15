@@ -22,6 +22,7 @@ pacotes próprios, instalados junto com o core:
 | [`pivotphp/http`](https://github.com/PivotPHP/pivotphp-http) | PSR-7/PSR-17 (nyholm/psr7), fachada `ExpressRequest`/`ExpressResponse`, parsing de corpo, emissor |
 | [`pivotphp/core-routing`](https://github.com/PivotPHP/pivotphp-core-routing) | Registro, compilação e casamento de rotas; grupos; arquivos estáticos |
 | [`pivotphp/security`](https://github.com/PivotPHP/pivotphp-security) | CORS, headers de segurança, CSRF, JWT, rate limiting, proxies confiáveis |
+| [`pivotphp/logger`](https://github.com/PivotPHP/pivotphp-logger) | Logging estruturado PSR-3 com Monolog, formatação JSON e sanitização de dados sensíveis |
 
 ## ✨ Recursos
 
