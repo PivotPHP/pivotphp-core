@@ -97,7 +97,6 @@ class TestHttpClient
     {
         $reflection = new \ReflectionClass($this->app);
         $booted = $reflection->getProperty('booted');
-        $booted->setAccessible(true);
 
         return (bool) $booted->getValue($this->app);
     }

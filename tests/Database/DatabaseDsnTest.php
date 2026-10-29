@@ -19,7 +19,6 @@ class DatabaseDsnTest extends TestCase
     private function dsn(string $driver, array $config): string
     {
         $method = new \ReflectionMethod(Database::class, 'buildDsn');
-        $method->setAccessible(true);
 
         $dsn = $method->invoke(null, $driver, $config + ['database' => 'app']);
         $this->assertIsString($dsn);
