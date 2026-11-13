@@ -235,7 +235,6 @@ class ApplicationTest extends TestCase
         // Test that middleware aliases are properly configured
         $reflection = new \ReflectionClass($this->app);
         $property = $reflection->getProperty('middlewareAliases');
-        $property->setAccessible(true);
         $aliases = $property->getValue($this->app);
 
         // 'rate-limiter' removed in 4.0.0: the RateLimiter did not limit under PHP-FPM (SPEC-093)
