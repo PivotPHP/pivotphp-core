@@ -56,7 +56,7 @@ class Application implements ApplicationInterface
     /**
      * Versão do framework.
      */
-    public const VERSION = '5.2.0';
+    public const VERSION = '5.3.0';
 
     /**
      * Container de dependências PSR-11.
@@ -108,6 +108,44 @@ class Application implements ApplicationInterface
     ];
 
     /**
+     * Providers do core registrados sob demanda: só são instanciados quando um dos serviços
+     * que fornecem é consultado, resolvido ou redefinido (SPEC-116). A lista de ids espelha o
+     * provides() de cada provider.
+     *
+     * @var array<class-string<ServiceProvider>, array<int, string>>
+     */
+    private const DEFERRED_PROVIDERS = [
+        ContainerServiceProvider::class => [\Psr\Container\ContainerInterface::class, 'container'],
+        EventServiceProvider::class => [
+            EventDispatcherInterface::class,
+            \Psr\EventDispatcher\ListenerProviderInterface::class,
+            'events',
+            'listeners',
+        ],
+        LoggingServiceProvider::class => [LoggerInterface::class, 'log', 'logger'],
+        HookServiceProvider::class => [HookManager::class, 'hooks'],
+        ExtensionServiceProvider::class => [\PivotPHP\Core\Providers\ExtensionManager::class, 'extensions'],
+        RoutingServiceProvider::class => ['router'],
+    ];
+
+    /**
+     * Providers adiados ainda não carregados.
+     *
+     * @var array<string, true>
+     */
+    private array $pendingProviders = [];
+
+    /**
+     * Quantos providers adiados já foram carregados (eles ficam à frente dos demais na ordem de boot).
+     */
+    private int $loadedDeferredProviders = 0;
+
+    /**
+     * Indica que o boot dos providers já começou: um provider carregado depois disso faz boot na hora.
+     */
+    private bool $providersBooting = false;
+
+    /**
      * Middleware aliases mapping
      *
      * @var array<string, string>
@@ -132,6 +170,16 @@ class Application implements ApplicationInterface
     protected \DateTime $startTime;
 
     /**
+     * Quando true, handlers `[Classe::class, 'método']` só são carregados e validados no despacho.
+     */
+    private bool $lazyHandlers = false;
+
+    /**
+     * Provider do sistema de eventos padrão; null quando a aplicação não o registra.
+     */
+    private ?EventServiceProvider $eventServiceProvider = null;
+
+    /**
      * Lista de listeners PSR-14 registrados.
      * @var array<string, array<int, callable>>
      */
@@ -154,15 +202,63 @@ class Application implements ApplicationInterface
 
         $this->registerCoreServices();
 
-        // Core providers (container, events, logging, hooks, extensions, routing) are registered
-        // here so listeners, hooks and extensions can be added before boot(); boot() only boots
-        // them and registers the providers listed in configuration.
+        // Core providers (container, events, logging, hooks, extensions, routing) are made available
+        // here so listeners, hooks and extensions can be added before boot(). They are deferred:
+        // each one is only instantiated when one of its services is first needed (SPEC-116).
         foreach ($this->providers as $provider) {
-            $this->register($provider);
+            $this->registerOrDefer($provider);
         }
 
         // Configurar error handling o mais cedo possível
         $this->configureBasicErrorHandling();
+    }
+
+    /**
+     * Registra o provider agora ou, se for um provider adiável do core, na primeira vez em que
+     * um de seus serviços for necessário.
+     */
+    private function registerOrDefer(string $provider): void
+    {
+        if (!isset(self::DEFERRED_PROVIDERS[$provider])) {
+            $this->register($provider);
+            return;
+        }
+
+        $this->pendingProviders[$provider] = true;
+        $this->container->defer(
+            self::DEFERRED_PROVIDERS[$provider],
+            function () use ($provider): void {
+                $this->loadDeferredProvider($provider);
+            }
+        );
+    }
+
+    /**
+     * Carrega um provider adiado, mantendo-o à frente dos demais na ordem de boot.
+     */
+    private function loadDeferredProvider(string $provider): void
+    {
+        if (!isset($this->pendingProviders[$provider])) {
+            return;
+        }
+
+        unset($this->pendingProviders[$provider]);
+
+        $instance = new $provider($this);
+        if (!$instance instanceof ServiceProvider) {
+            return;
+        }
+
+        $instance->register();
+        array_splice($this->serviceProviders, $this->loadedDeferredProviders++, 0, [$instance]);
+
+        if ($instance instanceof EventServiceProvider) {
+            $this->eventServiceProvider = $instance;
+        }
+
+        if ($this->providersBooting) {
+            $instance->boot();
+        }
     }
 
     /**
@@ -265,7 +361,9 @@ class Application implements ApplicationInterface
         $this->booted = true;
 
         // Disparar evento de boot da aplicação
-        $this->dispatchEvent(new ApplicationStarted($this->startTime, $this->config->all()));
+        if (!$this->isEventSystemIdle()) {
+            $this->dispatchEvent(new ApplicationStarted($this->startTime, $this->config->all()));
+        }
 
         return $this;
     }
@@ -298,9 +396,11 @@ class Application implements ApplicationInterface
      */
     protected function registerServiceProviders(): void
     {
-        // Registrar providers básicos
+        // Registrar providers básicos (os adiados continuam aguardando o primeiro uso)
         foreach ($this->providers as $provider) {
-            $this->register($provider);
+            if (!isset($this->pendingProviders[$provider])) {
+                $this->register($provider);
+            }
         }
 
         // Registrar providers adicionais do config
@@ -321,6 +421,16 @@ class Application implements ApplicationInterface
      */
     protected function bootServiceProviders(): void
     {
+        // Os hooks do core (app.registered, app.booting) são disparados no boot do provider de
+        // hooks. Se já existe listener PSR-14, ele pode estar ouvindo esses hooks: carrega o provider.
+        if (isset($this->pendingProviders[HookServiceProvider::class]) && !$this->isEventSystemIdle()) {
+            $this->loadDeferredProvider(HookServiceProvider::class);
+        }
+
+        // A partir daqui, um provider adiado carregado durante o boot dos demais faz boot na hora:
+        // ele não está na lista percorrida abaixo.
+        $this->providersBooting = true;
+
         foreach ($this->serviceProviders as $provider) {
             if (method_exists($provider, 'boot')) {
                 $provider->boot();
@@ -402,6 +512,13 @@ class Application implements ApplicationInterface
     public function register(string|ServiceProvider $provider): self
     {
         $providerClass = is_string($provider) ? $provider : get_class($provider);
+
+        // Registro explícito de um provider adiado: carrega-o agora.
+        if (isset($this->pendingProviders[$providerClass])) {
+            $this->loadDeferredProvider($providerClass);
+            return $this;
+        }
+
         foreach ($this->serviceProviders as $registered) {
             if (get_class($registered) === $providerClass) {
                 return $this;
@@ -420,6 +537,10 @@ class Application implements ApplicationInterface
 
         if ($provider instanceof ServiceProvider) {
             $this->serviceProviders[] = $provider;
+        }
+
+        if ($provider instanceof EventServiceProvider) {
+            $this->eventServiceProvider = $provider;
         }
 
         return $this;
@@ -525,7 +646,15 @@ class Application implements ApplicationInterface
         $class = $handler[0] ?? null;
         $method = $handler[1] ?? null;
 
-        if (!is_string($class) || !is_string($method) || !class_exists($class) || !method_exists($class, $method)) {
+        if (!is_string($class) || !is_string($method)) {
+            return $handler;
+        }
+
+        if ($this->lazyHandlers) {
+            return $this->lazyHandler($class, $method);
+        }
+
+        if (!class_exists($class) || !method_exists($class, $method)) {
             return $handler;
         }
 
@@ -533,13 +662,62 @@ class Application implements ApplicationInterface
             return $handler;
         }
 
-        return function (ExpressRequest $request, ExpressResponse $response) use ($class, $method) {
-            $instance = $this->container->has($class)
-                ? $this->container->get($class)
-                : new $class();
+        return fn (ExpressRequest $request, ExpressResponse $response): mixed
+            => $this->controllerInstance($class)->{$method}($request, $response);
+    }
 
-            return $instance->{$method}($request, $response);
+    /**
+     * Handler que adia o carregamento e a validação da classe para o despacho da rota.
+     *
+     * @param class-string|string $class
+     */
+    private function lazyHandler(string $class, string $method): \Closure
+    {
+        return function (ExpressRequest $request, ExpressResponse $response) use ($class, $method): mixed {
+            if (!class_exists($class)) {
+                throw new \InvalidArgumentException("Class '{$class}' does not exist");
+            }
+
+            if (!method_exists($class, $method)) {
+                throw new \InvalidArgumentException("Route handler '{$class}::{$method}' does not exist");
+            }
+
+            if ((new \ReflectionMethod($class, $method))->isStatic()) {
+                return $class::{$method}($request, $response);
+            }
+
+            return $this->controllerInstance($class)->{$method}($request, $response);
         };
+    }
+
+    /**
+     * Instância do controller: do contêiner quando registrada, senão criada sem argumentos.
+     *
+     * @param class-string $class
+     */
+    private function controllerInstance(string $class): mixed
+    {
+        return $this->container->has($class)
+            ? $this->container->get($class)
+            : new $class();
+    }
+
+    /**
+     * Adia o carregamento e a validação dos handlers `[Classe::class, 'método']` para o despacho.
+     *
+     * Por padrão a classe é carregada e validada no registro da rota, e um handler inválido lança
+     * `InvalidArgumentException` ali mesmo. Com handlers preguiçosos, só a classe da rota que casou
+     * é carregada: os demais controllers deixam de ser incluídos em toda requisição. O erro de um
+     * handler inválido passa a surgir quando a rota é chamada. Vale para as rotas registradas
+     * depois desta chamada.
+     *
+     * @return $this
+     */
+    public function lazyHandlers(bool $enabled = true): self
+    {
+        $this->lazyHandlers = $enabled;
+
+        return $this;
     }
 
     /**
@@ -737,12 +915,17 @@ class Application implements ApplicationInterface
         $startTime = microtime(true);
 
         // Disparar evento de requisição recebida
-        $this->dispatchLifecycleEvent(new RequestReceived($request, new \DateTime()));
+        if (!$this->isEventSystemIdle()) {
+            $this->dispatchLifecycleEvent(new RequestReceived($request, new \DateTime()));
+        }
 
         try {
             // Parsing do corpo dentro do try: corpo malformado (ex.: JSON inválido) vira
             // resposta 400 via HttpExceptionInterface, em vez de escapar de handle().
-            $request = (new BodyParser())->parse($request);
+            // Sem Content-Type o BodyParser devolve a requisição intacta; nem é instanciado.
+            if ($request->getHeaderLine('Content-Type') !== '') {
+                $request = (new BodyParser())->parse($request);
+            }
 
             // Executar middlewares globais ENVOLVENDO a resolução de rota, para
             // que middlewares vejam todas as requisições (incl. 404/OPTIONS) e
@@ -756,10 +939,29 @@ class Application implements ApplicationInterface
         }
 
         // Disparado uma única vez, com a resposta final (sucesso ou erro) — SPEC-085.
-        $processingTime = microtime(true) - $startTime;
-        $this->dispatchLifecycleEvent(new ResponseSent($request, $response, new \DateTime(), $processingTime));
+        // Reavaliado aqui: um listener pode ter sido registrado durante o tratamento da requisição.
+        if (!$this->isEventSystemIdle()) {
+            $processingTime = microtime(true) - $startTime;
+            $this->dispatchLifecycleEvent(new ResponseSent($request, $response, new \DateTime(), $processingTime));
+        }
 
         return $response;
+    }
+
+    /**
+     * Indica que nenhum listener pode existir: o dispatcher e o listener provider padrão ainda não
+     * foram resolvidos nem substituídos. Nesse estado os eventos de ciclo de vida não são criados,
+     * porque despachá-los não teria efeito observável (SPEC-116).
+     *
+     * @internal
+     */
+    public function isEventSystemIdle(): bool
+    {
+        if (isset($this->pendingProviders[EventServiceProvider::class])) {
+            return true;
+        }
+
+        return $this->eventServiceProvider !== null && $this->eventServiceProvider->isIdle();
     }
 
     /**
@@ -905,7 +1107,10 @@ class Application implements ApplicationInterface
 
         // Usar CallableResolver para garantir compatibilidade com array callables
         try {
-            $result = CallableResolver::call($handler, $expressRequest, $expressResponse);
+            // Closures já são executáveis: não passam pelo CallableResolver.
+            $result = $handler instanceof \Closure
+                ? $handler($expressRequest, $expressResponse)
+                : CallableResolver::call($handler, $expressRequest, $expressResponse);
         } catch (\InvalidArgumentException $e) {
             $handlerInfo = [
                 'type' => gettype($handler),

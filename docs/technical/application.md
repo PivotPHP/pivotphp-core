@@ -144,6 +144,25 @@ $app->register(DatabaseServiceProvider::class);
 $app->register(new CacheServiceProvider($config));
 ```
 
+#### `lazyHandlers(bool $enabled = true)`
+Adia o carregamento e a validação dos handlers `[Classe::class, 'método']` para o momento em que
+a rota é chamada.
+
+```php
+$app = new Application(__DIR__);
+$app->lazyHandlers();
+
+$app->get('/users', [UserController::class, 'index']);
+$app->get('/orders', [OrderController::class, 'index']);
+```
+
+- **Padrão (desligado)**: a classe é carregada e validada no registro da rota; um handler inválido
+  lança `InvalidArgumentException` ali mesmo. No PHP-FPM isso carrega todos os controllers em toda
+  requisição.
+- **Ligado**: só a classe da rota que casou é carregada. Um handler inválido (classe ou método
+  inexistente) só é detectado quando a rota é chamada, e a resposta é `500`.
+- Vale para as rotas registradas depois da chamada; closures e handlers `[$objeto, 'método']` não mudam.
+
 #### `setBasePath(string $path)`
 Define o caminho base da aplicação.
 

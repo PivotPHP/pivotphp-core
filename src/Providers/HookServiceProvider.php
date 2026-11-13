@@ -15,18 +15,17 @@ use PivotPHP\Core\Support\HookManager;
  */
 class HookServiceProvider extends ServiceProvider
 {
+    private ?\Closure $hookManagerFactory = null;
+
     /**
      * Register hook services
      */
     public function register(): void
     {
+        $this->hookManagerFactory = fn (): HookManager => new HookManager($this->app);
+
         // Register HookManager as singleton
-        $this->app->singleton(
-            HookManager::class,
-            function () {
-                return new HookManager($this->app);
-            }
-        );
+        $this->app->singleton(HookManager::class, $this->hookManagerFactory);
 
         // Create alias for easier access
         $this->app->getContainer()->alias('hooks', HookManager::class);
@@ -37,8 +36,26 @@ class HookServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Sem HookManager em uso e sem listener PSR-14, os hooks do core não têm quem os ouça:
+        // não instancia o HookManager nem o sistema de eventos só para disparar no vazio (SPEC-116).
+        if ($this->hooksAreUnused()) {
+            return;
+        }
+
         // Register core hooks
         $this->registerCoreHooks();
+    }
+
+    private function hooksAreUnused(): bool
+    {
+        if ($this->hookManagerFactory === null || !$this->app->isEventSystemIdle()) {
+            return false;
+        }
+
+        $container = $this->app->getContainer();
+
+        return $container->isPendingFactory('hooks', $this->hookManagerFactory)
+            && $container->isPendingFactory(HookManager::class, $this->hookManagerFactory);
     }
 
     /**

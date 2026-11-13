@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repository Overview
 
 PivotPHP Core is a PHP microframework inspired by Express.js, designed for building APIs. Current
-version: **5.2.0** (decoupled logging and companion adoption — SPEC-112). It targets PHP 8.1+ and is
+version: **5.3.0** (deferred core providers and lazy route handlers — SPEC-116). It targets PHP 8.1+ and is
 strict PSR-7 (HTTP messages), PSR-15 (middleware) and PSR-12 (style) compliant.
 
 Since the 4.0 line the core does one thing: it wires together the application, the routing engine and
@@ -141,9 +141,12 @@ src/
 1. **Application** (`src/Core/Application.php`) — bootstraps the framework, owns the PSR-11
    container, its **own** routing engine instance (`PivotPHP\Routing\Router\Router`, from
    `pivotphp/core-routing` 3.x — no state shared between applications)
-   and the global `MiddlewareStack`. It registers six core service providers in its constructor
+   and the global `MiddlewareStack`. It makes six core service providers available from its constructor
    (`Container`, `Event`, `Logging`, `Hook`, `Extension`, `Routing`), configures error handling and
    dispatches lifecycle events (`ApplicationStarted`, `RequestReceived`, `ResponseSent`).
+   Since 5.3.0 those providers are **deferred**: each is instantiated only when one of the
+   services it provides is first looked up, resolved or rebound, and lifecycle events are only
+   created while a listener can exist (`Application::isEventSystemIdle()`).
 
 2. **Middleware** (`src/Middleware/`) — PSR-15 compliant. `$app->use($middleware)` (alias
    `middleware()`) registers a **global** middleware that runs in registration order around
@@ -204,7 +207,7 @@ src/
 
 ## Current Version Status
 
-- **Current version**: 5.2.0
+- **Current version**: 5.3.0
 - **Code quality**: PHPStan Level 9, PSR-12 compliant
 - **Architecture**: application + pipeline + router integration; HTTP, routing, security and logging are
   delegated to `pivotphp/http`, `pivotphp/core-routing`, `pivotphp/security` and `pivotphp/logger`

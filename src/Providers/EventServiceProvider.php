@@ -15,32 +15,49 @@ use Psr\EventDispatcher\ListenerProviderInterface;
  */
 class EventServiceProvider extends ServiceProvider
 {
+    private ?\Closure $listenerProviderFactory = null;
+
+    private ?\Closure $dispatcherFactory = null;
+
     /**
      * {@inheritdoc}
      */
     public function register(): void
     {
-        // Register listener provider
-        $this->app->singleton(
-            ListenerProviderInterface::class,
-            function () {
-                return new EventsListenerProvider();
-            }
-        );
+        $this->listenerProviderFactory = static fn (): ListenerProviderInterface => new EventsListenerProvider();
 
-        // Register event dispatcher
-        $this->app->singleton(
-            EventDispatcherInterface::class,
-            function () {
-                /** @var ListenerProviderInterface $listenerProvider */
-                $listenerProvider = $this->app->resolve(ListenerProviderInterface::class);
-                return new EventsEventDispatcher($listenerProvider);
-            }
-        );
+        $this->dispatcherFactory = function (): EventDispatcherInterface {
+            /** @var ListenerProviderInterface $listenerProvider */
+            $listenerProvider = $this->app->resolve(ListenerProviderInterface::class);
+            return new EventsEventDispatcher($listenerProvider);
+        };
+
+        $this->app->singleton(ListenerProviderInterface::class, $this->listenerProviderFactory);
+        $this->app->singleton(EventDispatcherInterface::class, $this->dispatcherFactory);
 
         // Aliases
         $this->app->alias('events', EventDispatcherInterface::class);
         $this->app->alias('listeners', ListenerProviderInterface::class);
+    }
+
+    /**
+     * Indica que o sistema de eventos padrão ainda não foi usado: nem o dispatcher nem o listener
+     * provider foram resolvidos ou substituídos, logo não existe listener registrado.
+     *
+     * Enquanto for verdadeiro, despachar um evento não tem efeito observável.
+     */
+    public function isIdle(): bool
+    {
+        if ($this->dispatcherFactory === null || $this->listenerProviderFactory === null) {
+            return false;
+        }
+
+        $container = $this->app->getContainer();
+
+        return $container->isPendingFactory('events', $this->dispatcherFactory)
+            && $container->isPendingFactory(EventDispatcherInterface::class, $this->dispatcherFactory)
+            && $container->isPendingFactory('listeners', $this->listenerProviderFactory)
+            && $container->isPendingFactory(ListenerProviderInterface::class, $this->listenerProviderFactory);
     }
 
     /**
