@@ -114,6 +114,11 @@ For unbound classes, the container instantiates them with `new $class()`, which 
 arguments; constructor dependencies must be registered in the container (e.g. `$app->singleton(Ctl::class, fn () => new Ctl(...))`).
 Note: `$app->get()` registers a GET route — resolve services with `make()`.
 
+`$app->lazyHandlers()` defers loading and validating `[Controller::class, 'method']` handlers until the
+route is dispatched: only the matched controller class is loaded, and an invalid handler answers `500`
+when called instead of throwing `InvalidArgumentException` at registration. Off by default; applies to
+routes registered after the call.
+
 ## Events
 
 PSR-14: `$app->on(RequestReceived::class, $listener)`; lifecycle events `ApplicationStarted`,

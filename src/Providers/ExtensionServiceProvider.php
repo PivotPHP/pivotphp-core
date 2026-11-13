@@ -15,18 +15,17 @@ use PivotPHP\Core\Providers\ExtensionManager;
  */
 class ExtensionServiceProvider extends ServiceProvider
 {
+    private ?\Closure $extensionManagerFactory = null;
+
     /**
      * Register extension services
      */
     public function register(): void
     {
+        $this->extensionManagerFactory = fn (): ExtensionManager => new ExtensionManager($this->app);
+
         // Register ExtensionManager as singleton
-        $this->app->singleton(
-            ExtensionManager::class,
-            function () {
-                return new ExtensionManager($this->app);
-            }
-        );
+        $this->app->singleton(ExtensionManager::class, $this->extensionManagerFactory);
 
         // Create alias for easier access
         $this->app->getContainer()->alias('extensions', ExtensionManager::class);
@@ -37,6 +36,18 @@ class ExtensionServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $container = $this->app->getContainer();
+
+        // Nenhuma extensão vem da configuração; com o ExtensionManager padrão ainda não resolvido
+        // não há o que carregar, então ele não é instanciado no boot (SPEC-116).
+        if (
+            $this->extensionManagerFactory !== null
+            && $container->isPendingFactory('extensions', $this->extensionManagerFactory)
+            && $container->isPendingFactory(ExtensionManager::class, $this->extensionManagerFactory)
+        ) {
+            return;
+        }
+
         /** @var ExtensionManager $extensionManager */
         $extensionManager = $this->app->make(ExtensionManager::class);
 

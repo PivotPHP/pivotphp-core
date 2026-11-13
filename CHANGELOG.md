@@ -5,6 +5,40 @@ All notable changes to the PivotPHP Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.0] - 2026-11-13
+
+### Added
+- **Handlers preguiçosos** (SPEC-116): `Application::lazyHandlers(bool $enabled = true)` adia o carregamento e a
+  validação dos handlers `[Classe::class, 'método']` para o despacho da rota. Só a classe da rota que casou é
+  carregada; um handler inválido responde `500` quando a rota é chamada, em vez de lançar
+  `InvalidArgumentException` no registro. Desligado por padrão.
+- `Container::defer(array $ids, callable $loader)`: registro adiado de serviços — o carregador roda uma única
+  vez, na primeira vez em que um dos ids é consultado, resolvido ou redefinido.
+- `Container::isPendingFactory(string $id, callable $factory)`: indica se o serviço continua registrado com
+  aquela fábrica e ainda não foi resolvido.
+- `EventServiceProvider::isIdle()` e `Application::isEventSystemIdle()` (`@internal`): indicam que nenhum
+  listener pode existir, porque o dispatcher e o listener provider padrão não foram resolvidos nem substituídos.
+
+### Changed
+- **Providers do core sob demanda** (SPEC-116): os seis providers do core (`Container`, `Event`, `Logging`,
+  `Hook`, `Extension`, `Routing`) deixam de ser instanciados no construtor de `Application`. Cada um é carregado
+  quando um dos serviços que fornece é consultado, resolvido ou redefinido pela primeira vez. Os serviços, aliases
+  e a ordem de boot (providers do core antes dos da aplicação) não mudam; um binding feito pela aplicação antes
+  do primeiro uso continua prevalecendo sobre o do provider.
+- **Eventos de ciclo de vida só existem quando há quem ouça**: `ApplicationStarted`, `RequestReceived` e
+  `ResponseSent` não são criados nem despachados enquanto o sistema de eventos está ocioso. Listeners
+  registrados (antes ou durante a requisição) e dispatchers próprios continuam recebendo os eventos.
+- **Hooks e extensões fora do boot quando não usados**: `app.registered` e `app.booting` só são disparados se o
+  `HookManager` estiver em uso ou houver listener PSR-14; o `ExtensionManager` só é instanciado quando pedido.
+- `Application::handle()` não instancia o `BodyParser` para requisições sem `Content-Type` (ele já devolvia a
+  requisição intacta nesse caso) e executa handlers `Closure` sem passar pelo `CallableResolver`.
+
+### Performance
+- No cenário `GET /api/bare` da suíte de benchmarks (Nginx + PHP-FPM 8.3, OPcache, 1 vCPU), a CPU por requisição
+  caiu **6,3% ± 1,5** sem mudar a aplicação (563 → 527 µs) e **8,2% ± 1,4** com `lazyHandlers()` (517 µs); os
+  arquivos carregados por requisição passaram de 71 para 51 e 48. Medição pareada em 5 rodadas —
+  `pivotphp-benchmarks/reports/2026-11-13-microbench-core/`.
+
 ## [5.2.0] - 2026-10-12
 
 ### Changed

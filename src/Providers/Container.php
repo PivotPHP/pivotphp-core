@@ -53,10 +53,21 @@ class Container implements ContainerInterface
     private array $aliases = [];
 
     /**
+     * Carregadores adiados: id do serviço → callable que registra quem o fornece.
+     *
+     * @var array<string, callable>
+     */
+    private array $deferred = [];
+
+    /**
      * {@inheritdoc}
      */
     public function get(string $id): mixed
     {
+        if ($this->deferred !== []) {
+            $this->loadDeferred($id);
+        }
+
         // Resolve alias
         $id = $this->aliases[$id] ?? $id;
 
@@ -94,14 +105,65 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Indica se o serviço está registrado com exatamente esta fábrica e ainda não foi resolvido.
+     *
+     * Permite a um provider saber se o serviço que ele registrou continua intocado — nem
+     * instanciado, nem substituído por outro binding — e assim pular trabalho que só teria efeito
+     * se o serviço estivesse em uso.
+     */
+    public function isPendingFactory(string $id, callable $factory): bool
+    {
+        $id = $this->aliases[$id] ?? $id;
+
+        return !isset($this->instances[$id]) && ($this->factories[$id] ?? null) === $factory;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function has(string $id): bool
     {
+        if ($this->deferred !== []) {
+            $this->loadDeferred($id);
+        }
+
         // Resolve alias
         $id = $this->aliases[$id] ?? $id;
 
         return isset($this->services[$id]) || isset($this->factories[$id]);
+    }
+
+    /**
+     * Adia o registro dos serviços `$ids`: `$loader` roda uma única vez, na primeira vez em que
+     * um deles for consultado, resolvido ou redefinido, e deve registrá-los no contêiner.
+     *
+     * @param array<int, string> $ids
+     */
+    public function defer(array $ids, callable $loader): void
+    {
+        foreach ($ids as $id) {
+            $this->deferred[$id] = $loader;
+        }
+    }
+
+    /**
+     * Executa o carregador adiado de `$id` (ou do serviço para o qual ele é alias), se houver.
+     */
+    private function loadDeferred(string $id): void
+    {
+        $loader = $this->deferred[$id] ?? $this->deferred[$this->aliases[$id] ?? $id] ?? null;
+        if ($loader === null) {
+            return;
+        }
+
+        // Remove todas as entradas do carregador antes de executá-lo: ele registra esses mesmos ids.
+        foreach ($this->deferred as $key => $candidate) {
+            if ($candidate === $loader) {
+                unset($this->deferred[$key]);
+            }
+        }
+
+        $loader();
     }
 
     /**
@@ -112,6 +174,11 @@ class Container implements ContainerInterface
         mixed $concrete = null,
         bool $shared = true
     ): void {
+        // Quem redefine um serviço adiado espera sobrepor o registro original, não ser sobreposto.
+        if ($this->deferred !== []) {
+            $this->loadDeferred($abstract);
+        }
+
         $concrete = $concrete ?? $abstract;
 
         if (is_callable($concrete)) {
@@ -139,6 +206,11 @@ class Container implements ContainerInterface
      */
     public function instance(string $abstract, mixed $instance): void
     {
+        // Quem redefine um serviço adiado espera sobrepor o registro original, não ser sobreposto.
+        if ($this->deferred !== []) {
+            $this->loadDeferred($abstract);
+        }
+
         $this->instances[$abstract] = $instance;
         $this->services[$abstract] = $instance;
         $this->shared[$abstract] = true;
@@ -149,6 +221,11 @@ class Container implements ContainerInterface
      */
     public function alias(string $alias, string $abstract): void
     {
+        // Quem redefine um serviço adiado espera sobrepor o registro original, não ser sobreposto.
+        if ($this->deferred !== []) {
+            $this->loadDeferred($alias);
+        }
+
         $this->aliases[$alias] = $abstract;
     }
 
@@ -157,6 +234,11 @@ class Container implements ContainerInterface
      */
     public function forget(string $abstract): void
     {
+        // Quem redefine um serviço adiado espera sobrepor o registro original, não ser sobreposto.
+        if ($this->deferred !== []) {
+            $this->loadDeferred($abstract);
+        }
+
         unset(
             $this->services[$abstract],
             $this->factories[$abstract],
@@ -175,5 +257,6 @@ class Container implements ContainerInterface
         $this->instances = [];
         $this->shared = [];
         $this->aliases = [];
+        $this->deferred = [];
     }
 }
